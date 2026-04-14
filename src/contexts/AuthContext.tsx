@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signInGoogle = async (requireExistingProfile = false) => {
+  const signInGoogle = async (_requireExistingProfile = false) => {
     try {
       setError(null);
       const userCredential = await signInWithGoogle();
@@ -134,21 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check if profile exists
       const exists = await userProfileExists(firebaseUser.uid);
 
-      // Login flow: block Google login if profile was never created before
-      if (requireExistingProfile && !exists) {
-        await logOut();
-        const message = getAuthErrorMessage("auth/google-account-not-registered");
-        setError(message);
-        const noAccountError = new Error(message) as Error & {
-          code?: string;
-          email?: string;
-        };
-        noAccountError.code = "auth/google-account-not-registered";
-        noAccountError.email = firebaseUser.email || "";
-        throw noAccountError;
-      }
-
-      // Signup flow: create profile on first Google auth
+      // Ensure a Firestore profile exists for every Google-authenticated user.
       if (!exists) {
         await createUserProfile(firebaseUser.uid, {
           email: firebaseUser.email || "",
@@ -158,9 +144,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (err: any) {
-      if (err?.code === "auth/google-account-not-registered") {
-        throw err;
-      }
       const message = getAuthErrorMessage(err.code);
       setError(message);
       const authError = new Error(message) as Error & { code?: string };

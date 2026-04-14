@@ -1,7 +1,33 @@
+import { useEffect, useState } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import { Users, Target, Shield, Heart } from "lucide-react";
+import { getPublicStats } from "@/lib/publicStatsService";
 
 const About = () => {
+  const [happyCustomers, setHappyCustomers] = useState(0);
+  const [vehiclesProtected, setVehiclesProtected] = useState(0);
+  const [citiesCovered, setCitiesCovered] = useState(0);
+  const [googleRating, setGoogleRating] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    const loadStats = async () => {
+      const stats = await getPublicStats();
+      if (!alive) return;
+
+      setHappyCustomers(stats.happyCustomers);
+      setVehiclesProtected(stats.vehiclesProtected);
+      setCitiesCovered(stats.citiesCovered);
+      setGoogleRating(stats.googleRating);
+    };
+
+    void loadStats();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return (
     <MainLayout>
       <div className="py-16">
@@ -78,19 +104,19 @@ const About = () => {
             <div className="bg-primary rounded-2xl p-8">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                 <div>
-                  <div className="text-3xl font-bold text-foreground">100+</div>
+                  <div className="text-3xl font-bold text-foreground">{happyCustomers}+</div>
                   <div className="text-sm text-foreground/80">Happy Customers</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-foreground">200+</div>
+                  <div className="text-3xl font-bold text-foreground">{vehiclesProtected}+</div>
                   <div className="text-sm text-foreground/80">Vehicles Protected</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-foreground">3+</div>
+                  <div className="text-3xl font-bold text-foreground">{citiesCovered}+</div>
                   <div className="text-sm text-foreground/80">Cities Covered</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-foreground">4.0★</div>
+                  <div className="text-3xl font-bold text-foreground">{googleRating.toFixed(1)}★</div>
                   <div className="text-sm text-foreground/80">Google Rating</div>
                 </div>
               </div>
