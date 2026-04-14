@@ -57,7 +57,12 @@ import {
 } from "@/lib/validations/auth";
 import MainLayout from "@/layouts/MainLayout";
 import { toast } from "sonner";
-import { getUserPrebookings, type PrebookingRecord } from "@/lib/prebookService";
+import NFCProfileBuilder, { type NFCProfileData } from "@/components/NFCProfileBuilder";
+import {
+  getUserPrebookings,
+  updatePrebookingNFCProfile,
+  type PrebookingRecord,
+} from "@/lib/prebookService";
 
 export default function Profile() {
   const {
@@ -78,6 +83,28 @@ export default function Profile() {
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [orders, setOrders] = useState<PrebookingRecord[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [nfcDialogOpen, setNfcDialogOpen] = useState(false);
+  const [selectedNfcOrderId, setSelectedNfcOrderId] = useState<string | null>(null);
+  const [nfcEditLoading, setNfcEditLoading] = useState(false);
+  const [nfcProfileDraft, setNfcProfileDraft] = useState<NFCProfileData>({
+    username: "",
+    name: "",
+    companyName: "",
+    jobTitle: "",
+    email: "",
+    phone: "",
+    bio: "",
+    businessTags: "",
+    website: "",
+    address: "",
+    linkedin: "",
+    twitter: "",
+    instagram: "",
+    youtube: "",
+    facebook: "",
+    profilePhoto: "",
+    projects: [],
+  });
 
   // Profile form
   const profileForm = useForm<ProfileFormData>({
@@ -215,6 +242,58 @@ export default function Profile() {
       toast.error("Failed to check verification status.");
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const isNFCOrder = (order: PrebookingRecord): boolean => {
+    return !!order.items?.some((item) => item.id.startsWith("nfc-"));
+  };
+
+  const openEditNFC = (order: PrebookingRecord) => {
+    setSelectedNfcOrderId(order.id);
+    setNfcProfileDraft({
+      username: order.nfcProfile?.username || "",
+      name: order.nfcProfile?.name || order.fullName || profile.displayName || "",
+      companyName: order.nfcProfile?.companyName || "",
+      jobTitle: order.nfcProfile?.jobTitle || "",
+      email: order.nfcProfile?.email || order.email || user.email || "",
+      phone: order.nfcProfile?.phone || order.phone || profile.mobile || "",
+      bio: order.nfcProfile?.bio || "",
+      businessTags: order.nfcProfile?.businessTags || "",
+      website: order.nfcProfile?.website || "",
+      address: order.nfcProfile?.address || [order.address, order.city].filter(Boolean).join(", "),
+      linkedin: order.nfcProfile?.linkedin || "",
+      twitter: order.nfcProfile?.twitter || "",
+      instagram: order.nfcProfile?.instagram || "",
+      youtube: order.nfcProfile?.youtube || "",
+      facebook: order.nfcProfile?.facebook || "",
+      profilePhoto: order.nfcProfile?.profilePhoto || "",
+      projects: order.nfcProfile?.projects || [],
+    });
+    setNfcDialogOpen(true);
+  };
+
+  const handleSaveNFCProfile = async () => {
+    if (!selectedNfcOrderId || !user?.uid) return;
+
+    try {
+      setNfcEditLoading(true);
+      await updatePrebookingNFCProfile(selectedNfcOrderId, nfcProfileDraft);
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === selectedNfcOrderId
+            ? { ...order, nfcProfile: { ...nfcProfileDraft } }
+            : order
+        )
+      );
+      toast.success("NFC profile updated successfully!");
+      setNfcDialogOpen(false);
+      setSelectedNfcOrderId(null);
+    } catch (error: any) {
+      toast.error("Failed to update NFC profile. Please try again.");
+      console.error("NFC profile save error:", error);
+    } finally {
+      setNfcEditLoading(false);
     }
   };
 
@@ -730,20 +809,33 @@ export default function Profile() {
                           <Package className="w-4 h-4 text-primary" />
                           <span className="text-xs font-mono text-muted-foreground">#{order.id.slice(0, 8).toUpperCase()}</span>
                         </div>
-                        <Badge
-                          variant="secondary"
-                          className={`text-xs ${
-                            order.status === 'confirmed'
-                              ? 'bg-green-100 text-green-700'
-                              : order.status === 'cancelled'
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-amber-100 text-amber-700'
-                          }`}
-                        >
-                          {order.status === 'confirmed' && <CheckCircle className="mr-1 h-3 w-3" />}
-                          {order.status === 'pending' && <Clock className="mr-1 h-3 w-3" />}
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          {isNFCOrder(order) && order.status === "confirmed" && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditNFC(order)}
+                            >
+                              <Edit2 className="mr-2 h-3.5 w-3.5" />
+                              Edit NFC
+                            </Button>
+                          )}
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs ${
+                              order.status === 'confirmed'
+                                ? 'bg-green-100 text-green-700'
+                                : order.status === 'cancelled'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-amber-100 text-amber-700'
+                            }`}
+                          >
+                            {order.status === 'confirmed' && <CheckCircle className="mr-1 h-3 w-3" />}
+                            {order.status === 'pending' && <Clock className="mr-1 h-3 w-3" />}
+                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                          </Badge>
+                        </div>
                       </div>
                       
                       {/* Items */}
@@ -836,6 +928,41 @@ export default function Profile() {
               </div>
             </CardContent>
           </Card>
+
+          <Dialog
+            open={nfcDialogOpen}
+            onOpenChange={(open) => {
+              setNfcDialogOpen(open);
+              if (!open) {
+                setSelectedNfcOrderId(null);
+              }
+            }}
+          >
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit NFC Profile</DialogTitle>
+                <DialogDescription>
+                  Update the NFC profile linked to your purchased NFC card.
+                </DialogDescription>
+              </DialogHeader>
+              <NFCProfileBuilder
+                profileData={nfcProfileDraft}
+                onProfileChange={setNfcProfileDraft}
+                onBack={() => {
+                  setNfcDialogOpen(false);
+                  setSelectedNfcOrderId(null);
+                }}
+                onContinue={handleSaveNFCProfile}
+                isLoading={nfcEditLoading}
+                title="Edit Your NFC Profile"
+                description="Keep your NFC card profile up to date from your account dashboard."
+                infoText="These details power your public NFC page link as pleaseping.me/nfc&lt;username&gt;. Username is globally unique and updates reflect on your live link."
+                backLabel="Cancel"
+                continueLabel="Save NFC Profile"
+                variant="edit"
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </MainLayout>

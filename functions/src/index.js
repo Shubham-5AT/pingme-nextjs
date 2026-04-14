@@ -22,6 +22,7 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 const corsHandler = cors({ origin: true });
+const publicStatsRef = db.collection("publicStats").doc("global");
 
 const getExpectedDeliveryDate = () => {
   const date = new Date();
@@ -400,3 +401,68 @@ exports.notifyOrderConfirmed = onDocumentUpdated(
     );
   }
 );
+
+exports.getPublicStats = onRequest({ region: "asia-south1" }, (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "GET") {
+      res.status(405).send("Method Not Allowed");
+      return;
+    }
+
+    try {
+      const snap = await publicStatsRef.get();
+      const data = snap.exists ? snap.data() || {} : {};
+
+      res.status(200).json({
+        happyCustomers: Number(data.happyCustomers || 0),
+        vehiclesProtected: Number(data.vehiclesProtected || 0),
+        citiesCovered: Number(data.citiesCovered || 0),
+        googleRating: Number(data.googleRating || 0),
+        installCount: Number(data.installCount || 0),
+      });
+    } catch (error) {
+      console.error("getPublicStats error", error);
+      res.status(500).send("Failed to fetch public stats.");
+    }
+  });
+});
+
+exports.trackInstall = onRequest({ region: "asia-south1" }, (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send("Method Not Allowed");
+      return;
+    }
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(publicStatsRef);
+        const prev = snap.exists ? snap.data() || {} : {};
+
+        const nextInstallCount = Number(prev.installCount || 0) + 1;
+        const nextHappyCustomers = Number(prev.happyCustomers || 0) + 1;
+        const nextVehiclesProtected = Number(prev.vehiclesProtected || 0) + 1;
+        const nextCitiesCovered = Math.max(Number(prev.citiesCovered || 0), nextInstallCount > 0 ? 1 : 0);
+        const nextGoogleRating = Number(prev.googleRating || 0) > 0 ? Number(prev.googleRating) : (nextInstallCount > 0 ? 4 : 0);
+
+        tx.set(
+          publicStatsRef,
+          {
+            installCount: nextInstallCount,
+            happyCustomers: nextHappyCustomers,
+            vehiclesProtected: nextVehiclesProtected,
+            citiesCovered: nextCitiesCovered,
+            googleRating: nextGoogleRating,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
+      });
+
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("trackInstall error", error);
+      res.status(500).send("Failed to track install.");
+    }
+  });
+});

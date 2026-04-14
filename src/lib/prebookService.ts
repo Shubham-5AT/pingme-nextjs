@@ -1,4 +1,13 @@
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export interface CartItem {
@@ -13,14 +22,26 @@ export interface CartItem {
 
 export interface NFCProfile {
   name: string;
+  companyName?: string;
+  jobTitle?: string;
   email: string;
   phone: string;
   bio?: string;
+  businessTags?: string;
   website?: string;
+  address?: string;
   linkedin?: string;
   twitter?: string;
   instagram?: string;
+  youtube?: string;
   facebook?: string;
+  profilePhoto?: string;
+  projects?: Array<{
+    name: string;
+    description?: string;
+    link?: string;
+    photo?: string;
+  }>;
 }
 
 export interface PrebookingData {
@@ -47,12 +68,45 @@ export interface PrebookingData {
   };
 }
 
+const PREBOOKINGS_COLLECTION = 'prebookings';
+
 // Simple text sanitizer to prevent XSS
 const sanitizeText = (text: string): string => {
   return text
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/<[^>]*>/g, '')
     .trim();
+};
+
+const sanitizeNFCProfile = (profile: NFCProfile): NFCProfile => {
+  return {
+    ...(profile.username ? { username: sanitizeText(profile.username) } : {}),
+    name: sanitizeText(profile.name || ''),
+    ...(profile.companyName ? { companyName: sanitizeText(profile.companyName) } : {}),
+    ...(profile.jobTitle ? { jobTitle: sanitizeText(profile.jobTitle) } : {}),
+    email: sanitizeText(profile.email || ''),
+    phone: sanitizeText(profile.phone || ''),
+    ...(profile.bio ? { bio: sanitizeText(profile.bio) } : {}),
+    ...(profile.businessTags ? { businessTags: sanitizeText(profile.businessTags) } : {}),
+    ...(profile.website ? { website: sanitizeText(profile.website) } : {}),
+    ...(profile.address ? { address: sanitizeText(profile.address) } : {}),
+    ...(profile.linkedin ? { linkedin: sanitizeText(profile.linkedin) } : {}),
+    ...(profile.twitter ? { twitter: sanitizeText(profile.twitter) } : {}),
+    ...(profile.instagram ? { instagram: sanitizeText(profile.instagram) } : {}),
+    ...(profile.youtube ? { youtube: sanitizeText(profile.youtube) } : {}),
+    ...(profile.facebook ? { facebook: sanitizeText(profile.facebook) } : {}),
+    ...(profile.profilePhoto ? { profilePhoto: sanitizeText(profile.profilePhoto) } : {}),
+    ...(profile.projects && profile.projects.length > 0
+      ? {
+          projects: profile.projects.map((project) => ({
+            name: sanitizeText(project.name || ''),
+            ...(project.description ? { description: sanitizeText(project.description) } : {}),
+            ...(project.link ? { link: sanitizeText(project.link) } : {}),
+            ...(project.photo ? { photo: sanitizeText(project.photo) } : {}),
+          })),
+        }
+      : {}),
+  };
 };
 
 export const createPrebooking = async (data: PrebookingData): Promise<string> => {
@@ -90,17 +144,7 @@ export const createPrebooking = async (data: PrebookingData): Promise<string> =>
     status: data.status,
     ...(data.nfcProfile
       ? {
-          nfcProfile: {
-            name: sanitizeText(data.nfcProfile.name),
-            email: sanitizeText(data.nfcProfile.email),
-            phone: sanitizeText(data.nfcProfile.phone),
-            ...(data.nfcProfile.bio ? { bio: sanitizeText(data.nfcProfile.bio) } : {}),
-            ...(data.nfcProfile.website ? { website: sanitizeText(data.nfcProfile.website) } : {}),
-            ...(data.nfcProfile.linkedin ? { linkedin: sanitizeText(data.nfcProfile.linkedin) } : {}),
-            ...(data.nfcProfile.twitter ? { twitter: sanitizeText(data.nfcProfile.twitter) } : {}),
-            ...(data.nfcProfile.instagram ? { instagram: sanitizeText(data.nfcProfile.instagram) } : {}),
-            ...(data.nfcProfile.facebook ? { facebook: sanitizeText(data.nfcProfile.facebook) } : {}),
-          },
+          nfcProfile: sanitizeNFCProfile(data.nfcProfile),
         }
       : {}),
     ...(data.payment
@@ -125,7 +169,7 @@ export const createPrebooking = async (data: PrebookingData): Promise<string> =>
   );
 
   const docRef = await Promise.race([
-    addDoc(collection(db, 'prebookings'), sanitizedData),
+    addDoc(collection(db, PREBOOKINGS_COLLECTION), sanitizedData),
     timeoutPromise,
   ]);
 
@@ -155,7 +199,7 @@ export const getUserPrebookings = async ({ userId, email }: GetUserPrebookingsPa
 
     // Prefer userId query because email can change later in account settings.
     if (userId) {
-      const byUserId = query(collection(db, 'prebookings'), where('userId', '==', userId));
+      const byUserId = query(collection(db, PREBOOKINGS_COLLECTION), where('userId', '==', userId));
       const userSnapshot = await getDocs(byUserId);
       if (!userSnapshot.empty) {
         return userSnapshot.docs
@@ -165,7 +209,7 @@ export const getUserPrebookings = async ({ userId, email }: GetUserPrebookingsPa
     }
 
     if (email) {
-      const byEmail = query(collection(db, 'prebookings'), where('email', '==', email));
+      const byEmail = query(collection(db, PREBOOKINGS_COLLECTION), where('email', '==', email));
       const emailSnapshot = await getDocs(byEmail);
       return emailSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() } as PrebookingRecord))
@@ -177,4 +221,19 @@ export const getUserPrebookings = async ({ userId, email }: GetUserPrebookingsPa
     console.error('Failed to fetch prebookings:', error);
     return [];
   }
+};
+
+export const updatePrebookingNFCProfile = async (
+  orderId: string,
+  nfcProfile: NFCProfile
+): Promise<void> => {
+  if (!orderId) {
+    throw new Error('Order ID is required');
+  }
+
+  const sanitizedProfile = sanitizeNFCProfile(nfcProfile);
+  await updateDoc(doc(db, PREBOOKINGS_COLLECTION, orderId), {
+    nfcProfile: sanitizedProfile,
+    updatedAt: serverTimestamp(),
+  });
 };

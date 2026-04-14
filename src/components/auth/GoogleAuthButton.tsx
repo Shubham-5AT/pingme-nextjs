@@ -36,7 +36,14 @@ export default function GoogleAuthButton({ onSuccess, intent = "signin" }: Googl
             googleEmail: err?.email || "",
           },
         });
+        return;
       }
+
+      toast({
+        title: "Google sign-in failed",
+        description: err?.message || "Unable to sign in with Google right now. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
