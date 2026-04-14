@@ -23,6 +23,74 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 const corsHandler = cors({ origin: true });
 
+const getMailTransporter = () => {
+  const host = (SMTP_HOST.value() || process.env.SMTP_HOST || "").trim();
+  const port = Number((SMTP_PORT.value() || process.env.SMTP_PORT || "587").trim());
+  const user = (SMTP_USER.value() || process.env.SMTP_USER || "").trim();
+  const pass = (SMTP_PASS.value() || process.env.SMTP_PASS || "").trim();
+
+  if (!host || !user || !pass) {
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+};
+
+const sendBookingConfirmationEmail = async ({ email, fullName, bookingId, items, totalAmount }) => {
+  if (!email) {
+    return;
+  }
+
+  const transporter = getMailTransporter();
+  const fromEmail = (
+    SMTP_FROM.value() ||
+    SMTP_USER.value() ||
+    process.env.SMTP_FROM ||
+    process.env.SMTP_USER ||
+    ""
+  ).trim();
+
+  if (!transporter || !fromEmail) {
+    console.warn("Booking confirmation email skipped due to missing SMTP configuration.");
+    return;
+  }
+
+  const itemsLabel = Array.isArray(items) && items.length
+    ? items.map((item) => `${item?.title || "Item"} x${item?.quantity || 1}`).join(", ")
+    : "-";
+
+  const totalLabel = Number(totalAmount || 0).toFixed(2);
+
+  await transporter.sendMail({
+    from: fromEmail,
+    to: email,
+    subject: `Booking Confirmed - ${bookingId}`,
+    text: [
+      `Hi ${fullName || "Customer"},`,
+      "",
+      "Your booking is confirmed.",
+      `Booking ID: ${bookingId}`,
+      `Items: ${itemsLabel}`,
+      `Total Paid: INR ${totalLabel}`,
+      "",
+      "Thank you for choosing PingME.",
+    ].join("\n"),
+    html: `
+      <p>Hi ${fullName || "Customer"},</p>
+      <p>Your booking is confirmed.</p>
+      <p><strong>Booking ID:</strong> ${bookingId}</p>
+      <p><strong>Items:</strong> ${itemsLabel}</p>
+      <p><strong>Total Paid:</strong> INR ${totalLabel}</p>
+      <p>Thank you for choosing PingME.</p>
+    `,
+  });
+};
+
 const getRazorpayClient = () => {
   const keyId = (RAZORPAY_KEY_ID.value() || process.env.RAZORPAY_KEY_ID || "").trim();
   const keySecret = (RAZORPAY_KEY_SECRET.value() || process.env.RAZORPAY_KEY_SECRET || "").trim();
@@ -78,7 +146,7 @@ exports.createOrder = onRequest({
 
 exports.verifyPayment = onRequest({
   region: "asia-south1",
-  secrets: [RAZORPAY_KEY_SECRET],
+  secrets: [RAZORPAY_KEY_SECRET, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM],
 }, (req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== "POST") {
@@ -127,11 +195,24 @@ exports.verifyPayment = onRequest({
 
       const prebookingData = {
         ...prebooking,
-        status: "pending",
+        status: "confirmed",
+        confirmedAt: admin.firestore.FieldValue.serverTimestamp(),
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       };
 
       const prebookingRef = await db.collection("prebookings").add(prebookingData);
+
+      try {
+        await sendBookingConfirmationEmail({
+          email: prebooking?.email,
+          fullName: prebooking?.fullName,
+          bookingId: prebookingRef.id,
+          items: prebooking?.items,
+          totalAmount: prebooking?.totalAmount,
+        });
+      } catch (mailErr) {
+        console.error("booking confirmation email error", mailErr);
+      }
 
       res.status(200).json({
         success: true,
