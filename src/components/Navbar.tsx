@@ -148,7 +148,11 @@ const Navbar = () => {
                       className="w-full h-12 text-base"
                       onClick={() => {
                         setCartOpen(false);
-                        navigate("/prebook");
+                        if (!user) {
+                          navigate("/login", { state: { from: { pathname: "/booking" } } });
+                          return;
+                        }
+                        navigate("/booking");
                       }}
                     >
                       Checkout Securely
