@@ -21,6 +21,7 @@ export interface CartItem {
 }
 
 export interface NFCProfile {
+  username?: string;
   name: string;
   companyName?: string;
   jobTitle?: string;
@@ -80,7 +81,7 @@ const sanitizeText = (text: string): string => {
 
 const sanitizeNFCProfile = (profile: NFCProfile): NFCProfile => {
   return {
-    ...(profile.username ? { username: sanitizeText(profile.username) } : {}),
+    ...(profile.username ? { username: sanitizeText(profile.username).toLowerCase() } : {}),
     name: sanitizeText(profile.name || ''),
     ...(profile.companyName ? { companyName: sanitizeText(profile.companyName) } : {}),
     ...(profile.jobTitle ? { jobTitle: sanitizeText(profile.jobTitle) } : {}),

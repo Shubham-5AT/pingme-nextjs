@@ -28,6 +28,7 @@ import VerifyEmail from "./pages/auth/VerifyEmail";
 import CompletePhone from "./pages/auth/CompletePhone";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
+import PublicNFCProfile from "./pages/PublicNFCProfile";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,8 @@ const App = () => (
               <Route path="/prebook" element={<Prebook />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/nfc:username" element={<PublicNFCProfile />} />
+              <Route path="/nfc/:username" element={<PublicNFCProfile />} />
 
               {/* Auth Routes */}
               <Route path="/login" element={<Login />} />

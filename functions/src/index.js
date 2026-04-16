@@ -23,6 +23,52 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 const corsHandler = cors({ origin: true });
 
+const USERNAME_PATTERN = /^[a-z0-9._-]{3,32}$/;
+
+const normalizeUsername = (value = "") => value.trim().toLowerCase();
+
+const toMillis = (value) => {
+  if (!value) return 0;
+  if (typeof value.toMillis === "function") return value.toMillis();
+  if (typeof value.seconds === "number") return value.seconds * 1000;
+  return 0;
+};
+
+const toSafePublicProfile = (docData, id) => {
+  const nfc = docData?.nfcProfile || {};
+  const profile = {
+    orderId: id,
+    username: String(nfc.username || ""),
+    name: String(nfc.name || ""),
+    companyName: nfc.companyName ? String(nfc.companyName) : "",
+    jobTitle: nfc.jobTitle ? String(nfc.jobTitle) : "",
+    email: nfc.email ? String(nfc.email) : "",
+    phone: nfc.phone ? String(nfc.phone) : "",
+    bio: nfc.bio ? String(nfc.bio) : "",
+    businessTags: nfc.businessTags ? String(nfc.businessTags) : "",
+    website: nfc.website ? String(nfc.website) : "",
+    address: nfc.address ? String(nfc.address) : "",
+    linkedin: nfc.linkedin ? String(nfc.linkedin) : "",
+    twitter: nfc.twitter ? String(nfc.twitter) : "",
+    instagram: nfc.instagram ? String(nfc.instagram) : "",
+    youtube: nfc.youtube ? String(nfc.youtube) : "",
+    facebook: nfc.facebook ? String(nfc.facebook) : "",
+    profilePhoto: nfc.profilePhoto ? String(nfc.profilePhoto) : "",
+    projects: Array.isArray(nfc.projects)
+      ? nfc.projects
+          .filter((project) => project && project.name)
+          .map((project) => ({
+            name: String(project.name || ""),
+            description: project.description ? String(project.description) : "",
+            link: project.link ? String(project.link) : "",
+            photo: project.photo ? String(project.photo) : "",
+          }))
+      : [],
+  };
+
+  return profile;
+};
+
 const getMailTransporter = () => {
   const host = (SMTP_HOST.value() || process.env.SMTP_HOST || "").trim();
   const port = Number((SMTP_PORT.value() || process.env.SMTP_PORT || "587").trim());
@@ -221,6 +267,71 @@ exports.verifyPayment = onRequest({
     } catch (error) {
       console.error("verifyPayment error", error);
       res.status(500).send("Failed to verify payment.");
+    }
+  });
+});
+
+exports.getPublicNfcProfile = onRequest({
+  region: "asia-south1",
+}, (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "GET") {
+      res.status(405).send("Method Not Allowed");
+      return;
+    }
+
+    try {
+      const username = normalizeUsername(String(req.query.username || ""));
+
+      if (!USERNAME_PATTERN.test(username)) {
+        res.status(400).json({ error: "Invalid username." });
+        return;
+      }
+
+      const snapshot = await db
+        .collection("prebookings")
+        .where("nfcProfile.username", "==", username)
+        .get();
+
+      if (snapshot.empty) {
+        res.status(404).json({ error: "Profile not found." });
+        return;
+      }
+
+      const confirmedDocs = snapshot.docs.filter(
+        (docSnap) => String(docSnap.data()?.status || "") === "confirmed"
+      );
+
+      if (!confirmedDocs.length) {
+        res.status(404).json({ error: "Profile not found." });
+        return;
+      }
+
+      const latest = confirmedDocs.sort((a, b) => {
+        const aData = a.data();
+        const bData = b.data();
+
+        const aTime = Math.max(
+          toMillis(aData.updatedAt),
+          toMillis(aData.confirmedAt),
+          toMillis(aData.createdAt)
+        );
+        const bTime = Math.max(
+          toMillis(bData.updatedAt),
+          toMillis(bData.confirmedAt),
+          toMillis(bData.createdAt)
+        );
+
+        return bTime - aTime;
+      })[0];
+
+      res.set("Cache-Control", "public, max-age=120");
+      res.status(200).json({
+        profile: toSafePublicProfile(latest.data(), latest.id),
+      });
+    } catch (error) {
+      console.error("getPublicNfcProfile error", error);
+      res.status(500).json({ error: "Failed to fetch profile." });
     }
   });
 });
