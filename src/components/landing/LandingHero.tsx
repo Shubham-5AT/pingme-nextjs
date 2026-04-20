@@ -279,7 +279,7 @@ const LandingHero = () => {
                   </div>
 
                   <div className="grid gap-4 p-5 md:grid-cols-[180px_1fr] md:p-6">
-                    <img src={item.image} alt={item.title} className="h-210 w-210 rounded-2xl object-cover" />
+                    <img src={item.image} alt={item.title} className="h-100 w-100 object-cover" />
                     <div className="space-y-3">
                       {item.points.map((point) => (
                         <div key={point} className="flex items-start gap-3 rounded-2xl bg-muted/40 px-4 py-3">

@@ -27,6 +27,7 @@ import tagOval from "@/assets/products/tag_oval.png";
 import tagSquareBlack from "@/assets/products/tag_square_black.png";
 import tagSquareYellow from "@/assets/products/tag_square_yellow.png";
 import carcardFront from "@/assets/products/product-card.png";
+import keytagpet from "@/assets/products/Pet Tags.jpeg";
 import carcardBack from "@/assets/products/carcard_back.png";
 
 // ─── Data ───────────────────────────────────────────────
@@ -156,6 +157,14 @@ const categories: ProductCategory[] = [
         price: "₹299",
         originalPrice: "₹349",
         image: keytagRed,
+        features: ["Bold red design", "Attach to any pet collar", "Quick scan for owner info", "Waterproof & lifetime activation"],
+      },
+      {
+        id: "pet-safety-tag",
+        title: "Smart Safety Pet Tag – Yellow",
+        price: "₹299",
+        originalPrice: "₹349",
+        image: keytagpet,
         features: ["Bold red design", "Attach to any pet collar", "Quick scan for owner info", "Waterproof & lifetime activation"],
       },
     ],

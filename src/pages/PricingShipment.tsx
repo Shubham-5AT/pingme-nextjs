@@ -25,19 +25,23 @@ const PricingShipment = () => {
                 <tbody>
                   <tr className="border-b border-border">
                     <td className="py-3">Standard Car Card</td>
-                    <td className="text-right font-bold">₹199</td>
+                    <td className="text-right font-bold">₹249</td>
                   </tr>
                   <tr className="border-b border-border">
                     <td className="py-3">Bike Tag</td>
-                    <td className="text-right font-bold">₹149</td>
+                    <td className="text-right font-bold">₹249</td>
                   </tr>
                   <tr className="border-b border-border">
-                    <td className="py-3">Laptop Tag</td>
-                    <td className="text-right font-bold">₹99</td>
+                    <td className="py-3">Pet Tag</td>
+                    <td className="text-right font-bold">₹299</td>
+                  </tr>
+                  <tr className="border-b border-border">
+                    <td className="py-3">NFC Card</td>
+                    <td className="text-right font-bold">₹399</td>
                   </tr>
                   <tr>
                     <td className="py-3">Keychain Tag</td>
-                    <td className="text-right font-bold">₹79</td>
+                    <td className="text-right font-bold">₹179</td>
                   </tr>
                 </tbody>
               </table>
