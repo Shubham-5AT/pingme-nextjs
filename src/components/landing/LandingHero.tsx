@@ -17,11 +17,12 @@ import {
   Tag,
   Zap,
 } from "lucide-react";
+import { buildProductImageUrl } from "@/lib/productCatalog";
 
-import carcardFront from "@/assets/products/product-card.png";
-import backpackSticker from "@/assets/products/backpack_sticker.png";
-import nfcFront from "@/assets/products/nfc_frontcard.png";
-import petSafetyTag from "@/assets/products/Pet Tags.jpeg";
+const carcardFront = buildProductImageUrl("product-card.png");
+const backpackSticker = buildProductImageUrl("backpack_sticker.png");
+const nfcFront = buildProductImageUrl("nfc_frontcard.png");
+const petSafetyTag = buildProductImageUrl("Pet Tags.jpeg");
 
 const quickFacts = [
   {

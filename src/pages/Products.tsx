@@ -7,10 +7,15 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  baseCategories,
-  categoryTutorials,
+  buildGenericCategoryTutorial,
+  categoryCoverImageFromProducts,
+  categoryDescriptionFromName,
+  categoryGradientFromSlug,
+  categoryIconFromProducts,
+  categoryNameFromSlug,
+  normalizeCategorySlug,
   type ProductVariant,
-  type ProductCategory
+  type ProductCategory,
 } from "@/lib/productCatalog";
 import { subscribeToProducts, DbProduct } from "@/lib/productService";
 
@@ -128,7 +133,7 @@ const ProductCardItem = ({ product }: { product: ProductVariant }) => {
 const Products = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
   const navigate = useNavigate();
-  const selectedCategory = categorySlug || null;
+  const selectedCategory = categorySlug ? normalizeCategorySlug(categorySlug) : null;
   const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
 
   useEffect(() => {
@@ -143,14 +148,37 @@ const Products = () => {
     return unsubscribe;
   }, []);
 
-  const categories = useMemo(() => {
-    return baseCategories.map((cat) => ({
-      ...cat,
-      products: dbProducts.filter((p) => p.categorySlug === cat.slug),
-    }));
+  const categories = useMemo<ProductCategory[]>(() => {
+    const groups = new Map<string, DbProduct[]>();
+
+    dbProducts.forEach((product) => {
+      const slug = normalizeCategorySlug(product.categorySlug) || "uncategorized";
+      const existing = groups.get(slug) || [];
+      existing.push(product);
+      groups.set(slug, existing);
+    });
+
+    return Array.from(groups.entries())
+      .map(([slug, products]) => {
+        const name = categoryNameFromSlug(slug);
+        return {
+          slug,
+          name,
+          description: categoryDescriptionFromName(name),
+          icon: categoryIconFromProducts(products),
+          coverImage: categoryCoverImageFromProducts(products),
+          gradient: categoryGradientFromSlug(slug),
+          products: products.sort((left, right) => left.title.localeCompare(right.title)),
+        };
+      })
+      .sort((left, right) => left.name.localeCompare(right.name));
   }, [dbProducts]);
 
   const activeCategory = categories.find((c) => c.slug === selectedCategory);
+  const activeTutorial = useMemo(
+    () => (activeCategory ? buildGenericCategoryTutorial(activeCategory.name) : null),
+    [activeCategory],
+  );
 
   const CategoryCoverImage = ({ category }: { category: ProductCategory }) => {
     const [coverFailed, setCoverFailed] = useState(false);
@@ -183,11 +211,11 @@ const Products = () => {
               className={`text-4xl md:text-5xl font-extrabold tracking-tight mb-4 ${selectedCategory ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
               onClick={() => selectedCategory && navigate("/products")}
             >
-              {selectedCategory ? activeCategory?.name : "Explore PingME Tags"}
+              {selectedCategory ? (activeCategory?.name || categoryNameFromSlug(selectedCategory)) : "Explore PingME Tags"}
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto md:text-lg">
               {selectedCategory
-                ? activeCategory?.description
+                ? (activeCategory?.description || "No products are available in this category yet.")
                 : "Choose a category to explore our range of smart NFC & QR-enabled tags for every use-case."}
             </p>
           </div>
@@ -205,63 +233,79 @@ const Products = () => {
 
           {/* ── Category Grid (Landing View) ── */}
           {!selectedCategory && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.map((cat) => (
-                <button
-                  key={cat.slug}
-                  onClick={() => navigate(`/products/${cat.slug}`)}
-                  className={`group relative rounded-2xl border border-border bg-gradient-to-br ${cat.gradient} p-6 text-left transition-all hover:shadow-xl hover:border-primary/40 hover:scale-[1.02] active:scale-[0.98] overflow-hidden`}
-                >
-                  {/* Cover Image */}
-                  <div className="aspect-[16/10] rounded-xl bg-white/60 dark:bg-white/10 mb-5 flex items-center justify-center p-4 overflow-hidden">
-                    <CategoryCoverImage category={cat} />
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-2xl">{cat.icon}</span>
-                        <h3 className="font-bold text-lg">{cat.name}</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">{cat.description}</p>
-                      <span className="inline-block mt-3 text-xs font-medium text-primary">
-                        {cat.products.length} design{cat.products.length > 1 ? "s" : ""} available
-                      </span>
+            categories.length === 0 ? (
+              <div className="rounded-2xl border border-dashed p-8 text-center">
+                <h2 className="text-xl font-semibold mb-2">Products are coming soon</h2>
+                <p className="text-muted-foreground">No product categories are available yet. Please check back shortly.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.slug}
+                    onClick={() => navigate(`/products/${cat.slug}`)}
+                    className={`group relative rounded-2xl border border-border bg-gradient-to-br ${cat.gradient} p-6 text-left transition-all hover:shadow-xl hover:border-primary/40 hover:scale-[1.02] active:scale-[0.98] overflow-hidden`}
+                  >
+                    {/* Cover Image */}
+                    <div className="aspect-[16/10] rounded-xl bg-white/60 dark:bg-white/10 mb-5 flex items-center justify-center p-4 overflow-hidden">
+                      <CategoryCoverImage category={cat} />
                     </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-                  </div>
-                </button>
-              ))}
-            </div>
+
+                    {/* Info */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-2xl">{cat.icon}</span>
+                          <h3 className="font-bold text-lg">{cat.name}</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{cat.description}</p>
+                        <span className="inline-block mt-3 text-xs font-medium text-primary">
+                          {cat.products.length} design{cat.products.length > 1 ? "s" : ""} available
+                        </span>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )
           )}
 
           {/* ── Product Grid (Category View) ── */}
+          {selectedCategory && !activeCategory && (
+            <div className="rounded-2xl border border-dashed p-8 text-center">
+              <h2 className="text-xl font-semibold mb-2">Category not found</h2>
+              <p className="text-muted-foreground">This category has no products right now.</p>
+            </div>
+          )}
+
           {selectedCategory && activeCategory && (
             <div className="space-y-8">
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 md:p-8">
-                <h2 className="text-2xl md:text-3xl font-extrabold mb-2">
-                  {categoryTutorials[activeCategory.slug]?.title}
-                </h2>
-                <p className="text-muted-foreground mb-6 max-w-3xl">
-                  {categoryTutorials[activeCategory.slug]?.subtitle}
-                </p>
+              {activeTutorial && (
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 md:p-8">
+                  <h2 className="text-2xl md:text-3xl font-extrabold mb-2">
+                    {activeTutorial.title}
+                  </h2>
+                  <p className="text-muted-foreground mb-6 max-w-3xl">
+                    {activeTutorial.subtitle}
+                  </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 mb-6">
-                  {categoryTutorials[activeCategory.slug]?.steps.map((step, idx) => (
-                    <div key={idx} className="rounded-xl border border-border bg-card p-4 flex gap-3">
-                      <span className="w-7 h-7 rounded-full bg-primary/15 text-primary text-sm font-bold flex items-center justify-center shrink-0 mt-0.5">
-                        {idx + 1}
-                      </span>
-                      <p className="text-sm font-medium leading-relaxed">{step}</p>
-                    </div>
-                  ))}
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 mb-6">
+                    {activeTutorial.steps.map((step, idx) => (
+                      <div key={idx} className="rounded-xl border border-border bg-card p-4 flex gap-3">
+                        <span className="w-7 h-7 rounded-full bg-primary/15 text-primary text-sm font-bold flex items-center justify-center shrink-0 mt-0.5">
+                          {idx + 1}
+                        </span>
+                        <p className="text-sm font-medium leading-relaxed">{step}</p>
+                      </div>
+                    ))}
+                  </div>
 
-                <div className="rounded-xl border border-primary/25 bg-primary/10 p-4 text-sm font-medium">
-                  <span className="font-bold">Pro Tip:</span> {categoryTutorials[activeCategory.slug]?.tip}
+                  <div className="rounded-xl border border-primary/25 bg-primary/10 p-4 text-sm font-medium">
+                    <span className="font-bold">Pro Tip:</span> {activeTutorial.tip}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {activeCategory.products.map((product) => (
