@@ -16,8 +16,8 @@ import {
   normalizeCategorySlug,
   type ProductVariant,
   type ProductCategory,
-} from "@/lib/productCatalog";
-import { subscribeToProducts, type DbProduct } from "@/lib/productService";
+} from "../lib/productCatalog";
+import { subscribeToProducts, type DbProduct } from "../lib/productService";
 
 // ─── Components ─────────────────────────────────────────
 
@@ -148,7 +148,7 @@ const Products = () => {
     return unsubscribe;
   }, []);
 
-  const categories = useMemo<ProductCategory[]>(() => {
+  const categories = useMemo(() => {
     const groups = new Map<string, DbProduct[]>();
 
     dbProducts.forEach((product) => {
@@ -160,15 +160,17 @@ const Products = () => {
 
     return Array.from(groups.entries())
       .map(([slug, products]) => {
+        const categoryProducts = products as unknown as ProductVariant[];
+
         const name = categoryNameFromSlug(slug);
         return {
           slug,
           name,
           description: categoryDescriptionFromName(name),
-          icon: categoryIconFromProducts(products),
-          coverImage: categoryCoverImageFromProducts(products),
+          icon: categoryIconFromProducts(categoryProducts),
+          coverImage: categoryCoverImageFromProducts(categoryProducts),
           gradient: categoryGradientFromSlug(slug),
-          products: products.sort((left, right) => {
+          products: categoryProducts.sort((left, right) => {
             // If one is popular and the other isn't, popular comes first
             if (left.popular !== right.popular) {
               return left.popular ? -1 : 1;

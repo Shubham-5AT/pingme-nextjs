@@ -13,6 +13,7 @@ import Landing from "./pages/Landing";
 import Products from "./pages/Products";
 import Prebook from "./pages/Prebook";
 import About from "./pages/About";
+import Partners from "./pages/Partners";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import RefundPolicy from "./pages/RefundPolicy";
@@ -55,6 +56,7 @@ const App = () => (
               />
               <Route path="/prebook" element={<Navigate to="/booking" replace />} />
               <Route path="/about" element={<About />} />
+              <Route path="/partners" element={<Partners />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/nfc:username" element={<PublicNFCProfile />} />
               <Route path="/nfc/:username" element={<PublicNFCProfile />} />

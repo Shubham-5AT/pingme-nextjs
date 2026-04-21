@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,14 +11,26 @@ import {
   Nfc,
   PackageSearch,
   PawPrint,
+  Pause,
+  Play,
   ScanLine,
   Shield,
   ShieldCheck,
   Sparkles,
   Tag,
+  Volume1,
+  Volume2,
+  VolumeX,
   Zap,
 } from "lucide-react";
-import { subscribeToProducts, DbProduct } from "@/lib/productService";
+
+import carcardFront from "@/assets/product-card.png";
+import backpackSticker from "@/assets/pingwebsite-2.png";
+import nfcFront from "@/assets/pingprocard_logo.jpeg";
+import petSafetyTag from "@/assets/pingprocard.jpeg";
+import heroDemoVideoMp4 from "@/assets/IMG_9847.mp4";
+import heroDemoVideoWebm from "@/assets/IMG_9847.webm";
+import { subscribeToProducts, type DbProduct } from "@/lib/productService";
 import { normalizeCategorySlug } from "@/lib/productCatalog";
 
 const quickFacts = [
@@ -44,18 +56,35 @@ const quickFacts = [
   },
 ];
 
+type HeroProduct = {
+  categorySlug: string;
+  title: string;
+  image?: string;
+  popular?: boolean;
+};
+
 const getBestSellingImage = (products: DbProduct[], categorySlug: string, fallback: string): string => {
   const categoryProducts = products.filter(
-    (p) => normalizeCategorySlug(p.categorySlug) === categorySlug && p.image
+    (product): product is DbProduct & HeroProduct =>
+      normalizeCategorySlug(product.categorySlug) === categorySlug && typeof (product as HeroProduct).image === "string" && Boolean((product as HeroProduct).image)
   );
-  if (!categoryProducts.length) return fallback;
-  
-  const bestSeller = categoryProducts.sort((a, b) => {
-    if (a.popular !== b.popular) return a.popular ? -1 : 1;
-    return a.title.localeCompare(b.title);
+
+  if (!categoryProducts.length) {
+    return fallback;
+  }
+
+  const bestSeller = [...categoryProducts].sort((left, right) => {
+    const leftItem = left as HeroProduct;
+    const rightItem = right as HeroProduct;
+
+    if (leftItem.popular !== rightItem.popular) {
+      return leftItem.popular ? -1 : 1;
+    }
+
+    return leftItem.title.localeCompare(rightItem.title);
   })[0];
-  
-  return bestSeller.image || fallback;
+
+  return (bestSeller as HeroProduct).image || fallback;
 };
 
 const getOfferings = (products: DbProduct[]) => [
@@ -63,7 +92,7 @@ const getOfferings = (products: DbProduct[]) => [
     icon: CarFront,
     title: "Vehicle Tags",
     description: "Let others notify you about parking issues, damage, or emergencies without exposing your number.",
-    image: getBestSellingImage(products, "car-tags", ""),
+    image: getBestSellingImage(products, "car-tags", carcardFront),
     accent: "from-amber-400/30 to-yellow-200/10",
     points: ["Car and bike use cases", "Secure masked contact", "Instant parking issue alerts"],
   },
@@ -71,7 +100,7 @@ const getOfferings = (products: DbProduct[]) => [
     icon: PackageSearch,
     title: "Lost & Found Tags",
     description: "Backpacks, laptops, keychains, and everyday essentials can find their way back faster.",
-    image: getBestSellingImage(products, "backpack-stickers", ""),
+    image: getBestSellingImage(products, "backpack-stickers", backpackSticker),
     accent: "from-slate-400/30 to-zinc-200/10",
     points: ["For bags, laptops, and accessories", "Easy scan for the finder", "Private return flow"],
   },
@@ -79,7 +108,7 @@ const getOfferings = (products: DbProduct[]) => [
     icon: PawPrint,
     title: "Pet Safety Tags",
     description: "Help anyone who finds your pet reach you instantly and safely.",
-    image: getBestSellingImage(products, "pet-tags", ""),
+    image: getBestSellingImage(products, "pet-tags", petSafetyTag),
     accent: "from-emerald-400/30 to-teal-200/10",
     points: ["Fast reunion when pets wander", "Visible and durable tag format", "Owner details stay private"],
   },
@@ -87,7 +116,7 @@ const getOfferings = (products: DbProduct[]) => [
     icon: Nfc,
     title: "NFC Smart Cards",
     description: "Tap-enabled cards for quick, seamless, private information exchange.",
-    image: getBestSellingImage(products, "nfc-cards", ""),
+    image: getBestSellingImage(products, "nfc-cards", nfcFront),
     accent: "from-sky-400/30 to-blue-200/10",
     points: ["Tap to share", "Modern digital contact experience", "Works alongside QR-enabled profiles"],
   },
@@ -117,15 +146,91 @@ const differentiators = [
 ];
 
 const LandingHero = () => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [products, setProducts] = useState<DbProduct[]>([]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(80);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const unsubscribe = subscribeToProducts(
       (latest) => setProducts(latest),
       (error) => console.error("Failed to load products for hero", error)
     );
+
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.volume = volume / 100;
+    video.muted = isMuted || volume === 0;
+  }, [isMuted, volume]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      async ([entry]) => {
+        if (entry.isIntersecting) {
+          try {
+            await video.play();
+            setIsPlaying(true);
+          } catch {
+            setIsPlaying(false);
+          }
+          return;
+        }
+
+        video.pause();
+        setIsPlaying(false);
+      },
+      { threshold: 0.55 }
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  const handleVideoToggle = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      try {
+        await video.play();
+        setIsPlaying(true);
+      } catch {
+        setIsPlaying(false);
+      }
+      return;
+    }
+
+    video.pause();
+    setIsPlaying(false);
+  };
+
+  const handleVolumeChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextVolume = Number(event.target.value);
+    setVolume(nextVolume);
+    setIsMuted(nextVolume === 0);
+  };
+
+  const handleMuteToggle = () => {
+    setIsMuted((currentMuted) => {
+      const nextMuted = !currentMuted;
+      if (!nextMuted && volume === 0) {
+        setVolume(80);
+      }
+      return nextMuted;
+    });
+  };
 
   const offerings = getOfferings(products);
 
@@ -137,7 +242,7 @@ const LandingHero = () => {
         <div className="absolute bottom-0 left-[-5rem] h-80 w-80 rounded-full bg-orange-100/60 blur-3xl" />
       </div>
 
-      <div className="container relative py-10 md:py-14 lg:py-20 space-y-16 lg:space-y-24">
+      <div className="container relative py-10 md:py-14 lg:py-12 space-y-16 lg:space-y-24">
         <section className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div className="space-y-8">
             <div className="space-y-4 max-w-3xl">
@@ -204,83 +309,73 @@ const LandingHero = () => {
 
           <div className="relative">
             <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-primary/15 via-white/20 to-transparent blur-2xl" />
-            <div className="relative grid gap-4 rounded-[2rem] border border-border/60 bg-background/85 p-4 shadow-[0_30px_90px_rgba(81,60,9,0.16)] backdrop-blur-md md:p-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <article className="overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm">
-                  <div className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.2em] text-brown">
-                    <span>Vehicle Tags</span>
-                    <CarFront className="h-4 w-4" />
-                  </div>
-                  <div className="flex h-52 w-full items-center justify-center rounded-2xl bg-white p-2">
-                    {offerings[0].image ? (
-                      <img src={offerings[0].image} alt="PingME car tag" className="h-100 w-100 rounded-xl object-contain" />
-                    ) : (
-                      <span className="text-4xl">🚗</span>
-                    )}
-                  </div>
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    Reach the owner about parking, damage, or emergencies without exposing private details.
-                  </p>
-                </article>
+            <div className="relative rounded-[2rem] border border-border/60 bg-background/85 p-4 shadow-[0_30px_90px_rgba(81,60,9,0.16)] backdrop-blur-md md:p-6">
+              <div className="overflow-hidden rounded-3xl border border-border/50 bg-black shadow-sm">
 
-                <article className="overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm">
-                  <div className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.2em] text-brown">
-                    <span>Lost & Found</span>
-                    <PackageSearch className="h-4 w-4" />
-                  </div>
-                  {offerings[1].image ? (
-                    <img src={offerings[1].image} alt="PingME lost and found tag" className="h-44 w-full rounded-2xl object-cover" />
-                  ) : (
-                     <div className="flex h-44 w-full items-center justify-center rounded-2xl bg-white p-2 text-4xl">🎒</div>
-                  )}
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    Keep bags, laptops, and everyday items connected to a secure return path.
-                  </p>
-                </article>
+                <div className="relative aspect-[9/16] w-full bg-black sm:aspect-[4/5] lg:aspect-[3/4]">
+                  <video
+                    ref={videoRef}
+                    className="h-full w-full object-contain"
+                    playsInline
+                    loop
+                    muted
+                    preload="metadata"
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                  >
+                    <source src={heroDemoVideoMp4} type="video/mp4" />
+                    <source src={heroDemoVideoWebm} type="video/webm" />
+                    Your browser does not support this video format.
+                  </video>
 
-                <article className="overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br from-emerald-50 to-white p-4 shadow-sm">
-                  <div className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.2em] text-brown">
-                    <span>Pet Safety</span>
-                    <PawPrint className="h-4 w-4" />
-                  </div>
-                  <div className="flex h-52 w-full items-center justify-center rounded-2xl bg-white p-2">
-                    {offerings[2].image ? (
-                      <img src={offerings[2].image} alt="PingME pet safety tag" className="h-full w-full rounded-xl object-contain" />
-                    ) : (
-                      <span className="text-4xl">🐾</span>
-                    )}
-                  </div>
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    Faster reunions for pets through a simple scan that keeps owner details private.
-                  </p>
-                </article>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-4 text-white">
+                    <div className="flex items-end gap-3">
+                      <button
+                        type="button"
+                        onClick={handleVideoToggle}
+                        className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 backdrop-blur-md transition-colors hover:bg-white/25"
+                        aria-label={isPlaying ? "Pause video" : "Play video"}
+                      >
+                        {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+                      </button>
 
-                <article className="overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br from-sky-50 to-white p-4 shadow-sm">
-                  <div className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.2em] text-brown">
-                    <span>NFC Smart Cards</span>
-                    <Nfc className="h-4 w-4" />
-                  </div>
-                  {offerings[3].image ? (
-                    <img src={offerings[3].image} alt="PingME NFC smart card" className="h-44 w-full rounded-2xl object-cover" />
-                  ) : (
-                    <div className="flex h-44 w-full items-center justify-center rounded-2xl bg-white p-2 text-4xl">💳</div>
-                  )}
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    Tap-enabled cards for modern, seamless, and private information sharing.
-                  </p>
-                </article>
-              </div>
+                      <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full bg-white/10 px-3 py-2 backdrop-blur-md">
+                        <button
+                          type="button"
+                          onClick={handleMuteToggle}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
+                          aria-label={isMuted || volume === 0 ? "Unmute video" : "Mute video"}
+                        >
+                          {isMuted || volume === 0 ? (
+                            <VolumeX className="h-4 w-4" />
+                          ) : volume < 50 ? (
+                            <Volume1 className="h-4 w-4" />
+                          ) : (
+                            <Volume2 className="h-4 w-4" />
+                          )}
+                        </button>
 
-              <div className="rounded-3xl border border-primary/20 bg-primary/10 p-4 md:p-5">
-                <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-foreground">
-                  <ShieldCheck className="h-5 w-5 text-primary" />
-                  <span>One system, multiple use cases:</span>
-                  <span className="rounded-full bg-background px-3 py-1">vehicles</span>
-                  <span className="rounded-full bg-background px-3 py-1">belongings</span>
-                  <span className="rounded-full bg-background px-3 py-1">pets</span>
-                  <span className="rounded-full bg-background px-3 py-1">NFC cards</span>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="1"
+                          value={volume}
+                          onChange={handleVolumeChange}
+                          aria-label="Video volume"
+                          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/30 accent-white"
+                        />
+
+                        <span className="w-10 text-right text-xs font-medium tabular-nums text-white/80">
+                          {volume}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
+
+              
             </div>
           </div>
         </section>
@@ -319,7 +414,11 @@ const LandingHero = () => {
                   </div>
 
                   <div className="grid gap-4 p-5 md:grid-cols-[180px_1fr] md:p-6">
-                    <img src={item.image} alt={item.title} className="h-100 w-100 object-cover" />
+                    {item.image ? (
+                      <img src={item.image} alt={item.title} className="h-100 w-100 object-cover" />
+                    ) : (
+                      <div className="flex h-100 w-100 items-center justify-center rounded-2xl bg-muted/30 text-4xl">{item.title.slice(0, 1)}</div>
+                    )}
                     <div className="space-y-3">
                       {item.points.map((point) => (
                         <div key={point} className="flex items-start gap-3 rounded-2xl bg-muted/40 px-4 py-3">
@@ -378,53 +477,18 @@ const LandingHero = () => {
             <p className="section-eyebrow text-left">Our Mission</p>
             <h2 className="text-3xl font-bold tracking-tight text-foreground">To make everyday interactions safer, simpler, and private.</h2>
             <p className="mt-4 text-lg leading-8 text-muted-foreground">
-              PingME exists to help people stay reachable for the moments that matter, without turning a contact point
-              into a privacy risk. That includes vehicles, lost belongings, and pets, along with modern NFC contact
-              sharing.
+              We are building PingME to be the layer that helps people communicate when it matters most, without asking
+              them to trade away personal privacy in the process.
             </p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              {[
-                "Parking issues",
-                "Lost items",
-                "Found pets",
-              ].map((item) => (
-                <div key={item} className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-sm font-medium text-foreground">
-                  {item}
-                </div>
-              ))}
-            </div>
           </div>
 
-          <div className="rounded-[1.75rem] border border-border/60 bg-gradient-to-br from-primary/15 via-white to-amber-50 p-6 shadow-[0_18px_50px_rgba(81,60,9,0.08)] md:p-8">
-            <p className="section-eyebrow text-left">Our Vision</p>
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">A world where help reaches you without friction.</h2>
-            <p className="mt-4 text-lg leading-8 text-muted-foreground">
-              Lost things return faster, personal information stays protected, and connected objects work as a simple,
-              trustworthy layer between strangers and owners.
-            </p>
-
-            <div className="mt-6 rounded-3xl bg-background/80 p-5 shadow-sm">
-              <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-brown">
-                <Sparkles className="h-4 w-4" />
-                Designed in India, built for scale
-              </div>
-              <p className="mt-3 text-sm leading-7 text-foreground/80">
-                PingME is proudly designed and developed in India, shaped by real user feedback and built to grow across
-                everyday use cases and future categories.
-              </p>
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link to="/products">
-                <Button className="group">
-                  Browse the catalog
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </Link>
-              <Link to="/prebook?product=pingme-car-card">
-                <Button variant="outline">Pre-book a car tag</Button>
-              </Link>
-            </div>
+          <div className="rounded-[1.75rem] border border-border/60 bg-background/90 p-6 shadow-[0_18px_50px_rgba(81,60,9,0.08)] md:p-8">
+            <p className="section-eyebrow text-left">What We Stand For</p>
+            <ul className="space-y-3 text-sm leading-7 text-muted-foreground">
+              <li>Privacy-first contact experiences for real-world use cases.</li>
+              <li>Flexible QR and NFC products that work across vehicle and non-vehicle scenarios.</li>
+              <li>A scalable product system that can expand with partners and new use cases.</li>
+            </ul>
           </div>
         </section>
       </div>
