@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,11 +18,8 @@ import {
   Tag,
   Zap,
 } from "lucide-react";
-
-import carcardFront from "@/assets/products/product-card.png";
-import backpackSticker from "@/assets/products/backpack_sticker.png";
-import nfcFront from "@/assets/products/nfc_frontcard.png";
-import petSafetyTag from "@/assets/products/Pet Tags.jpeg";
+import { subscribeToProducts, DbProduct } from "@/lib/productService";
+import { normalizeCategorySlug } from "@/lib/productCatalog";
 
 const quickFacts = [
   {
@@ -46,12 +44,26 @@ const quickFacts = [
   },
 ];
 
-const offerings = [
+const getBestSellingImage = (products: DbProduct[], categorySlug: string, fallback: string): string => {
+  const categoryProducts = products.filter(
+    (p) => normalizeCategorySlug(p.categorySlug) === categorySlug && p.image
+  );
+  if (!categoryProducts.length) return fallback;
+  
+  const bestSeller = categoryProducts.sort((a, b) => {
+    if (a.popular !== b.popular) return a.popular ? -1 : 1;
+    return a.title.localeCompare(b.title);
+  })[0];
+  
+  return bestSeller.image || fallback;
+};
+
+const getOfferings = (products: DbProduct[]) => [
   {
     icon: CarFront,
     title: "Vehicle Tags",
     description: "Let others notify you about parking issues, damage, or emergencies without exposing your number.",
-    image: carcardFront,
+    image: getBestSellingImage(products, "car-tags", ""),
     accent: "from-amber-400/30 to-yellow-200/10",
     points: ["Car and bike use cases", "Secure masked contact", "Instant parking issue alerts"],
   },
@@ -59,7 +71,7 @@ const offerings = [
     icon: PackageSearch,
     title: "Lost & Found Tags",
     description: "Backpacks, laptops, keychains, and everyday essentials can find their way back faster.",
-    image: backpackSticker,
+    image: getBestSellingImage(products, "backpack-stickers", ""),
     accent: "from-slate-400/30 to-zinc-200/10",
     points: ["For bags, laptops, and accessories", "Easy scan for the finder", "Private return flow"],
   },
@@ -67,7 +79,7 @@ const offerings = [
     icon: PawPrint,
     title: "Pet Safety Tags",
     description: "Help anyone who finds your pet reach you instantly and safely.",
-    image: petSafetyTag,
+    image: getBestSellingImage(products, "pet-tags", ""),
     accent: "from-emerald-400/30 to-teal-200/10",
     points: ["Fast reunion when pets wander", "Visible and durable tag format", "Owner details stay private"],
   },
@@ -75,7 +87,7 @@ const offerings = [
     icon: Nfc,
     title: "NFC Smart Cards",
     description: "Tap-enabled cards for quick, seamless, private information exchange.",
-    image: nfcFront,
+    image: getBestSellingImage(products, "nfc-cards", ""),
     accent: "from-sky-400/30 to-blue-200/10",
     points: ["Tap to share", "Modern digital contact experience", "Works alongside QR-enabled profiles"],
   },
@@ -105,6 +117,18 @@ const differentiators = [
 ];
 
 const LandingHero = () => {
+  const [products, setProducts] = useState<DbProduct[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToProducts(
+      (latest) => setProducts(latest),
+      (error) => console.error("Failed to load products for hero", error)
+    );
+    return unsubscribe;
+  }, []);
+
+  const offerings = getOfferings(products);
+
   return (
     <main className="relative overflow-hidden bg-cream">
       <div className="absolute inset-0 pointer-events-none">
@@ -188,7 +212,11 @@ const LandingHero = () => {
                     <CarFront className="h-4 w-4" />
                   </div>
                   <div className="flex h-52 w-full items-center justify-center rounded-2xl bg-white p-2">
-                    <img src={carcardFront} alt="PingME car tag" className="h-100 w-100 rounded-xl object-contain" />
+                    {offerings[0].image ? (
+                      <img src={offerings[0].image} alt="PingME car tag" className="h-100 w-100 rounded-xl object-contain" />
+                    ) : (
+                      <span className="text-4xl">🚗</span>
+                    )}
                   </div>
                   <p className="mt-3 text-sm text-muted-foreground">
                     Reach the owner about parking, damage, or emergencies without exposing private details.
@@ -200,7 +228,11 @@ const LandingHero = () => {
                     <span>Lost & Found</span>
                     <PackageSearch className="h-4 w-4" />
                   </div>
-                  <img src={backpackSticker} alt="PingME lost and found tag" className="h-44 w-full rounded-2xl object-cover" />
+                  {offerings[1].image ? (
+                    <img src={offerings[1].image} alt="PingME lost and found tag" className="h-44 w-full rounded-2xl object-cover" />
+                  ) : (
+                     <div className="flex h-44 w-full items-center justify-center rounded-2xl bg-white p-2 text-4xl">🎒</div>
+                  )}
                   <p className="mt-3 text-sm text-muted-foreground">
                     Keep bags, laptops, and everyday items connected to a secure return path.
                   </p>
@@ -212,7 +244,11 @@ const LandingHero = () => {
                     <PawPrint className="h-4 w-4" />
                   </div>
                   <div className="flex h-52 w-full items-center justify-center rounded-2xl bg-white p-2">
-                    <img src={petSafetyTag} alt="PingME pet safety tag" className="h-full w-full rounded-xl object-contain" />
+                    {offerings[2].image ? (
+                      <img src={offerings[2].image} alt="PingME pet safety tag" className="h-full w-full rounded-xl object-contain" />
+                    ) : (
+                      <span className="text-4xl">🐾</span>
+                    )}
                   </div>
                   <p className="mt-3 text-sm text-muted-foreground">
                     Faster reunions for pets through a simple scan that keeps owner details private.
@@ -224,7 +260,11 @@ const LandingHero = () => {
                     <span>NFC Smart Cards</span>
                     <Nfc className="h-4 w-4" />
                   </div>
-                  <img src={nfcFront} alt="PingME NFC smart card" className="h-44 w-full rounded-2xl object-cover" />
+                  {offerings[3].image ? (
+                    <img src={offerings[3].image} alt="PingME NFC smart card" className="h-44 w-full rounded-2xl object-cover" />
+                  ) : (
+                    <div className="flex h-44 w-full items-center justify-center rounded-2xl bg-white p-2 text-4xl">💳</div>
+                  )}
                   <p className="mt-3 text-sm text-muted-foreground">
                     Tap-enabled cards for modern, seamless, and private information sharing.
                   </p>

@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAllOrders, updateOrderStatus } from "@/lib/adminService";
-import { baseCategories, productCatalog } from "@/lib/productCatalog";
+import { categoryNameFromSlug, normalizeCategorySlug } from "@/lib/productCatalog";
 import { subscribeToProducts, saveProduct, deleteProductDoc, uploadProductImage, DbProduct } from "@/lib/productService";
 import type { PrebookingRecord } from "@/lib/prebookService";
 
@@ -33,6 +33,35 @@ const normalizePriceInput = (rawValue: string): string | null => {
   return `₹${Number.isInteger(numericValue) ? numericValue.toFixed(0) : numericValue.toFixed(2)}`;
 };
 
+const DEFAULT_CATEGORY_SLUG = "uncategorized";
+
+const getCategoryIcon = (products: DbProduct[]): string => {
+  const iconSource = products.find((product) => typeof product.emoji === "string" && product.emoji.trim());
+  return iconSource?.emoji?.trim() || "📦";
+};
+
+const AdminProductMedia = ({ product }: { product: DbProduct }) => {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  return (
+    <div className="aspect-[4/3] bg-muted flex items-center justify-center p-2 relative">
+      {product.popular && (
+        <Badge className="absolute top-2 right-2">Popular</Badge>
+      )}
+      {product.image && !imageFailed ? (
+        <img
+          src={product.image}
+          alt={product.title}
+          className="max-h-full object-contain"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <span className="text-4xl">{product.emoji || "📦"}</span>
+      )}
+    </div>
+  );
+};
+
 export default function Admin() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<PrebookingRecord[]>([]);
@@ -47,7 +76,6 @@ export default function Admin() {
   const [editingProduct, setEditingProduct] = useState<DbProduct | null>(null);
   const [isProductDialogOpn, setIsProductDialogOpn] = useState(false);
   const [savingProductId, setSavingProductId] = useState<string | null>(null);
-  const [isSeeding, setIsSeeding] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   useEffect(() => {
@@ -78,48 +106,41 @@ export default function Admin() {
   }, []);
 
   const categorizedProducts = useMemo(() => {
-    return baseCategories.map((cat) => ({
-      ...cat,
-      products: dbProducts.filter((p) => p.categorySlug === cat.slug),
-    }));
+    const groups = new Map<string, DbProduct[]>();
+
+    dbProducts.forEach((product) => {
+      const slug = normalizeCategorySlug(product.categorySlug) || DEFAULT_CATEGORY_SLUG;
+      const existing = groups.get(slug) || [];
+      existing.push({ ...product, categorySlug: slug });
+      groups.set(slug, existing);
+    });
+
+    return Array.from(groups.entries())
+      .map(([slug, products]) => ({
+        slug,
+        name: categoryNameFromSlug(slug),
+        icon: getCategoryIcon(products),
+        products: products.sort((left, right) => left.title.localeCompare(right.title)),
+      }))
+      .sort((left, right) => left.name.localeCompare(right.name));
   }, [dbProducts]);
 
-  const handleSeedDatabase = async () => {
-    if (!window.confirm("Are you sure you want to seed the database? This might duplicate products if already populated.")) return;
-    try {
-      setIsSeeding(true);
-      for (const cat of productCatalog) {
-        for (const prod of cat.products) {
-          const newDoc: Omit<DbProduct, "createdAt" | "updatedAt"> = {
-            id: prod.id,
-            categorySlug: cat.slug,
-            title: prod.title,
-            price: prod.price,
-            originalPrice: prod.originalPrice || "",
-            image: prod.image || "",
-            emoji: prod.emoji || "",
-            features: prod.features,
-            popular: !!prod.popular,
-          };
-          await saveProduct(newDoc);
-        }
-      }
-      toast.success("Database seeded with static product catalog!");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to seed database.");
-    } finally {
-      setIsSeeding(false);
-    }
-  };
+  const categoryOptions = useMemo(() => categorizedProducts.map((category) => category.slug), [categorizedProducts]);
 
-  const handleEditProduct = (product: DbProduct | null, categorySlug: string = "car-tags") => {
+  const defaultCategorySlug = categoryOptions[0] || DEFAULT_CATEGORY_SLUG;
+
+  const handleEditProduct = (product: DbProduct | null, categorySlug?: string) => {
+    const resolvedCategorySlug = normalizeCategorySlug(categorySlug || "") || defaultCategorySlug;
+
     if (product) {
-      setEditingProduct({ ...product });
+      setEditingProduct({
+        ...product,
+        categorySlug: normalizeCategorySlug(product.categorySlug) || defaultCategorySlug,
+      });
     } else {
       setEditingProduct({
         id: "",
-        categorySlug,
+        categorySlug: resolvedCategorySlug,
         title: "",
         price: "",
         originalPrice: "",
@@ -138,7 +159,7 @@ export default function Admin() {
 
     try {
       setIsUploadingImage(true);
-      const downloadURL = await uploadProductImage(file);
+      const downloadURL = await uploadProductImage(file, editingProduct.categorySlug);
       setEditingProduct({ ...editingProduct, image: downloadURL });
       toast.success("Image uploaded successfully.");
     } catch (err) {
@@ -157,9 +178,11 @@ export default function Admin() {
       setSavingProductId(editingProduct.id || "new");
       const normalizedPrice = normalizePriceInput(editingProduct.price) || editingProduct.price;
       const normalizedOrig = editingProduct.originalPrice ? (normalizePriceInput(editingProduct.originalPrice) || editingProduct.originalPrice) : "";
+      const normalizedCategorySlug = normalizeCategorySlug(editingProduct.categorySlug) || defaultCategorySlug;
       
       await saveProduct({
         ...editingProduct,
+        categorySlug: normalizedCategorySlug,
         price: normalizedPrice,
         originalPrice: normalizedOrig,
         features: editingProduct.features.filter(f => f.trim() !== ""),
@@ -402,9 +425,6 @@ export default function Admin() {
                   <CardDescription>View, Add, Edit, and Delete products.</CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleSeedDatabase} disabled={isSeeding}>
-                    {isSeeding ? <Loader2 className="w-4 h-4 animate-spin" /> : "Seed Database"}
-                  </Button>
                   <Button size="sm" onClick={() => handleEditProduct(null)}>
                     <Plus className="w-4 h-4 mr-1" />
                     Add Product
@@ -413,59 +433,65 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {categorizedProducts.map((category) => (
-                    <div key={category.slug} className="space-y-3">
-                      <div className="flex items-center justify-between border-b pb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">{category.icon}</span>
-                          <h3 className="font-semibold text-lg">{category.name}</h3>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => handleEditProduct(null, category.slug)}>
-                          <Plus className="w-3 h-3 mr-1" /> Add to {category.name}
-                        </Button>
-                      </div>
-                      
-                      {category.products.length === 0 ? (
-                        <p className="text-sm text-muted-foreground italic">No products in this category.</p>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {category.products.map((product) => (
-                            <Card key={product.id} className="overflow-hidden flex flex-col">
-                              <div className="aspect-[4/3] bg-muted flex items-center justify-center p-2 relative">
-                                {product.popular && (
-                                  <Badge className="absolute top-2 right-2">Popular</Badge>
-                                )}
-                                {product.image ? (
-                                  <img src={product.image} alt={product.title} className="max-h-full object-contain" />
-                                ) : (
-                                  <span className="text-4xl">{product.emoji || "📦"}</span>
-                                )}
+                  {categorizedProducts.length === 0 ? (
+                    <p className="text-sm text-muted-foreground italic">
+                      No products found. Use Add Product to create your first item.
+                    </p>
+                  ) : (
+                    <Accordion type="single" collapsible className="w-full space-y-4">
+                      {categorizedProducts.map((category) => (
+                        <AccordionItem key={category.slug} value={category.slug} className="rounded-xl border px-4">
+                          <AccordionTrigger className="py-4 hover:no-underline">
+                            <div className="flex items-center gap-3 text-left">
+                              <span className="text-xl">{category.icon}</span>
+                              <div>
+                                <h3 className="font-semibold text-lg leading-tight">{category.name}</h3>
+                                <p className="text-xs text-muted-foreground">/{category.slug} • {category.products.length} product{category.products.length === 1 ? "" : "s"}</p>
                               </div>
-                              <CardContent className="p-4 flex-1 flex flex-col">
-                                <h4 className="font-bold truncate mb-1" title={product.title}>{product.title}</h4>
-                                <div className="flex items-center justify-between mt-auto pt-4">
-                                  <div>
-                                    <span className="font-bold text-primary">{product.price}</span>
-                                    {product.originalPrice && (
-                                      <span className="text-xs text-muted-foreground line-through ml-2">{product.originalPrice}</span>
-                                    )}
-                                  </div>
-                                  <div className="flex gap-1">
-                                    <Button variant="ghost" size="icon" onClick={() => handleEditProduct(product)}>
-                                      <Edit className="w-4 h-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteProduct(product.id)}>
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-4">
+                            <div className="mb-4 flex justify-end">
+                              <Button variant="ghost" size="sm" onClick={() => handleEditProduct(null, category.slug)}>
+                                <Plus className="w-3 h-3 mr-1" /> Add to {category.name}
+                              </Button>
+                            </div>
+
+                            {category.products.length === 0 ? (
+                              <p className="text-sm text-muted-foreground italic">No products in this category.</p>
+                            ) : (
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {category.products.map((product) => (
+                                  <Card key={product.id} className="overflow-hidden flex flex-col">
+                                    <AdminProductMedia product={product} />
+                                    <CardContent className="p-4 flex-1 flex flex-col">
+                                      <h4 className="font-bold truncate mb-1" title={product.title}>{product.title}</h4>
+                                      <div className="flex items-center justify-between mt-auto pt-4">
+                                        <div>
+                                          <span className="font-bold text-primary">{product.price}</span>
+                                          {product.originalPrice && (
+                                            <span className="text-xs text-muted-foreground line-through ml-2">{product.originalPrice}</span>
+                                          )}
+                                        </div>
+                                        <div className="flex gap-1">
+                                          <Button variant="ghost" size="icon" onClick={() => handleEditProduct(product)}>
+                                            <Edit className="w-4 h-4" />
+                                          </Button>
+                                          <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteProduct(product.id)}>
+                                            <Trash2 className="w-4 h-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </div>
+                            )}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -549,20 +575,21 @@ export default function Admin() {
               <form onSubmit={handleSaveProduct} className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select 
-                      value={editingProduct.categorySlug} 
-                      onValueChange={(val) => setEditingProduct({ ...editingProduct, categorySlug: val })}
-                    >
-                      <SelectTrigger id="category">
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {baseCategories.map(cat => (
-                          <SelectItem key={cat.slug} value={cat.slug}>{cat.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="category">Category Slug</Label>
+                    <Input
+                      id="category"
+                      value={editingProduct.categorySlug}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, categorySlug: normalizeCategorySlug(e.target.value) })}
+                      placeholder="e.g. car-tags"
+                      list="category-slug-options"
+                      required
+                    />
+                    <datalist id="category-slug-options">
+                      {categoryOptions.map((slug) => (
+                        <option key={slug} value={slug} />
+                      ))}
+                    </datalist>
+                    <p className="text-xs text-muted-foreground">Use lowercase words with hyphens (for example: bike-tags).</p>
                   </div>
                   
                   <div className="space-y-2">

@@ -1,34 +1,3 @@
-const storageBucketName = (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "").replace(/^gs:\/\//, "");
-
-const buildStorageImageUrl = (fileName: string): string => {
-  if (!storageBucketName) {
-    return "";
-  }
-
-  const encodedPath = encodeURIComponent(`products/${fileName}`);
-  return `https://firebasestorage.googleapis.com/v0/b/${storageBucketName}/o/${encodedPath}?alt=media`;
-};
-
-const nfcShinchan = buildStorageImageUrl("nfc_shinchan.png");
-const nfcOnepiece = buildStorageImageUrl("nfc_onepiece.png");
-const nfcPhoenix = buildStorageImageUrl("nfc_phoenix.png");
-const nfcMindset = buildStorageImageUrl("nfc_mindset.png");
-const nfcYoucan = buildStorageImageUrl("nfc_youcan.png");
-const backpackSticker = buildStorageImageUrl("backpack_sticker.png");
-const backpackSticker1 = buildStorageImageUrl("backpack_sticker1.png");
-const backpackSticker2 = buildStorageImageUrl("backpack_sticker2.png");
-const keytagBlack = buildStorageImageUrl("keytag_black.png");
-const keytagRed = buildStorageImageUrl("keytag_red.png");
-const keytagNavy = buildStorageImageUrl("keytag_navy.png");
-const keytagTeal = buildStorageImageUrl("keytag_teal.png");
-const petSafetyTag = buildStorageImageUrl("Pet Tags.jpeg");
-const tagCircle1 = buildStorageImageUrl("tag_circle1.png");
-const tagCircle2 = buildStorageImageUrl("tag_circle2.png");
-const tagOval = buildStorageImageUrl("tag_oval.png");
-const tagSquareBlack = buildStorageImageUrl("tag_square_black.png");
-const tagSquareYellow = buildStorageImageUrl("tag_square_yellow.png");
-const carcardFront = buildStorageImageUrl("product-card.png");
-
 export interface ProductVariant {
   id: string;
   title: string;
@@ -57,56 +26,199 @@ export interface CategoryTutorial {
   tip: string;
 }
 
-export const baseCategories: Omit<ProductCategory, "products">[] = [
-  {
-    slug: "car-tags",
-    name: "Car Tags",
-    description: "Premium QR cards for your car dashboard - get contacted anonymously if parked wrong.",
-    icon: "🚗",
-    coverImage: carcardFront,
-    gradient: "from-amber-500/20 to-yellow-500/10",
-  },
-  {
-    slug: "bike-tags",
-    name: "Bike Tags",
-    description: "Compact, UV-resistant tags that attach easily to your two-wheeler.",
-    icon: "🏍️",
-    coverImage: tagOval,
-    gradient: "from-rose-500/20 to-pink-500/10",
-  },
-  {
-    slug: "pet-tags",
-    name: "Pet Tags",
-    description: "Attach to any pet collar - instant QR scan reveals owner info to finders.",
-    icon: "🐾",
-    coverImage: keytagTeal,
-    gradient: "from-teal-500/20 to-emerald-500/10",
-  },
-  {
-    slug: "nfc-cards",
-    name: "NFC Cards",
-    description: "Custom-designed NFC-enabled smart cards - tap to share contact or social profile.",
-    icon: "💳",
-    coverImage: nfcShinchan,
-    gradient: "from-sky-500/20 to-blue-500/10",
-  },
-  {
-    slug: "keychain-tags",
-    name: "Keychain Tags",
-    description: "Sturdy metal keychain tags with embedded QR to identify & return lost keys.",
-    icon: "🔑",
-    coverImage: keytagBlack,
-    gradient: "from-slate-500/20 to-zinc-500/10",
-  },
-  {
-    slug: "backpack-stickers",
-    name: "Backpack & Laptop Stickers",
-    description: "Stylish stickers with embedded QR to help return lost bags and laptops.",
-    icon: "🎒",
-    coverImage: backpackSticker,
-    gradient: "from-gray-500/20 to-neutral-500/10",
-  },
+const storageBucketName = (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "").replace(/^gs:\/\//, "");
+
+const normalizeStorageObjectPath = (rawPath: string): string => {
+  const normalized = rawPath.trim().replace(/\\/g, "/").replace(/^\/+/, "");
+
+  if (!normalized) {
+    return "";
+  }
+
+  return normalized.startsWith("products/") ? normalized : `products/${normalized}`;
+};
+
+const decodeObjectPath = (path: string): string => {
+  try {
+    return decodeURIComponent(path);
+  } catch {
+    return path;
+  }
+};
+
+const extractStoragePathFromUrl = (urlValue: string): string => {
+  try {
+    const parsed = new URL(urlValue);
+    const marker = "/o/";
+    const markerIndex = parsed.pathname.indexOf(marker);
+
+    if (markerIndex === -1) {
+      return "";
+    }
+
+    const encodedPath = parsed.pathname.slice(markerIndex + marker.length);
+    return normalizeStorageObjectPath(decodeObjectPath(encodedPath));
+  } catch {
+    return "";
+  }
+};
+
+export const buildProductImageUrl = (fileNameOrPath: string): string => {
+  const objectPath = normalizeStorageObjectPath(fileNameOrPath);
+
+  if (!storageBucketName || !objectPath) {
+    return "";
+  }
+
+  const encodedPath = encodeURIComponent(objectPath);
+  return `https://firebasestorage.googleapis.com/v0/b/${storageBucketName}/o/${encodedPath}?alt=media`;
+};
+
+export const resolveProductImageUrl = (image?: string): string => {
+  const rawImage = (image || "").trim();
+
+  if (!rawImage) {
+    return "";
+  }
+
+  if (/^data:/i.test(rawImage)) {
+    return rawImage;
+  }
+
+  if (/^https?:\/\//i.test(rawImage)) {
+    const objectPath = extractStoragePathFromUrl(rawImage);
+    return objectPath ? buildProductImageUrl(objectPath) : rawImage;
+  }
+
+  const withoutQuery = rawImage.split("?")[0].split("#")[0].trim();
+  const normalized = withoutQuery.replace(/\\/g, "/");
+
+  const productsIndex = normalized.toLowerCase().lastIndexOf("products/");
+  if (productsIndex >= 0) {
+    const pathFromProducts = normalizeStorageObjectPath(normalized.slice(productsIndex));
+    return pathFromProducts ? buildProductImageUrl(pathFromProducts) : "";
+  }
+
+  const fileName = decodeObjectPath(normalized.split("/").pop() || "").trim();
+
+  if (!fileName) {
+    return "";
+  }
+
+  return buildProductImageUrl(fileName);
+};
+
+const CATEGORY_GRADIENTS = [
+  "from-amber-500/20 to-yellow-500/10",
+  "from-rose-500/20 to-pink-500/10",
+  "from-teal-500/20 to-emerald-500/10",
+  "from-sky-500/20 to-blue-500/10",
+  "from-slate-500/20 to-zinc-500/10",
+  "from-gray-500/20 to-neutral-500/10",
 ];
+
+const DEFAULT_CATEGORY_ICON = "📦";
+
+export const normalizeCategorySlug = (rawSlug: string): string => {
+  return rawSlug
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
+
+export const categoryNameFromSlug = (slug: string): string => {
+  const normalized = normalizeCategorySlug(slug);
+
+  if (!normalized) {
+    return "Uncategorized";
+  }
+
+  return normalized
+    .split("-")
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
+};
+
+const hashString = (value: string): number => {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+};
+
+export const categoryGradientFromSlug = (slug: string): string => {
+  const normalized = normalizeCategorySlug(slug);
+  if (!normalized) {
+    return CATEGORY_GRADIENTS[0];
+  }
+
+  return CATEGORY_GRADIENTS[hashString(normalized) % CATEGORY_GRADIENTS.length];
+};
+
+export const categoryDescriptionFromName = (categoryName: string): string => {
+  return `Smart ${categoryName} products for secure identification and faster owner contact.`;
+};
+
+export const categoryIconFromProducts = (products: ProductVariant[]): string => {
+  const iconSource = products.find((product) => typeof product.emoji === "string" && product.emoji.trim());
+  return iconSource?.emoji?.trim() || DEFAULT_CATEGORY_ICON;
+};
+
+export const categoryCoverImageFromProducts = (products: ProductVariant[]): string => {
+  const coverSource = [...products]
+    .filter((product) => typeof product.image === "string" && product.image.trim())
+    .sort((left, right) => {
+      if (Boolean(left.popular) !== Boolean(right.popular)) {
+        return Number(Boolean(right.popular)) - Number(Boolean(left.popular));
+      }
+
+      return left.title.localeCompare(right.title);
+    })[0];
+
+  return coverSource?.image?.trim() || "";
+};
+
+export const buildGenericCategoryTutorial = (categoryName: string): CategoryTutorial => {
+  return {
+    title: `How to Use Your ${categoryName}`,
+    subtitle: "Set it up once, keep details updated, and stay reachable when someone scans it.",
+    steps: [
+      "Choose your design and complete checkout.",
+      "Open your profile and add the contact details you want to share.",
+      "Place or carry the product where it stays visible and easy to scan.",
+      "Update your details anytime from your profile without replacing the product.",
+    ],
+    tip: "Run one quick scan test after setup to confirm your public profile opens correctly.",
+  };
+};
+
+const buildStorageImageUrl = (fileName: string): string => {
+  return buildProductImageUrl(fileName);
+};
+
+const nfcShinchan = buildStorageImageUrl("nfc_shinchan.png");
+const nfcOnepiece = buildStorageImageUrl("nfc_onepiece.png");
+const nfcPhoenix = buildStorageImageUrl("nfc_phoenix.png");
+const nfcMindset = buildStorageImageUrl("nfc_mindset.png");
+const nfcYoucan = buildStorageImageUrl("nfc_youcan.png");
+const backpackSticker = buildStorageImageUrl("backpack_sticker.png");
+const backpackSticker1 = buildStorageImageUrl("backpack_sticker1.png");
+const backpackSticker2 = buildStorageImageUrl("backpack_sticker2.png");
+const keytagBlack = buildStorageImageUrl("keytag_black.png");
+const keytagRed = buildStorageImageUrl("keytag_red.png");
+const keytagNavy = buildStorageImageUrl("keytag_navy.png");
+const keytagTeal = buildStorageImageUrl("keytag_teal.png");
+const petSafetyTag = buildStorageImageUrl("Pet Tags.jpeg");
+const tagCircle1 = buildStorageImageUrl("tag_circle1.png");
+const tagCircle2 = buildStorageImageUrl("tag_circle2.png");
+const tagOval = buildStorageImageUrl("tag_oval.png");
+const tagSquareBlack = buildStorageImageUrl("tag_square_black.png");
+const tagSquareYellow = buildStorageImageUrl("tag_square_yellow.png");
+const carcardFront = buildStorageImageUrl("product-card.png");
 
 export const productCatalog: ProductCategory[] = [
   {
@@ -343,6 +455,8 @@ export const productCatalog: ProductCategory[] = [
     ],
   },
 ];
+
+export const baseCategories: Omit<ProductCategory, "products">[] = productCatalog.map(({ products, ...category }) => category);
 
 export const categoryTutorials: Record<string, CategoryTutorial> = {
   "car-tags": {
