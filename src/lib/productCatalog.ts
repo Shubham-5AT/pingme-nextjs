@@ -246,8 +246,8 @@ export const productCatalog: ProductCategory[] = [
     ],
   },
   {
-    slug: "bike-tags",
-    name: "Bike Tags",
+    slug: "Pet-tags",
+    name: " Tags",
     description: "Compact, UV-resistant tags that attach easily to your two-wheeler.",
     icon: "🏍️",
     coverImage: tagOval,

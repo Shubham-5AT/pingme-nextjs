@@ -145,7 +145,7 @@ const Contact = () => {
                   <div>
                     <h3 className="font-bold mb-1">Address</h3>
                     <p className="text-muted-foreground">
-                      745 Kesho Ram Complex Sector 45 Chandigarh
+                      745, Kesho Ram Complex, Sector 45, Chandigarh - 160045
                     </p>
                   </div>
                 </div>
@@ -208,7 +208,7 @@ const Contact = () => {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="form-input-styled"
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 98765XXXXX"
                   />
                 </div>
 

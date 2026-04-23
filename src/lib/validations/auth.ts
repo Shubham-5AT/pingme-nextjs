@@ -21,8 +21,12 @@ export const signupSchema = z
       .string()
       .min(8, "Password must be at least 8 characters")
       .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[0-9]/, "Password must contain at least one number"),
-    confirmPassword: z.string(),
+      .regex(/[0-9]/, "Password must contain at least one number")
+      .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character")
+      .regex(/^\S+$/, "Password must not contain spaces"),
+    confirmPassword: z
+      .string()
+      .regex(/^\S+$/, "Confirm password must not contain spaces"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",

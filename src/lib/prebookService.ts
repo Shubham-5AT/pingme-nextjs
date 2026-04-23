@@ -320,7 +320,7 @@ export const updatePrebookingNFCProfile = async (
       nfcProfile: sanitizedProfile,
       updatedAt: serverTimestamp(),
     }),
-  ]);
+  ], 'update prebooking NFC profile');
 
   await syncNfcProfileToPublicDomain(profileId || orderId, sanitizedProfile);
 };

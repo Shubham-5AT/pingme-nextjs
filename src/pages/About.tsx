@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import { Users, Target, Shield, Heart } from "lucide-react";
-import { getPublicStats } from "@/lib/publicStatsService";
+import { getCachedPublicStats, refreshPublicStats } from "@/lib/publicStatsService";
 
 const STATIC_CITIES_COVERED = 3;
 const STATIC_GOOGLE_RATING = 4.0;
@@ -29,8 +29,9 @@ const animateNumber = (
 };
 
 const About = () => {
-  const [happyCustomers, setHappyCustomers] = useState(0);
-  const [vehiclesProtected, setVehiclesProtected] = useState(0);
+  const cachedStats = useMemo(() => getCachedPublicStats(), []);
+  const [happyCustomers, setHappyCustomers] = useState(cachedStats?.happyCustomers || 0);
+  const [vehiclesProtected, setVehiclesProtected] = useState(cachedStats?.vehiclesProtected || 0);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const aboutStats = useMemo(() => ({
@@ -40,14 +41,22 @@ const About = () => {
 
   useEffect(() => {
     let alive = true;
+
+    if (cachedStats) {
+      setIsLoaded(true);
+    }
+
     const loadStats = async () => {
-      const stats = await getPublicStats();
+      const stats = await refreshPublicStats();
       if (!alive) return;
 
-      animateNumber(0, stats.happyCustomers, 1400, (value) => {
+      const fromHappyCustomers = cachedStats?.happyCustomers || 0;
+      const fromVehiclesProtected = cachedStats?.vehiclesProtected || 0;
+
+      animateNumber(fromHappyCustomers, stats.happyCustomers, 700, (value) => {
         if (alive) setHappyCustomers(value);
       });
-      animateNumber(0, stats.vehiclesProtected, 1400, (value) => {
+      animateNumber(fromVehiclesProtected, stats.vehiclesProtected, 700, (value) => {
         if (alive) setVehiclesProtected(value);
       });
 
@@ -59,7 +68,7 @@ const About = () => {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [cachedStats]);
 
   return (
     <MainLayout>
@@ -68,7 +77,7 @@ const About = () => {
           <p className="section-eyebrow">About Us</p>
           <h1 className="section-title text-4xl">The story behind privacy-first vehicle contact</h1>
 
-          <div className="max-w-4xl mx-auto">
+          <div className="mx-auto max-w-6xl">
             <div className="prose prose-lg mb-12">
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                 We started PingME because we saw a simple problem: how do you let someone contact you about your parked

@@ -68,9 +68,9 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
+        <div className="relative flex justify-center text-xs text-muted-foreground">
           <span className="bg-card px-2 text-muted-foreground">
-            Or continue with email
+            OR
           </span>
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
             <Input
               id="mobile"
               type="tel"
-              placeholder="9876543210"
+              placeholder="98765XXXXX"
               className="pl-10"
               {...register("mobile")}
             />
@@ -134,7 +134,7 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Min 8 chars, 1 uppercase, 1 number"
+              placeholder="Create a password"
               className="pl-10 pr-10"
               {...register("password")}
             />
@@ -144,9 +144,9 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
                 <Eye className="h-4 w-4" />
+              ) : (
+                <EyeOff className="h-4 w-4" />
               )}
             </button>
           </div>
@@ -172,9 +172,9 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               {showConfirmPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
                 <Eye className="h-4 w-4" />
+              ) : (
+                <EyeOff className="h-4 w-4" />
               )}
             </button>
           </div>

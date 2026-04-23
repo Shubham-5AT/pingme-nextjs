@@ -19,12 +19,22 @@ import {
 } from "../lib/productCatalog";
 import { subscribeToProducts, type DbProduct } from "../lib/productService";
 
+const categoryEmojiBySlug: Record<string, string> = {
+  "car-tags": "🚗",
+  "bike-tags": "🏍️",
+  "pet-tags": "🐾",
+  "nfc-cards": "💳",
+  "keychain-tags": "🔑",
+  "backpack-stickers": "🎒",
+};
+
 // ─── Components ─────────────────────────────────────────
 
 const ProductCardItem = ({ product }: { product: ProductVariant }) => {
   const { addToCart } = useCart();
   const { toast } = useToast();
   const [imageFailed, setImageFailed] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleAddToCart = () => {
     addToCart({
@@ -39,7 +49,7 @@ const ProductCardItem = ({ product }: { product: ProductVariant }) => {
   };
 
   return (
-    <Dialog>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <div className={`bg-card rounded-2xl p-5 border transition-all hover:shadow-xl flex flex-col h-full relative group cursor-pointer ${
           product.popular ? "border-primary/60 border-2 shadow-md" : "border-border"
@@ -69,7 +79,7 @@ const ProductCardItem = ({ product }: { product: ProductVariant }) => {
             {product.originalPrice && <span className="text-muted-foreground line-through text-sm mb-0.5">{product.originalPrice}</span>}
           </div>
 
-          <p className="text-sm text-foreground/75 mt-auto">Click to view details</p>
+          <p className="text-sm text-foreground/75 mt-auto  hover:text-yellow-400 hover:underline">Click to view details</p>
         </div>
       </DialogTrigger>
 
@@ -115,10 +125,9 @@ const ProductCardItem = ({ product }: { product: ProductVariant }) => {
             </ul>
           </div>
 
-          <Button className="w-full h-10 sm:h-11 text-sm sm:text-base font-bold shadow-lg shadow-primary/20" onClick={() => {
+          <Button type="button" className="w-full h-10 sm:h-11 text-sm sm:text-base font-bold shadow-lg shadow-primary/20" onClick={() => {
             handleAddToCart();
-            // Optional: You could close the dialog here by controlling the dialog state, 
-            // but for simplicity it stays open and shows toast.
+            setIsDialogOpen(false);
           }}>
             Add to Cart
           </Button>
@@ -167,7 +176,7 @@ const Products = () => {
           slug,
           name,
           description: categoryDescriptionFromName(name),
-          icon: categoryIconFromProducts(categoryProducts),
+          icon: categoryEmojiBySlug[slug] || categoryIconFromProducts(categoryProducts),
           coverImage: categoryCoverImageFromProducts(categoryProducts),
           gradient: categoryGradientFromSlug(slug),
           products: categoryProducts.sort((left, right) => {
@@ -272,9 +281,11 @@ const Products = () => {
                     {/* Info */}
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-2xl">{cat.icon}</span>
-                          <h3 className="font-bold text-lg">{cat.name}</h3>
+                        <div className="mb-1 flex items-center gap-2">
+                          <span className="inline-flex h-7 w-7 items-center justify-center text-xl leading-none shrink-0" aria-hidden="true">
+                            {cat.icon}
+                          </span>
+                          <h3 className="text-lg font-bold leading-none pt-0.5">{cat.name}</h3>
                         </div>
                         <p className="text-sm text-muted-foreground line-clamp-2">{cat.description}</p>
                         <span className="inline-block mt-3 text-xs font-medium text-primary">
