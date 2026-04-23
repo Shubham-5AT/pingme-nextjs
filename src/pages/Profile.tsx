@@ -63,6 +63,7 @@ import {
   updatePrebookingNFCProfile,
   type PrebookingRecord,
 } from "@/lib/prebookService";
+import { resolveProductImageUrl } from "@/lib/productCatalog";
 
 export default function Profile() {
   const {
@@ -849,11 +850,13 @@ export default function Profile() {
                           <div key={idx} className="flex justify-between items-center gap-3 text-sm">
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="w-10 h-10 rounded-md border border-border bg-secondary/40 flex items-center justify-center shrink-0 overflow-hidden">
-                                {item.image ? (
+                                {resolveProductImageUrl(item.image) ? (
                                   <img
-                                    src={item.image}
+                                    src={resolveProductImageUrl(item.image)}
                                     alt={item.title}
                                     className="w-full h-full object-contain"
+                                    loading="lazy"
+                                    decoding="async"
                                   />
                                 ) : item.emoji ? (
                                   <span className="text-base">{item.emoji}</span>

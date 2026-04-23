@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { CartItem } from "@/lib/prebookService"; 
+import { resolveProductImageUrl } from "@/lib/productCatalog";
 
 interface CartContextType {
   items: CartItem[];
@@ -17,7 +18,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem("pingme_cart");
-      return saved ? JSON.parse(saved) : [];
+      if (!saved) {
+        return [];
+      }
+
+      const parsed = JSON.parse(saved) as CartItem[];
+      return parsed.map((item) => ({
+        ...item,
+        image: resolveProductImageUrl(item.image) || undefined,
+      }));
     } catch {
       return [];
     }
@@ -37,7 +46,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
             : item
         );
       }
-      return [...prev, { ...newItem, quantity: newItem.quantity || 1 } as CartItem];
+      return [
+        ...prev,
+        {
+          ...newItem,
+          image: resolveProductImageUrl(newItem.image) || undefined,
+          quantity: newItem.quantity || 1,
+        } as CartItem,
+      ];
     });
   };
 

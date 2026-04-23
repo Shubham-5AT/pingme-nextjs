@@ -9,6 +9,7 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { resolveProductImageUrl } from '@/lib/productCatalog';
 
 export interface CartItem {
   id: string;
@@ -131,7 +132,7 @@ export const createPrebooking = async (data: PrebookingData): Promise<string> =>
         quantity: Math.min(Math.max(1, item.quantity), 10),
       };
       if (item.originalPrice) cleanItem.originalPrice = item.originalPrice;
-      if (item.image) cleanItem.image = item.image;
+      if (item.image) cleanItem.image = resolveProductImageUrl(item.image) || item.image;
       if (item.emoji) cleanItem.emoji = item.emoji;
       return cleanItem;
     }),

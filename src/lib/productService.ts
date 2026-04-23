@@ -71,7 +71,7 @@ export const getProducts = async (): Promise<DbProduct[]> => {
   return products;
 };
 
-export const saveProduct = async (product: Omit<DbProduct, "createdAt" | "updatedAt">) => {
+export const saveProduct = async (product: Omit<DbProduct, "updatedAt">) => {
   if (!product.id) {
     product.id = doc(collection(db, "products")).id;
   }
@@ -100,7 +100,10 @@ export const uploadProductImage = async (file: File, rawCategorySlug?: string): 
   const safeFileName = file.name.replace(/\s+/g, "_");
   const fileName = `products/${categorySlug}/${Date.now()}_${safeFileName}`;
   const storageRef = ref(storage, fileName);
-  const snapshot = await uploadBytes(storageRef, file);
+  const snapshot = await uploadBytes(storageRef, file, {
+    contentType: file.type || "application/octet-stream",
+    cacheControl: "public,max-age=31536000,immutable",
+  });
   const downloadURL = await getDownloadURL(snapshot.ref);
   return downloadURL;
 };

@@ -13,6 +13,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { resolveProductImageUrl } from "@/lib/productCatalog";
 
 const navLinks = [
   { label: "Home", to: "/" },
@@ -99,8 +100,8 @@ const Navbar = () => {
                     items.map(item => (
                       <div key={item.id} className="flex gap-4 p-3 border border-border rounded-xl bg-card">
                         <div className="w-16 h-16 bg-secondary rounded-lg flex items-center justify-center shrink-0">
-                          {item.image ? (
-                            <img src={item.image} alt={item.title} className="max-w-[80%] max-h-[80%] object-contain" />
+                          {resolveProductImageUrl(item.image) ? (
+                            <img src={resolveProductImageUrl(item.image)} alt={item.title} className="max-w-[80%] max-h-[80%] object-contain" loading="lazy" decoding="async" />
                           ) : (
                             <span className="text-2xl">{item.emoji}</span>
                           )}

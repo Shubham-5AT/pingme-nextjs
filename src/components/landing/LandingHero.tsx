@@ -63,7 +63,7 @@ type HeroProduct = {
   popular?: boolean;
 };
 
-const getBestSellingImage = (products: DbProduct[], categorySlug: string, fallback: string): string => {
+const getBestSellingImage = (products: DbProduct[], categorySlug: string, fallback?: string): string | undefined => {
   const categoryProducts = products.filter(
     (product): product is DbProduct & HeroProduct =>
       normalizeCategorySlug(product.categorySlug) === categorySlug && typeof (product as HeroProduct).image === "string" && Boolean((product as HeroProduct).image)
@@ -87,12 +87,13 @@ const getBestSellingImage = (products: DbProduct[], categorySlug: string, fallba
   return (bestSeller as HeroProduct).image || fallback;
 };
 
-const getOfferings = (products: DbProduct[]) => [
+const getOfferings = (products: DbProduct[], hasProductSnapshot: boolean) => [
   {
     icon: CarFront,
     title: "Vehicle Tags",
     description: "Let others notify you about parking issues, damage, or emergencies without exposing your number.",
-    image: getBestSellingImage(products, "car-tags", carcardFront),
+    image: getBestSellingImage(products, "car-tags", hasProductSnapshot ? carcardFront : undefined),
+    imageFrameClass: "md:h-[210px]",
     accent: "from-amber-400/30 to-yellow-200/10",
     points: ["Car and bike use cases", "Secure masked contact", "Instant parking issue alerts"],
   },
@@ -100,7 +101,8 @@ const getOfferings = (products: DbProduct[]) => [
     icon: PackageSearch,
     title: "Lost & Found Tags",
     description: "Backpacks, laptops, keychains, and everyday essentials can find their way back faster.",
-    image: getBestSellingImage(products, "backpack-stickers", backpackSticker),
+    image: getBestSellingImage(products, "backpack-stickers", hasProductSnapshot ? backpackSticker : undefined),
+    imageFrameClass: "md:h-[250px]",
     accent: "from-slate-400/30 to-zinc-200/10",
     points: ["For bags, laptops, and accessories", "Easy scan for the finder", "Private return flow"],
   },
@@ -108,7 +110,8 @@ const getOfferings = (products: DbProduct[]) => [
     icon: PawPrint,
     title: "Pet Safety Tags",
     description: "Help anyone who finds your pet reach you instantly and safely.",
-    image: getBestSellingImage(products, "pet-tags", petSafetyTag),
+    image: getBestSellingImage(products, "pet-tags", hasProductSnapshot ? petSafetyTag : undefined),
+    imageFrameClass: "md:h-[250px]",
     accent: "from-emerald-400/30 to-teal-200/10",
     points: ["Fast reunion when pets wander", "Visible and durable tag format", "Owner details stay private"],
   },
@@ -116,7 +119,8 @@ const getOfferings = (products: DbProduct[]) => [
     icon: Nfc,
     title: "NFC Smart Cards",
     description: "Tap-enabled cards for quick, seamless, private information exchange.",
-    image: getBestSellingImage(products, "nfc-cards", nfcFront),
+    image: getBestSellingImage(products, "nfc-cards", hasProductSnapshot ? nfcFront : undefined),
+    imageFrameClass: "md:h-[250px]",
     accent: "from-sky-400/30 to-blue-200/10",
     points: ["Tap to share", "Modern digital contact experience", "Works alongside QR-enabled profiles"],
   },
@@ -148,14 +152,21 @@ const differentiators = [
 const LandingHero = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [products, setProducts] = useState<DbProduct[]>([]);
+  const [hasProductSnapshot, setHasProductSnapshot] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const unsubscribe = subscribeToProducts(
-      (latest) => setProducts(latest),
-      (error) => console.error("Failed to load products for hero", error)
+      (latest) => {
+        setProducts(latest);
+        setHasProductSnapshot(true);
+      },
+      (error) => {
+        console.error("Failed to load products for hero", error);
+        setHasProductSnapshot(true);
+      }
     );
 
     return unsubscribe;
@@ -232,7 +243,7 @@ const LandingHero = () => {
     });
   };
 
-  const offerings = getOfferings(products);
+  const offerings = getOfferings(products, hasProductSnapshot);
 
   return (
     <main className="relative overflow-hidden bg-cream">
@@ -414,11 +425,21 @@ const LandingHero = () => {
                   </div>
 
                   <div className="grid gap-4 p-5 md:grid-cols-[180px_1fr] md:p-6">
-                    {item.image ? (
-                      <img src={item.image} alt={item.title} className="h-100 w-100 object-cover" />
-                    ) : (
-                      <div className="flex h-100 w-100 items-center justify-center rounded-2xl bg-muted/30 text-4xl">{item.title.slice(0, 1)}</div>
-                    )}
+                    <div className={`flex h-[220px] w-full items-center justify-center overflow-hidden rounded-2xl border border-border/40 bg-white/70 p-3 ${item.imageFrameClass || ""}`}>
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="h-full w-full object-contain"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center rounded-xl bg-muted/30">
+                          <Icon className="h-10 w-10 text-foreground/45" />
+                        </div>
+                      )}
+                    </div>
                     <div className="space-y-3">
                       {item.points.map((point) => (
                         <div key={point} className="flex items-start gap-3 rounded-2xl bg-muted/40 px-4 py-3">

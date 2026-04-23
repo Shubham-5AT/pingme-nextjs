@@ -61,7 +61,7 @@ const Partners = () => {
             <article className="rounded-[1.75rem] border border-white/10 bg-black/70 p-6 shadow-[0_0_50px_rgba(239,68,68,0.12),0_0_80px_rgba(250,204,21,0.08)] backdrop-blur-xl md:p-8">
               <div className="flex flex-wrap items-center gap-4">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-2 shadow-[0_0_24px_rgba(250,204,21,0.12)]">
-                  <img src={pingMeLogo} alt="PingME logo" className="h-12 w-auto object-contain" />
+                  <img src={pingMeLogo} alt="PingME logo" className="h-12 w-auto object-contain rounded-xl" />
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-red-500/25 to-amber-400/20 text-amber-200 shadow-[0_0_18px_rgba(239,68,68,0.18)]">
                   <Handshake className="h-6 w-6" />
