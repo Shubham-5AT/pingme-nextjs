@@ -56,6 +56,4 @@ export {
   type User,
 };
 
-
-
 export default app;
