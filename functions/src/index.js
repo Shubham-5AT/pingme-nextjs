@@ -21,7 +21,27 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
-const corsHandler = cors({ origin: true });
+const ALLOWED_ORIGINS = [
+  "https://plzpingme.com",
+  "https://www.plzpingme.com",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:8080",
+  "http://localhost:8081",
+];
+
+const corsHandler = cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+
+    if (ALLOWED_ORIGINS.indexOf(origin) !== -1 || origin.endsWith(".web.app") || origin.endsWith(".firebaseapp.com")) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+});
 const NFC_PROFILES_COLLECTION = "nfcProfiles";
 
 const getCount = async (collectionRef, queryConstraints = []) => {
@@ -280,6 +300,22 @@ const getRazorpayClient = () => {
   });
 };
 
+const authenticate = async (req) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const idToken = authHeader.split("Bearer ")[1];
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    return decodedToken;
+  } catch (error) {
+    console.error("Authentication failed:", error);
+    return null;
+  }
+};
+
 exports.createOrder = onRequest({
   region: "asia-south1",
   secrets: [RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET],
@@ -287,6 +323,12 @@ exports.createOrder = onRequest({
   corsHandler(req, res, async () => {
     if (req.method !== "POST") {
       res.status(405).send("Method Not Allowed");
+      return;
+    }
+
+    const decodedToken = await authenticate(req);
+    if (!decodedToken) {
+      res.status(401).send("Unauthorized");
       return;
     }
 
@@ -303,7 +345,11 @@ exports.createOrder = onRequest({
         amount: Number(amount),
         currency,
         receipt: receipt || `pingme_${Date.now()}`,
-        notes,
+        notes: {
+          ...notes,
+          userId: decodedToken.uid,
+          userEmail: decodedToken.email || "",
+        },
       });
 
       res.status(200).json({
@@ -357,6 +403,12 @@ exports.trackInstall = onRequest({
   corsHandler(req, res, async () => {
     if (req.method !== "POST") {
       res.status(405).send("Method Not Allowed");
+      return;
+    }
+
+    const decodedToken = await authenticate(req);
+    if (!decodedToken) {
+      res.status(401).send("Unauthorized");
       return;
     }
 
@@ -450,6 +502,12 @@ exports.verifyPayment = onRequest({
   corsHandler(req, res, async () => {
     if (req.method !== "POST") {
       res.status(405).send("Method Not Allowed");
+      return;
+    }
+
+    const decodedToken = await authenticate(req);
+    if (!decodedToken) {
+      res.status(401).send("Unauthorized");
       return;
     }
 

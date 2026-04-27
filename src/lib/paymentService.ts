@@ -1,3 +1,4 @@
+import { auth } from "@/lib/firebase";
 import type { PrebookingData } from "@/lib/prebookService";
 
 interface CreateOrderResponse {
@@ -79,10 +80,18 @@ export const createRazorpayOrder = async (input: {
     throw new Error("Payment API is not configured. Add VITE_PAYMENT_API_BASE_URL to your env.");
   }
 
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    throw new Error("You must be logged in to create an order.");
+  }
+
+  const idToken = await currentUser.getIdToken();
+
   const res = await fetch(`${baseUrl}/createOrder`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${idToken}`,
     },
     body: JSON.stringify(input),
   });
@@ -106,10 +115,18 @@ export const verifyRazorpayPaymentAndCreatePrebooking = async (input: {
     throw new Error("Payment API is not configured. Add VITE_PAYMENT_API_BASE_URL to your env.");
   }
 
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    throw new Error("You must be logged in to verify payment.");
+  }
+
+  const idToken = await currentUser.getIdToken();
+
   const res = await fetch(`${baseUrl}/verifyPayment`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${idToken}`,
     },
     body: JSON.stringify(input),
   });

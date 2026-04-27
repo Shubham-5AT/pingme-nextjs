@@ -5,12 +5,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function hasAdminClaim() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    function hasAdminDoc() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email in [
-        'pavitr.4444@gmail.com',
-        'arpitpathak2408@gmail.com',
-        'harshitsb2615@gmail.com'
-      ];
+      return hasAdminClaim() || hasAdminDoc();
     }
 
     function isOwner(uid) {
@@ -45,6 +49,11 @@ service cloud.firestore {
     match /adminAccess/{docId} {
       allow read: if isAdmin();
       allow write: if false;
+    }
+
+    match /admins/{uid} {
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+      allow create, update, delete: if hasAdminClaim();
     }
 
     match /booking/{orderId} {

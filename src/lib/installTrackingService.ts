@@ -1,3 +1,5 @@
+import { auth } from "@/lib/firebase";
+
 const INSTALL_TRACKED_KEY = "pingme_install_tracked_v1";
 
 const getApiBaseUrl = () => {
@@ -9,10 +11,16 @@ const postInstallEvent = async () => {
   const baseUrl = getApiBaseUrl();
   if (!baseUrl) return;
 
+  const currentUser = auth.currentUser;
+  if (!currentUser) return; // Only track for logged in users to satisfy security audit
+
+  const idToken = await currentUser.getIdToken();
+
   await fetch(`${baseUrl}/trackInstall`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${idToken}`,
     },
     body: JSON.stringify({
       installedAt: new Date().toISOString(),
