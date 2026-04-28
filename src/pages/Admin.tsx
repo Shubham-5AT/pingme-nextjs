@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { subscribeToOrders, updateOrderStatus } from "@/lib/adminService";
 import { categoryNameFromSlug, normalizeCategorySlug } from "@/lib/productCatalog";
-import { subscribeToProducts, saveProduct, deleteProductDoc, uploadProductImage, DbProduct } from "@/lib/productService";
+import { subscribeToProducts, saveProduct, deleteProductDoc, uploadProductImage, DbProduct, renameCategory, moveProductsToCategory, subscribeToProductCategories } from "@/lib/productService";
 import type { PrebookingRecord } from "@/lib/prebookService";
 
 const formatDate = (value: unknown): string => {
@@ -80,6 +80,13 @@ export default function Admin() {
   
   const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
   const [editingProduct, setEditingProduct] = useState<DbProduct | null>(null);
+  const [renameCategoryTarget, setRenameCategoryTarget] = useState<string | null>(null);
+  const [renameCategoryName, setRenameCategoryName] = useState<string>("");
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+  const [moveTargetProductId, setMoveTargetProductId] = useState<string | null>(null);
+  const [moveTargetSlug, setMoveTargetSlug] = useState<string>("");
+  const [categoryMetadata, setCategoryMetadata] = useState<Record<string, { name?: string }>>({});
   const [isProductDialogOpn, setIsProductDialogOpn] = useState(false);
   const [savingProductId, setSavingProductId] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -112,6 +119,14 @@ export default function Admin() {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    const unsub = subscribeToProductCategories(
+      (map) => setCategoryMetadata(map),
+      (err) => console.error("Failed to load category metadata", err),
+    );
+    return unsub;
+  }, []);
+
   const categorizedProducts = useMemo(() => {
     const groups = new Map<string, DbProduct[]>();
 
@@ -125,12 +140,13 @@ export default function Admin() {
     return Array.from(groups.entries())
       .map(([slug, products]) => ({
         slug,
-        name: categoryNameFromSlug(slug),
+        name: (categoryMetadata[slug] && categoryMetadata[slug].name) ? categoryMetadata[slug].name! : categoryNameFromSlug(slug),
         icon: getCategoryIcon(products),
         products: products.sort((left, right) => left.title.localeCompare(right.title)),
       }))
       .sort((left, right) => left.name.localeCompare(right.name));
-  }, [dbProducts]);
+  }, [dbProducts, categoryMetadata]);
+  
 
   const categoryOptions = useMemo(() => categorizedProducts.map((category) => category.slug), [categorizedProducts]);
 
@@ -238,8 +254,10 @@ export default function Admin() {
     });
 
     return filtered.sort((left, right) => {
-      const leftCreated = left.createdAt?.seconds ? left.createdAt.seconds * 1000 : 0;
-      const rightCreated = right.createdAt?.seconds ? right.createdAt.seconds * 1000 : 0;
+      const leftTs = left.createdAt as { seconds?: number } | undefined;
+      const rightTs = right.createdAt as { seconds?: number } | undefined;
+      const leftCreated = (leftTs?.seconds ?? 0) * 1000;
+      const rightCreated = (rightTs?.seconds ?? 0) * 1000;
 
       switch (orderSort) {
         case "oldest":
@@ -452,7 +470,12 @@ export default function Admin() {
                             <div className="flex items-center gap-3 text-left">
                               <span className="text-xl">{category.icon}</span>
                               <div>
-                                <h3 className="font-semibold text-lg leading-tight">{category.name}</h3>
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-semibold text-lg leading-tight">{category.name}</h3>
+                                  <Button variant="ghost" size="icon" onClick={() => { setRenameCategoryTarget(category.slug); setRenameCategoryName(category.name); setIsRenameDialogOpen(true); }}>
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                </div>
                                 <p className="text-xs text-muted-foreground">/{category.slug} • {category.products.length} product{category.products.length === 1 ? "" : "s"}</p>
                               </div>
                             </div>
@@ -483,6 +506,9 @@ export default function Admin() {
                                         <div className="flex gap-1">
                                           <Button variant="ghost" size="icon" onClick={() => handleEditProduct(product)}>
                                             <Edit className="w-4 h-4" />
+                                          </Button>
+                                          <Button variant="ghost" size="icon" onClick={() => { setMoveTargetProductId(product.id); setIsMoveDialogOpen(true); }}>
+                                            <SlidersHorizontal className="w-4 h-4" />
                                           </Button>
                                           <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteProduct(product.id)}>
                                             <Trash2 className="w-4 h-4" />
@@ -570,6 +596,80 @@ export default function Admin() {
             )}
           </DialogContent>
         </Dialog>
+
+          {/* Rename Category Dialog */}
+          <Dialog open={isRenameDialogOpen} onOpenChange={(open) => { if (!open) { setIsRenameDialogOpen(false); setRenameCategoryTarget(null); } }}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Rename Section</DialogTitle>
+                <DialogDescription>Provide a new display name or slug for this section. Slug will be generated automatically.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                if (!renameCategoryTarget) return;
+                try {
+                  await renameCategory(renameCategoryTarget, renameCategoryName || "");
+                  toast.success("Section renamed successfully.");
+                  setIsRenameDialogOpen(false);
+                  setRenameCategoryTarget(null);
+                } catch (err) {
+                  console.error(err);
+                  toast.error("Failed to rename section.");
+                }
+              }} className="space-y-4 py-4">
+                <div>
+                  <Label htmlFor="newName">New Name</Label>
+                  <Input id="newName" value={renameCategoryName} onChange={(e) => setRenameCategoryName(e.target.value)} placeholder="e.g. Pet Tags" required />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" type="button" onClick={() => { setIsRenameDialogOpen(false); setRenameCategoryTarget(null); }}>Cancel</Button>
+                  <Button type="submit">Save</Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Move Product Dialog */}
+          <Dialog open={isMoveDialogOpen} onOpenChange={(open) => { if (!open) { setIsMoveDialogOpen(false); setMoveTargetProductId(null); setMoveTargetSlug(""); } }}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Move Tag to Section</DialogTitle>
+                <DialogDescription>Select the target section to move this product to.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                if (!moveTargetProductId || !moveTargetSlug) return;
+                try {
+                  await moveProductsToCategory([moveTargetProductId], moveTargetSlug);
+                  toast.success("Product moved successfully.");
+                  setIsMoveDialogOpen(false);
+                  setMoveTargetProductId(null);
+                  setMoveTargetSlug("");
+                } catch (err) {
+                  console.error(err);
+                  toast.error("Failed to move product.");
+                }
+              }} className="space-y-4 py-4">
+                <div>
+                  <Label htmlFor="target">Target Section</Label>
+                  <Select value={moveTargetSlug} onValueChange={(v) => setMoveTargetSlug(v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose section" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoryOptions.map((slug) => (
+                        <SelectItem key={slug} value={slug}>{(categoryMetadata[slug] && categoryMetadata[slug].name) ? categoryMetadata[slug].name : categoryNameFromSlug(slug)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" type="button" onClick={() => { setIsMoveDialogOpen(false); setMoveTargetProductId(null); setMoveTargetSlug(""); }}>Cancel</Button>
+                  <Button type="submit">Move</Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
 
         {/* Product Dialog */}
         <Dialog open={isProductDialogOpn} onOpenChange={setIsProductDialogOpn}>

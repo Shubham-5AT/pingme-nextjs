@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, onSnapshot, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
+import { collection, doc, getDocs, onSnapshot, setDoc, deleteDoc, serverTimestamp, writeBatch, query, where, getDoc, onSnapshot as onSnap, type DocumentData } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
 import { normalizeCategorySlug, ProductVariant, resolveProductImageUrl } from "./productCatalog";
@@ -106,4 +106,85 @@ export const uploadProductImage = async (file: File, rawCategorySlug?: string): 
   });
   const downloadURL = await getDownloadURL(snapshot.ref);
   return downloadURL;
+};
+
+export interface ProductCategoryDoc {
+  name?: string;
+  description?: string;
+  icon?: string;
+  coverImage?: string;
+  gradient?: string;
+  updatedAt?: unknown;
+}
+
+export const subscribeToProductCategories = (
+  onUpdate: (map: Record<string, ProductCategoryDoc>) => void,
+  onError: (error: Error) => void,
+) => {
+  const ref = collection(db, "productCategories");
+  return onSnapshot(
+    ref,
+    (snapshot) => {
+      const map: Record<string, ProductCategoryDoc> = {};
+      snapshot.forEach((d) => {
+        try {
+          map[d.id] = d.data() as ProductCategoryDoc;
+        } catch {
+          map[d.id] = {};
+        }
+      });
+      onUpdate(map);
+    },
+    (error) => onError(error),
+  );
+};
+
+export const renameCategory = async (oldSlug: string, newNameOrSlug: string) => {
+  const newSlug = normalizeCategorySlug(newNameOrSlug) || "uncategorized";
+  const categoriesRef = collection(db, "productCategories");
+  const oldCatRef = doc(db, "productCategories", oldSlug);
+  const newCatRef = doc(db, "productCategories", newSlug);
+
+  // create or update new category doc with display name
+  await setDoc(newCatRef, {
+    name: newNameOrSlug,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+
+  if (oldSlug === newSlug) {
+    // only update display name
+    return;
+  }
+
+  // Move all products from oldSlug to newSlug using batched writes
+  const productsRef = collection(db, "products");
+  const q = query(productsRef, where("categorySlug", "==", oldSlug));
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) {
+    // remove old category doc if exists
+    await deleteDoc(oldCatRef).catch(() => {});
+    return;
+  }
+
+  const batch = writeBatch(db);
+  snapshot.forEach((p) => {
+    const pRef = doc(db, "products", p.id);
+    batch.update(pRef, { categorySlug: newSlug, updatedAt: serverTimestamp() });
+  });
+
+  // delete old category metadata doc
+  batch.delete(oldCatRef);
+
+  await batch.commit();
+};
+
+export const moveProductsToCategory = async (productIds: string[], targetSlugRaw: string) => {
+  const targetSlug = normalizeCategorySlug(targetSlugRaw) || "uncategorized";
+  if (!productIds || productIds.length === 0) return;
+  const batch = writeBatch(db);
+  productIds.forEach((id) => {
+    const pRef = doc(db, "products", id);
+    batch.update(pRef, { categorySlug: targetSlug, updatedAt: serverTimestamp() });
+  });
+  await batch.commit();
 };

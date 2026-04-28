@@ -17,7 +17,7 @@ import {
   type ProductVariant,
   type ProductCategory,
 } from "../lib/productCatalog";
-import { subscribeToProducts, type DbProduct } from "../lib/productService";
+import { subscribeToProducts, type DbProduct, subscribeToProductCategories } from "../lib/productService";
 
 const categoryEmojiBySlug: Record<string, string> = {
   "car-tags": "🚗",
@@ -144,6 +144,7 @@ const Products = () => {
   const navigate = useNavigate();
   const selectedCategory = categorySlug ? normalizeCategorySlug(categorySlug) : null;
   const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
+  const [categoryMetadata, setCategoryMetadata] = useState<Record<string, { name?: string }>>({});
 
   useEffect(() => {
     const unsubscribe = subscribeToProducts(
@@ -157,6 +158,14 @@ const Products = () => {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    const unsub = subscribeToProductCategories(
+      (map) => setCategoryMetadata(map),
+      (err) => console.error("Failed to load category metadata", err),
+    );
+    return unsub;
+  }, []);
+
   const categories = useMemo(() => {
     const groups = new Map<string, DbProduct[]>();
 
@@ -168,10 +177,10 @@ const Products = () => {
     });
 
     return Array.from(groups.entries())
-      .map(([slug, products]) => {
+        .map(([slug, products]) => {
         const categoryProducts = products as unknown as ProductVariant[];
 
-        const name = categoryNameFromSlug(slug);
+        const name = (categoryMetadata[slug] && categoryMetadata[slug].name) ? categoryMetadata[slug].name! : categoryNameFromSlug(slug);
         return {
           slug,
           name,
