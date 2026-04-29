@@ -28,7 +28,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const { items, cartCount, cartTotal, removeFromCart, updateQuantity } = useCart();
 
   const isActive = (link: typeof navLinks[0]) => {
