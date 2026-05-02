@@ -82,17 +82,13 @@ export const createRazorpayOrder = async (input: {
   }
 
   const currentUser = auth.currentUser;
-  if (!currentUser) {
-    throw new Error("You must be logged in to create an order.");
-  }
-
-  const idToken = await currentUser.getIdToken();
+  const idToken = currentUser ? await currentUser.getIdToken() : "";
 
   const res = await fetch(`${baseUrl}/createOrder`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${idToken}`,
+      ...(idToken ? { "Authorization": `Bearer ${idToken}` } : {}),
     },
     body: JSON.stringify(input),
   });
@@ -117,17 +113,13 @@ export const verifyRazorpayPaymentAndCreatePrebooking = async (input: {
   }
 
   const currentUser = auth.currentUser;
-  if (!currentUser) {
-    throw new Error("You must be logged in to verify payment.");
-  }
-
-  const idToken = await currentUser.getIdToken();
+  const idToken = currentUser ? await currentUser.getIdToken() : "";
 
   const res = await fetch(`${baseUrl}/verifyPayment`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${idToken}`,
+      ...(idToken ? { "Authorization": `Bearer ${idToken}` } : {}),
     },
     body: JSON.stringify(input),
   });
