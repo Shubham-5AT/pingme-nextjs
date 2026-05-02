@@ -327,6 +327,10 @@ exports.createOrder = onRequest({
     }
 
     const decodedToken = await authenticate(req);
+    if (!decodedToken) {
+      res.status(401).send("Unauthorized");
+      return;
+    }
 
     try {
       const { amount, currency = "INR", receipt, notes = {} } = req.body || {};
@@ -343,8 +347,8 @@ exports.createOrder = onRequest({
         receipt: receipt || `pingme_${Date.now()}`,
         notes: {
           ...notes,
-          userId: decodedToken?.uid || notes.userId || "guest",
-          userEmail: decodedToken?.email || notes.userEmail || "",
+          userId: decodedToken.uid,
+          userEmail: decodedToken.email || "",
         },
       });
 
@@ -444,6 +448,10 @@ exports.verifyPayment = onRequest({
     }
 
     const decodedToken = await authenticate(req);
+    if (!decodedToken) {
+      res.status(401).send("Unauthorized");
+      return;
+    }
 
     try {
       const { orderId, paymentId, signature, prebooking } = req.body || {};
@@ -544,6 +552,10 @@ exports.syncNfcProfileDraft = onRequest({
     }
 
     const decodedToken = await authenticate(req);
+    if (!decodedToken) {
+      res.status(401).send("Unauthorized");
+      return;
+    }
 
     try {
       const { profileId, nfcProfile } = req.body || {};

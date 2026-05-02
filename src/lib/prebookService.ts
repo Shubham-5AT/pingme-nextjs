@@ -336,13 +336,17 @@ export const syncNfcProfileToPublicDomain = async (
   }
 
   const currentUser = auth.currentUser;
-  const idToken = currentUser ? await currentUser.getIdToken() : "";
+  if (!currentUser) {
+    throw new Error('You must be logged in to sync your profile.');
+  }
+
+  const idToken = await currentUser.getIdToken();
 
   const response = await fetch(`${baseUrl}/syncNfcProfileDraft`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}),
+      'Authorization': `Bearer ${idToken}`,
     },
     body: JSON.stringify({
       profileId,
