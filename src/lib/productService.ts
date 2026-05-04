@@ -126,6 +126,23 @@ export interface ProductCategoryDoc {
   updatedAt?: unknown;
 }
 
+export interface ProductCategoryFullDoc extends ProductCategoryDoc {
+  howToUse?: string;
+  proTip?: string;
+}
+
+export const saveProductCategory = async (rawSlugOrName: string, data: ProductCategoryFullDoc) => {
+  const slug = normalizeCategorySlug(rawSlugOrName) || "uncategorized";
+  const ref = doc(db, "productCategories", slug);
+
+  const toSave: Record<string, unknown> = {
+    ...data,
+    updatedAt: serverTimestamp(),
+  };
+
+  await setDoc(ref, toSave, { merge: true });
+};
+
 export const subscribeToProductCategories = (
   onUpdate: (map: Record<string, ProductCategoryDoc>) => void,
   onError: (error: Error) => void,

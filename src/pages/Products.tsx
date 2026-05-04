@@ -144,7 +144,7 @@ const Products = () => {
   const navigate = useNavigate();
   const selectedCategory = categorySlug ? normalizeCategorySlug(categorySlug) : null;
   const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
-  const [categoryMetadata, setCategoryMetadata] = useState<Record<string, { name?: string }>>({});
+  const [categoryMetadata, setCategoryMetadata] = useState<Record<string, { name?: string; description?: string; icon?: string; coverImage?: string; gradient?: string }>>({});
 
   useEffect(() => {
     const unsubscribe = subscribeToProducts(
@@ -176,18 +176,21 @@ const Products = () => {
       groups.set(slug, existing);
     });
 
-    return Array.from(groups.entries())
-        .map(([slug, products]) => {
-        const categoryProducts = products as unknown as ProductVariant[];
+    const allSlugs = new Set<string>([...groups.keys(), ...Object.keys(categoryMetadata)]);
 
-        const name = (categoryMetadata[slug] && categoryMetadata[slug].name) ? categoryMetadata[slug].name! : categoryNameFromSlug(slug);
+    return Array.from(allSlugs)
+      .map((slug) => {
+        const categoryProducts = (groups.get(slug) || []) as unknown as ProductVariant[];
+        const meta = categoryMetadata[slug] || {};
+        const name = meta.name || categoryNameFromSlug(slug);
+
         return {
           slug,
           name,
-          description: categoryDescriptionFromName(name),
-          icon: categoryEmojiBySlug[slug] || categoryIconFromProducts(categoryProducts),
-          coverImage: categoryCoverImageFromProducts(categoryProducts),
-          gradient: categoryGradientFromSlug(slug),
+          description: meta.description || categoryDescriptionFromName(name),
+          icon: meta.icon?.trim() || categoryEmojiBySlug[slug] || categoryIconFromProducts(categoryProducts),
+          coverImage: meta.coverImage || categoryCoverImageFromProducts(categoryProducts),
+          gradient: meta.gradient || categoryGradientFromSlug(slug),
           products: categoryProducts.sort((left, right) => {
             // If one is popular and the other isn't, popular comes first
             if (left.popular !== right.popular) {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Eye, Loader2, Save, Search, Shield, SlidersHorizontal, XCircle, Plus, Edit, Trash2 } from "lucide-react";
+import { CheckCircle2, Copy, Eye, Loader2, Save, Search, Shield, SlidersHorizontal, XCircle, Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import MainLayout from "@/layouts/MainLayout";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { subscribeToOrders, updateOrderStatus } from "@/lib/adminService";
-import { categoryNameFromSlug, normalizeCategorySlug } from "@/lib/productCatalog";
-import { subscribeToProducts, saveProduct, deleteProductDoc, uploadProductImage, DbProduct, renameCategory, moveProductsToCategory, subscribeToProductCategories } from "@/lib/productService";
+import { categoryDescriptionFromName, categoryNameFromSlug, normalizeCategorySlug } from "@/lib/productCatalog";
+import { subscribeToProducts, saveProduct, deleteProductDoc, uploadProductImage, DbProduct, renameCategory, moveProductsToCategory, subscribeToProductCategories, saveProductCategory } from "@/lib/productService";
 import type { PrebookingRecord } from "@/lib/prebookService";
 
 const formatDate = (value: unknown): string => {
@@ -86,8 +86,16 @@ export default function Admin() {
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [moveTargetProductId, setMoveTargetProductId] = useState<string | null>(null);
   const [moveTargetSlug, setMoveTargetSlug] = useState<string>("");
-  const [categoryMetadata, setCategoryMetadata] = useState<Record<string, { name?: string }>>({});
+  const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
+  const [copyTargetProductId, setCopyTargetProductId] = useState<string | null>(null);
+  const [copyTargetSlug, setCopyTargetSlug] = useState<string>("");
+  const [categoryMetadata, setCategoryMetadata] = useState<Record<string, { name?: string; description?: string; icon?: string; coverImage?: string; gradient?: string }>>({});
   const [isProductDialogOpn, setIsProductDialogOpn] = useState(false);
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryIcon, setNewCategoryIcon] = useState("");
+  const [newCategoryDescription, setNewCategoryDescription] = useState("");
+  const [newCategoryProTip, setNewCategoryProTip] = useState("");
   const [savingProductId, setSavingProductId] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
@@ -137,13 +145,22 @@ export default function Admin() {
       groups.set(slug, existing);
     });
 
-    return Array.from(groups.entries())
-      .map(([slug, products]) => ({
-        slug,
-        name: (categoryMetadata[slug] && categoryMetadata[slug].name) ? categoryMetadata[slug].name! : categoryNameFromSlug(slug),
-        icon: getCategoryIcon(products),
-        products: products.sort((left, right) => left.title.localeCompare(right.title)),
-      }))
+    const allSlugs = new Set<string>([...groups.keys(), ...Object.keys(categoryMetadata)]);
+
+    return Array.from(allSlugs)
+      .map((slug) => {
+        const products = groups.get(slug) || [];
+        const meta = categoryMetadata[slug] || {};
+        const name = meta.name || categoryNameFromSlug(slug);
+
+        return {
+          slug,
+          name,
+          description: meta.description || categoryDescriptionFromName(name),
+          icon: meta.icon?.trim() || getCategoryIcon(products),
+          products: products.sort((left, right) => left.title.localeCompare(right.title)),
+        };
+      })
       .sort((left, right) => left.name.localeCompare(right.name));
   }, [dbProducts, categoryMetadata]);
   
@@ -215,6 +232,37 @@ export default function Admin() {
     } catch (err) {
       console.error(err);
       toast.error("Failed to save product.");
+    } finally {
+      setSavingProductId(null);
+    }
+  };
+
+  const handleCopyProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!copyTargetProductId || !copyTargetSlug) return;
+
+    const sourceProduct = dbProducts.find((product) => product.id === copyTargetProductId);
+    if (!sourceProduct) {
+      toast.error("Could not find the product to copy.");
+      return;
+    }
+
+    try {
+      setSavingProductId(copyTargetProductId);
+      await saveProduct({
+        ...sourceProduct,
+        id: "",
+        categorySlug: normalizeCategorySlug(copyTargetSlug) || defaultCategorySlug,
+        title: sourceProduct.title,
+        features: [...sourceProduct.features],
+      });
+      toast.success("Product copied successfully.");
+      setIsCopyDialogOpen(false);
+      setCopyTargetProductId(null);
+      setCopyTargetSlug("");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to copy product.");
     } finally {
       setSavingProductId(null);
     }
@@ -450,9 +498,9 @@ export default function Admin() {
                   <CardDescription>View, Add, Edit, and Delete products.</CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={() => handleEditProduct(null)}>
+                  <Button size="sm" onClick={() => setIsCategoryDialogOpen(true)}>
                     <Plus className="w-4 h-4 mr-1" />
-                    Add Product
+                    Add Product Category
                   </Button>
                 </div>
               </CardHeader>
@@ -466,20 +514,30 @@ export default function Admin() {
                     <Accordion type="single" collapsible className="w-full space-y-4">
                       {categorizedProducts.map((category) => (
                         <AccordionItem key={category.slug} value={category.slug} className="rounded-xl border px-4">
-                          <AccordionTrigger className="py-4 hover:no-underline">
-                            <div className="flex items-center gap-3 text-left">
-                              <span className="text-xl">{category.icon}</span>
-                              <div>
-                                <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
+                            <AccordionTrigger className="flex-1 py-4 hover:no-underline">
+                              <div className="flex items-center gap-3 text-left">
+                                <span className="text-xl">{category.icon}</span>
+                                <div>
                                   <h3 className="font-semibold text-lg leading-tight">{category.name}</h3>
-                                  <Button variant="ghost" size="icon" onClick={() => { setRenameCategoryTarget(category.slug); setRenameCategoryName(category.name); setIsRenameDialogOpen(true); }}>
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
+                                  <p className="text-xs text-muted-foreground">/{category.slug} • {category.products.length} product{category.products.length === 1 ? "" : "s"}</p>
                                 </div>
-                                <p className="text-xs text-muted-foreground">/{category.slug} • {category.products.length} product{category.products.length === 1 ? "" : "s"}</p>
                               </div>
-                            </div>
-                          </AccordionTrigger>
+                            </AccordionTrigger>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setRenameCategoryTarget(category.slug);
+                                setRenameCategoryName(category.name);
+                                setIsRenameDialogOpen(true);
+                              }}
+                              aria-label={`Rename ${category.name}`}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
                           <AccordionContent className="pb-4">
                             <div className="mb-4 flex justify-end">
                               <Button variant="ghost" size="sm" onClick={() => handleEditProduct(null, category.slug)}>
@@ -506,6 +564,9 @@ export default function Admin() {
                                         <div className="flex gap-1">
                                           <Button variant="ghost" size="icon" onClick={() => handleEditProduct(product)}>
                                             <Edit className="w-4 h-4" />
+                                          </Button>
+                                          <Button variant="ghost" size="icon" onClick={() => { setCopyTargetProductId(product.id); setCopyTargetSlug(normalizeCategorySlug(product.categorySlug) || defaultCategorySlug); setIsCopyDialogOpen(true); }}>
+                                            <Copy className="w-4 h-4" />
                                           </Button>
                                           <Button variant="ghost" size="icon" onClick={() => { setMoveTargetProductId(product.id); setIsMoveDialogOpen(true); }}>
                                             <SlidersHorizontal className="w-4 h-4" />
@@ -671,6 +732,37 @@ export default function Admin() {
             </DialogContent>
           </Dialog>
 
+          {/* Copy Product Dialog */}
+          <Dialog open={isCopyDialogOpen} onOpenChange={(open) => { if (!open) { setIsCopyDialogOpen(false); setCopyTargetProductId(null); setCopyTargetSlug(""); } }}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Copy Product to Another Section</DialogTitle>
+                <DialogDescription>Create a duplicate of this product in a selected category.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleCopyProduct} className="space-y-4 py-4">
+                <div>
+                  <Label htmlFor="copyTarget">Target Section</Label>
+                  <Select value={copyTargetSlug} onValueChange={(value) => setCopyTargetSlug(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose section" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoryOptions.map((slug) => (
+                        <SelectItem key={slug} value={slug}>
+                          {(categoryMetadata[slug] && categoryMetadata[slug].name) ? categoryMetadata[slug].name : categoryNameFromSlug(slug)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" type="button" onClick={() => { setIsCopyDialogOpen(false); setCopyTargetProductId(null); setCopyTargetSlug(""); }}>Cancel</Button>
+                  <Button type="submit" disabled={savingProductId === copyTargetProductId}>Copy</Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+
         {/* Product Dialog */}
         <Dialog open={isProductDialogOpn} onOpenChange={setIsProductDialogOpn}>
           <DialogContent className="max-w-2xl">
@@ -802,6 +894,58 @@ export default function Admin() {
                 </div>
               </form>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Category Dialog */}
+        <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => { if (!open) { setIsCategoryDialogOpen(false); } }}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Create Product Category</DialogTitle>
+              <DialogDescription>Provide metadata for the new category. This appears on the storefront.</DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                await saveProductCategory(newCategoryName || newCategoryIcon || Date.now().toString(), {
+                  name: newCategoryName,
+                  icon: newCategoryIcon,
+                  description: newCategoryDescription,
+                  proTip: newCategoryProTip,
+                });
+                toast.success("Category created.");
+                setIsCategoryDialogOpen(false);
+                setNewCategoryName("");
+                setNewCategoryIcon("");
+                setNewCategoryDescription("");
+                setNewCategoryProTip("");
+              } catch (err) {
+                console.error(err);
+                toast.error("Failed to create category.");
+              }
+            }} className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="catName">Category Name</Label>
+                <Input id="catName" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="e.g. Pet Tags" required />
+              </div>
+              <div>
+                <Label htmlFor="catIcon">Category Icon (emoji)</Label>
+                <Input id="catIcon" value={newCategoryIcon} onChange={(e) => setNewCategoryIcon(e.target.value)} placeholder="e.g. 🐾" />
+              </div>
+              <div>
+                <Label htmlFor="catDescription">Short Description</Label>
+                <Textarea id="catDescription" value={newCategoryDescription} onChange={(e) => setNewCategoryDescription(e.target.value)} placeholder="Short description shown on products page" />
+              </div>
+              <div>
+                <Label htmlFor="proTip">Pro Tip</Label>
+                <Input id="proTip" value={newCategoryProTip} onChange={(e) => setNewCategoryProTip(e.target.value)} placeholder="Short pro tip shown below points" />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" type="button" onClick={() => setIsCategoryDialogOpen(false)}>Cancel</Button>
+                <Button type="submit">Create Category</Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
