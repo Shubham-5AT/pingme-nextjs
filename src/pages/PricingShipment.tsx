@@ -28,8 +28,8 @@ const PricingShipment = () => {
                     <td className="text-right font-bold">₹249</td>
                   </tr>
                   <tr className="border-b border-border">
-                    <td className="py-3">Bike Tag</td>
-                    <td className="text-right font-bold">₹249</td>
+                    <td className="py-3">Backpack Sticker</td>
+                    <td className="text-right font-bold">₹199</td>
                   </tr>
                   <tr className="border-b border-border">
                     <td className="py-3">Pet Tag</td>
