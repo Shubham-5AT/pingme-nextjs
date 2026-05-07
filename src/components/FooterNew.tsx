@@ -43,6 +43,13 @@ const FooterNew = () => {
             >
               Terms & Conditions
             </Link>
+            <span className="text-muted-foreground">|</span>
+            <Link 
+              to="/faq" 
+              className="px-2 py-1 rounded-md text-muted-foreground transition-colors hover:bg-primary/10 hover:text-yellow-400 hover:underline"
+            >
+              FAQ
+            </Link>
           </div>
         </div>
       </div>

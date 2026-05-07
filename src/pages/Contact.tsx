@@ -145,7 +145,7 @@ const Contact = () => {
                   <div>
                     <h3 className="font-bold mb-1">Address</h3>
                     <p className="text-muted-foreground">
-                      745, Kesho Ram Complex, Sector 45, Chandigarh - 160045
+                      745, Kesho Ram Complex, Sector 45, Chandigarh - 160047
                     </p>
                   </div>
                 </div>
