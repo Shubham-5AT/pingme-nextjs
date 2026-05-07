@@ -24,6 +24,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
 const PricingShipment = lazy(() => import("./pages/PricingShipment"));
 const TermsConditions = lazy(() => import("./pages/TermsConditions"));
+const FAQ = lazy(() => import("./pages/FAQ"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Auth Pages
@@ -148,6 +149,7 @@ const App = () => (
                 <Route path="/refund-policy" element={<RefundPolicy />} />
                 <Route path="/pricing-shipment" element={<PricingShipment />} />
                 <Route path="/terms-conditions" element={<TermsConditions />} />
+                <Route path="/faq" element={<FAQ />} />
 
                 <Route path="/:username" element={<PublicNFCProfile />} />
                 <Route path="/:username#" element={<PublicNFCProfile />} />
