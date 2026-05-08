@@ -638,8 +638,14 @@ exports.getPublicNfcProfile = onRequest({
         return;
       }
 
-      const profile = snapshot.docs[0].data();
-      res.status(200).json({ profile });
+      const docSnap = snapshot.docs[0];
+      const profile = docSnap.data();
+      res.status(200).json({
+        profile: {
+          ...profile,
+          orderId: docSnap.id,
+        },
+      });
     } catch (error) {
       console.error("getPublicNfcProfile error", error);
       res.status(500).send("Failed to load public NFC profile.");

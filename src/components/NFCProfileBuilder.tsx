@@ -1,8 +1,9 @@
+import { useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, Info, AlertCircle } from "lucide-react";
 
 const MAX_IMAGE_DATA_URL_LENGTH = 850000;
 const MAX_IMAGE_DIMENSION = 1200;
@@ -117,6 +118,9 @@ export default function NFCProfileBuilder({
   continueLabel = "Continue to Payment",
   variant = "checkout",
 }: NFCProfileBuilderProps) {
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const inputRefs = useRef<Record<string, HTMLInputElement | HTMLTextAreaElement | null>>({});
   const handleInputChange = (field: keyof NFCProfileData, value: string) => {
     const newProfileData = { ...profileData, [field]: value };
     
@@ -125,6 +129,58 @@ export default function NFCProfileBuilder({
     }
 
     onProfileChange(newProfileData);
+    // Clear error for this field when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
+  const validateForm = useCallback((): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!profileData.username?.trim()) {
+      errors.username = "Username is required";
+    }
+    if (!profileData.name?.trim()) {
+      errors.name = "Full name is required";
+    }
+    if (!profileData.email?.trim()) {
+      errors.email = "Email is required";
+    } else if (!profileData.email.includes("@")) {
+      errors.email = "Please enter a valid email";
+    }
+    if (!profileData.phone?.trim()) {
+      errors.phone = "Phone number is required";
+    }
+
+    setValidationErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setShowValidationErrors(true);
+      // Auto-focus first invalid field
+      const fieldOrder = ["username", "name", "email", "phone"];
+      for (const field of fieldOrder) {
+        if (errors[field] && inputRefs.current[field]) {
+          setTimeout(() => {
+            inputRefs.current[field]?.focus();
+            inputRefs.current[field]?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 0);
+          break;
+        }
+      }
+      return false;
+    }
+    return true;
+  }, [profileData, validationErrors]);
+
+  const handleContinueClick = () => {
+    if (validateForm()) {
+      onContinue();
+    }
   };
 
   const handlePhotoUpload = async (field: "profilePhoto", file?: File | null) => {
@@ -237,8 +293,15 @@ export default function NFCProfileBuilder({
                   placeholder="default"
                   value={profileData.username || ""}
                   onChange={(e) => handleInputChange("username", e.target.value)}
-                  className="mt-1"
+                  className={`mt-1 ${validationErrors.username ? "border-destructive" : ""}`}
+                  ref={(el) => { if (el) inputRefs.current.username = el; }}
                 />
+                {validationErrors.username && showValidationErrors && (
+                  <p className="text-sm text-destructive mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {validationErrors.username}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground mt-1">Keep this consistent with your card profile data.</p>
               </div>
               <div>
@@ -248,8 +311,16 @@ export default function NFCProfileBuilder({
                   placeholder="Your full name"
                   value={profileData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                  className="mt-1"
+                  className={`mt-1 ${validationErrors.name ? "border-destructive" : ""}`}
+                  ref={(el) => { if (el) inputRefs.current.name = el; }}
                 />
+                {validationErrors.name && showValidationErrors && (
+                  <p className="text-sm text-destructive mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {validationErrors.name}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">This will be displayed when someone scans your NFC card</p>
               </div>
               <div>
                 <Label htmlFor="profile-company">Company Name</Label>
@@ -304,8 +375,15 @@ export default function NFCProfileBuilder({
                   placeholder="you@example.com"
                   value={profileData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  className="mt-1"
+                  className={`mt-1 ${validationErrors.email ? "border-destructive" : ""}`}
+                  ref={(el) => { if (el) inputRefs.current.email = el; }}
                 />
+                {validationErrors.email && showValidationErrors && (
+                  <p className="text-sm text-destructive mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {validationErrors.email}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="profile-phone">Phone *</Label>
@@ -314,8 +392,15 @@ export default function NFCProfileBuilder({
                   placeholder="+91 9876543210"
                   value={profileData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
-                  className="mt-1"
+                  className={`mt-1 ${validationErrors.phone ? "border-destructive" : ""}`}
+                  ref={(el) => { if (el) inputRefs.current.phone = el; }}
                 />
+                {validationErrors.phone && showValidationErrors && (
+                  <p className="text-sm text-destructive mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {validationErrors.phone}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="profile-website">Website</Label>
@@ -456,8 +541,15 @@ export default function NFCProfileBuilder({
                     placeholder="default"
                     value={profileData.username || ""}
                     onChange={(e) => handleInputChange("username", e.target.value)}
-                    className="mt-1"
+                    className={`mt-1 ${validationErrors.username ? "border-destructive" : ""}`}
+                    ref={(el) => { if (el) inputRefs.current.username = el; }}
                   />
+                  {validationErrors.username && showValidationErrors && (
+                    <p className="text-sm text-destructive mt-1.5 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {validationErrors.username}
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground mt-1">Keep this consistent with your card profile data.</p>
                 </div>
 
@@ -468,8 +560,15 @@ export default function NFCProfileBuilder({
                     placeholder="Your full name"
                     value={profileData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    className="mt-1"
+                    className={`mt-1 ${validationErrors.name ? "border-destructive" : ""}`}
+                    ref={(el) => { if (el) inputRefs.current.name = el; }}
                   />
+                  {validationErrors.name && showValidationErrors && (
+                    <p className="text-sm text-destructive mt-1.5 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {validationErrors.name}
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground mt-1">
                     This will be displayed when someone scans your NFC card
                   </p>
@@ -483,8 +582,15 @@ export default function NFCProfileBuilder({
                     placeholder="you@example.com"
                     value={profileData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    className="mt-1"
+                    className={`mt-1 ${validationErrors.email ? "border-destructive" : ""}`}
+                    ref={(el) => { if (el) inputRefs.current.email = el; }}
                   />
+                  {validationErrors.email && showValidationErrors && (
+                    <p className="text-sm text-destructive mt-1.5 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {validationErrors.email}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -494,8 +600,15 @@ export default function NFCProfileBuilder({
                     placeholder="+91 9876543210"
                     value={profileData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
-                    className="mt-1"
+                    className={`mt-1 ${validationErrors.phone ? "border-destructive" : ""}`}
+                    ref={(el) => { if (el) inputRefs.current.phone = el; }}
                   />
+                  {validationErrors.phone && showValidationErrors && (
+                    <p className="text-sm text-destructive mt-1.5 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {validationErrors.phone}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -594,9 +707,9 @@ export default function NFCProfileBuilder({
           </Button>
           <Button
             type="button"
-            onClick={onContinue}
+            onClick={handleContinueClick}
             className="flex-1"
-            disabled={!isValid || isLoading}
+            disabled={isLoading}
           >
             {isLoading ? "Processing..." : continueLabel}
           </Button>

@@ -214,3 +214,28 @@ export const moveProductsToCategory = async (productIds: string[], targetSlugRaw
   });
   await batch.commit();
 };
+
+export const deleteCategory = async (slugRaw: string) => {
+  const slug = normalizeCategorySlug(slugRaw);
+  if (!slug || slug === "uncategorized") {
+    throw new Error("Cannot delete the uncategorized category.");
+  }
+
+  const productsRef = collection(db, "products");
+  const q = query(productsRef, where("categorySlug", "==", slug));
+  const snapshot = await getDocs(q);
+
+  const batch = writeBatch(db);
+
+  // Move all products in this category to uncategorized
+  snapshot.forEach((p) => {
+    const pRef = doc(db, "products", p.id);
+    batch.update(pRef, { categorySlug: "uncategorized", updatedAt: serverTimestamp() });
+  });
+
+  // Delete the category metadata document
+  const catRef = doc(db, "productCategories", slug);
+  batch.delete(catRef);
+
+  await batch.commit();
+};

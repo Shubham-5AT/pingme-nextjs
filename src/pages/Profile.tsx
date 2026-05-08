@@ -168,6 +168,10 @@ export default function Profile() {
     profilePhoto: "",
     projects: [],
   });
+  const [nfcProfileOriginal, setNfcProfileOriginal] = useState<NFCProfileData | null>(null);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [unsavedNfcChanges, setUnsavedNfcChanges] = useState(false);
+  const [closeWithoutSaveConfirm, setCloseWithoutSaveConfirm] = useState(false);
 
   // Profile form
   const profileForm = useForm<ProfileFormData>({
@@ -246,24 +250,66 @@ export default function Profile() {
   const onAddressSubmit = async (data: AddressFormData) => {
     try {
       setAddressLoading(true);
-      const newAddress: DeliveryAddress = {
-        id: crypto.randomUUID(),
-        pincode: data.pincode,
-        country: data.country,
-        state: data.state,
-        city: data.city,
-        fullAddress: data.fullAddress,
-        landmark: data.landmark || "",
-      };
       const currentAddresses = profile?.addresses || [];
-      await updateAddresses([...currentAddresses, newAddress]);
-      toast.success("Address saved successfully!");
+      let updatedAddresses: DeliveryAddress[];
+
+      if (editingAddressId) {
+        // Edit mode: update existing address
+        updatedAddresses = currentAddresses.map((addr) =>
+          addr.id === editingAddressId
+            ? {
+                ...addr,
+                pincode: data.pincode,
+                country: data.country,
+                state: data.state,
+                city: data.city,
+                fullAddress: data.fullAddress,
+                landmark: data.landmark || "",
+              }
+            : addr
+        );
+        toast.success("Address updated successfully!");
+      } else {
+        // Add mode: create new address
+        const newAddress: DeliveryAddress = {
+          id: crypto.randomUUID(),
+          pincode: data.pincode,
+          country: data.country,
+          state: data.state,
+          city: data.city,
+          fullAddress: data.fullAddress,
+          landmark: data.landmark || "",
+        };
+        updatedAddresses = [...currentAddresses, newAddress];
+        toast.success("Address added successfully!");
+      }
+
+      await updateAddresses(updatedAddresses);
       addressForm.reset();
+      setEditingAddressId(null);
     } catch {
       toast.error("Failed to save address. Please try again.");
     } finally {
       setAddressLoading(false);
     }
+  };
+
+  const handleEditAddress = (addr: DeliveryAddress) => {
+    setEditingAddressId(addr.id);
+    addressForm.reset({
+      pincode: addr.pincode,
+      country: addr.country,
+      state: addr.state,
+      city: addr.city,
+      fullAddress: addr.fullAddress,
+      landmark: addr.landmark || "",
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEditAddress = () => {
+    setEditingAddressId(null);
+    addressForm.reset();
   };
 
   const handleResendVerification = async () => {
@@ -313,8 +359,7 @@ export default function Profile() {
   };
 
   const openEditNFC = (order: PrebookingRecord) => {
-    setSelectedNfcOrderId(order.id);
-    setNfcProfileDraft({
+    const initialProfile = {
       username: order.nfcProfile?.username || "",
       name: order.nfcProfile?.name || order.fullName || profile.displayName || "",
       companyName: order.nfcProfile?.companyName || "",
@@ -332,8 +377,31 @@ export default function Profile() {
       facebook: order.nfcProfile?.facebook || "",
       profilePhoto: order.nfcProfile?.profilePhoto || "",
       projects: order.nfcProfile?.projects || [],
-    });
+    };
+    setSelectedNfcOrderId(order.id);
+    setNfcProfileDraft(initialProfile);
+    setNfcProfileOriginal(initialProfile);
+    setUnsavedNfcChanges(false);
+    setCloseWithoutSaveConfirm(false);
     setNfcDialogOpen(true);
+  };
+
+  const handleNfcDialogOpenChange = (open: boolean) => {
+    if (!open && unsavedNfcChanges) {
+      setCloseWithoutSaveConfirm(true);
+      return;
+    }
+    setNfcDialogOpen(open);
+    if (!open) {
+      setSelectedNfcOrderId(null);
+      setUnsavedNfcChanges(false);
+      setCloseWithoutSaveConfirm(false);
+    }
+  };
+
+  const handleNfcProfileChange = (data: NFCProfileData) => {
+    setNfcProfileDraft(data);
+    setUnsavedNfcChanges(JSON.stringify(data) !== JSON.stringify(nfcProfileOriginal));
   };
 
   const handleSaveNFCProfile = async () => {
@@ -373,8 +441,10 @@ export default function Profile() {
         )
       );
       toast.success("NFC profile updated successfully!");
+      setUnsavedNfcChanges(false);
       setNfcDialogOpen(false);
       setSelectedNfcOrderId(null);
+      setNfcProfileOriginal(null);
     } catch (error: any) {
       const message =
         typeof error?.message === "string" && error.message.trim().length > 0
@@ -693,28 +763,41 @@ export default function Profile() {
                 {profile.addresses && profile.addresses.length > 0 ? (
                   profile.addresses.map((addr) => (
                     <div key={addr.id} className="p-4 border border-border rounded-xl flex justify-between items-start bg-card">
-                      <div>
-                        <p className="font-medium text-sm mb-1">{addr.fullAddress}</p>
+                      <div className="flex-1">
+                        <p className={editingAddressId === addr.id ? "font-bold text-sm mb-1 p-2 bg-blue-50 rounded text-blue-900" : "font-medium text-sm mb-1"}>
+                          {editingAddressId === addr.id && "✏️ Editing: "}
+                          {addr.fullAddress}
+                        </p>
                         <p className="text-sm text-muted-foreground">{addr.city}, {addr.state} - {addr.pincode}</p>
                         {addr.landmark && <p className="text-sm text-muted-foreground mt-1">Landmark: {addr.landmark}</p>}
                         <p className="text-sm text-muted-foreground">{addr.country}</p>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={async () => {
-                          const updated = profile.addresses!.filter(a => a.id !== addr.id);
-                          try {
-                            await updateAddresses(updated);
-                            toast.success("Address deleted");
-                          } catch {
-                            toast.error("Failed to delete address");
-                          }
-                        }} 
-                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        Delete
-                      </Button>
+                      <div className="flex gap-2 ml-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleEditAddress(addr)}
+                          className="text-primary hover:bg-primary/10"
+                        >
+                          Edit
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={async () => {
+                            const updated = profile.addresses!.filter(a => a.id !== addr.id);
+                            try {
+                              await updateAddresses(updated);
+                              toast.success("Address deleted");
+                            } catch {
+                              toast.error("Failed to delete address");
+                            }
+                          }} 
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -725,7 +808,20 @@ export default function Profile() {
               </div>
 
               <div className="pt-6 border-t border-border">
-                <h3 className="font-medium mb-4">Add New Address</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-medium">{editingAddressId ? "Edit Address" : "Add New Address"}</h3>
+                  {editingAddressId && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCancelEditAddress}
+                      className="text-muted-foreground"
+                    >
+                      Cancel Edit
+                    </Button>
+                  )}
+                </div>
                 <form
                   onSubmit={addressForm.handleSubmit(onAddressSubmit)}
                   className="space-y-4"
@@ -848,7 +944,17 @@ export default function Profile() {
                     />
                   </div>
 
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-2">
+                    {editingAddressId && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={addressLoading}
+                        onClick={handleCancelEditAddress}
+                      >
+                        Cancel
+                      </Button>
+                    )}
                     <Button
                       type="submit"
                       disabled={addressLoading || !addressForm.formState.isDirty}
@@ -856,7 +962,7 @@ export default function Profile() {
                       {addressLoading && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
-                      Add Address
+                      {editingAddressId ? "Update Address" : "Add Address"}
                     </Button>
                   </div>
                 </form>
@@ -1028,37 +1134,68 @@ export default function Profile() {
           </Card>
 
           <Dialog
-            open={nfcDialogOpen}
-            onOpenChange={(open) => {
-              setNfcDialogOpen(open);
-              if (!open) {
-                setSelectedNfcOrderId(null);
-              }
-            }}
+            open={nfcDialogOpen || closeWithoutSaveConfirm}
+            onOpenChange={handleNfcDialogOpenChange}
           >
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Edit NFC Profile</DialogTitle>
-                <DialogDescription>
-                  Update the NFC profile linked to your purchased NFC card.
-                </DialogDescription>
-              </DialogHeader>
-              <NFCProfileBuilder
-                profileData={nfcProfileDraft}
-                onProfileChange={setNfcProfileDraft}
-                onBack={() => {
-                  setNfcDialogOpen(false);
-                  setSelectedNfcOrderId(null);
-                }}
-                onContinue={handleSaveNFCProfile}
-                isLoading={nfcEditLoading}
-                title="Edit Your NFC Profile"
-                description="Keep your NFC card profile up to date from your account dashboard."
-                infoText="These details power your public NFC page link as pleaseping.me/nfc&lt;username&gt;. Username is globally unique and updates reflect on your live link."
-                backLabel="Cancel"
-                continueLabel="Save NFC Profile"
-                variant="edit"
-              />
+              {closeWithoutSaveConfirm ? (
+                <>
+                  <DialogHeader>
+                    <DialogTitle>Unsaved Changes</DialogTitle>
+                    <DialogDescription>
+                      You have unsaved changes. Are you sure you want to close without saving?
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex gap-3 justify-end pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setCloseWithoutSaveConfirm(false)}
+                    >
+                      Keep Editing
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        setNfcDialogOpen(false);
+                        setSelectedNfcOrderId(null);
+                        setUnsavedNfcChanges(false);
+                        setCloseWithoutSaveConfirm(false);
+                      }}
+                    >
+                      Discard Changes
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <DialogHeader>
+                    <DialogTitle>Edit NFC Profile</DialogTitle>
+                    <DialogDescription>
+                      Update the NFC profile linked to your purchased NFC card.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <NFCProfileBuilder
+                    profileData={nfcProfileDraft}
+                    onProfileChange={handleNfcProfileChange}
+                    onBack={() => {
+                      if (unsavedNfcChanges) {
+                        setCloseWithoutSaveConfirm(true);
+                      } else {
+                        setNfcDialogOpen(false);
+                        setSelectedNfcOrderId(null);
+                      }
+                    }}
+                    onContinue={handleSaveNFCProfile}
+                    isLoading={nfcEditLoading}
+                    title="Edit Your NFC Profile"
+                    description="Keep your NFC card profile up to date from your account dashboard."
+                    infoText="These details power your public NFC page link as pleaseping.me/nfc&lt;username&gt;. Username is globally unique and updates reflect on your live link."
+                    backLabel="Cancel"
+                    continueLabel="Save NFC Profile"
+                    variant="edit"
+                  />
+                </>
+              )}
             </DialogContent>
           </Dialog>
         </div>

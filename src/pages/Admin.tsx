@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { subscribeToOrders, updateOrderStatus } from "@/lib/adminService";
 import { categoryDescriptionFromName, categoryNameFromSlug, normalizeCategorySlug } from "@/lib/productCatalog";
-import { subscribeToProducts, saveProduct, deleteProductDoc, uploadProductImage, DbProduct, renameCategory, moveProductsToCategory, subscribeToProductCategories, saveProductCategory } from "@/lib/productService";
+import { subscribeToProducts, saveProduct, deleteProductDoc, uploadProductImage, DbProduct, renameCategory, moveProductsToCategory, subscribeToProductCategories, saveProductCategory, deleteCategory } from "@/lib/productService";
 import type { PrebookingRecord } from "@/lib/prebookService";
 
 const formatDate = (value: unknown): string => {
@@ -279,6 +279,18 @@ export default function Admin() {
     }
   };
 
+  const handleDeleteCategory = async (slug: string) => {
+    if (!window.confirm("Are you sure you want to delete this category? All products in this category will be moved to 'Uncategorized'.")) return;
+    try {
+      await deleteCategory(slug);
+      toast.success("Category deleted and products moved to Uncategorized.");
+    } catch (error) {
+      console.error(error);
+      const message = error instanceof Error ? error.message : "Failed to delete category.";
+      toast.error(message);
+    }
+  };
+
   const filteredOrders = useMemo(() => {
     const searchTerm = orderSearch.trim().toLowerCase();
 
@@ -536,6 +548,20 @@ export default function Admin() {
                               aria-label={`Rename ${category.name}`}
                             >
                               <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled={category.slug === "uncategorized"}
+                              className="text-destructive hover:bg-destructive/10 disabled:text-muted-foreground disabled:hover:bg-transparent"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleDeleteCategory(category.slug);
+                              }}
+                              aria-label={`Delete ${category.name}`}
+                              title={category.slug === "uncategorized" ? "Cannot delete the Uncategorized category" : `Delete ${category.name}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                           <AccordionContent className="pb-4">
