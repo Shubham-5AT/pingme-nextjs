@@ -2,7 +2,7 @@ import { useState } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Copy, ExternalLink } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { APP_CONFIG } from "@/config/constants";
@@ -14,6 +14,20 @@ const MAX_EMAIL_LENGTH = 255;
 const MAX_PHONE_LENGTH = 20;
 const MAX_MESSAGE_LENGTH = 1000;
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const SUPPORT_ADDRESS = "745, Kesho Ram Complex, Sector 45, Chandigarh - 160047";
+
+const buildGoogleMapsUrl = (address: string): string => {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+};
+
+const buildTelUrl = (phone: string): string => {
+  const normalizedPhone = phone.replace(/[^+\d]/g, "");
+  return `tel:${normalizedPhone}`;
+};
+
+const buildGmailComposeUrl = (email: string): string => {
+  return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`;
+};
 
 const Contact = () => {
   const { toast } = useToast();
@@ -24,6 +38,23 @@ const Contact = () => {
     message: "",
   });
   const [loading, setLoading] = useState(false);
+
+  const handleCopyContactDetail = async (value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast({
+        title: `${label} copied`,
+        description: `${label} copied to clipboard.`,
+      });
+    } catch (error) {
+      console.error(`Failed to copy ${label.toLowerCase()}:`, error);
+      toast({
+        title: "Copy failed",
+        description: `Unable to copy the ${label.toLowerCase()}.`,
+        variant: "destructive",
+      });
+    }
+  };
 
   const validateForm = (): boolean => {
     const trimmedName = formData.name.trim();
@@ -133,34 +164,92 @@ const Contact = () => {
 
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <a
+                    href={buildGoogleMapsUrl(SUPPORT_ADDRESS)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105"
+                    aria-label="Open address in Google Maps"
+                  >
                     <MapPin className="w-6 h-6 text-primary-foreground" />
-                  </div>
-                  <div>
+                  </a>
+                  <div className="space-y-2">
                     <h3 className="font-bold mb-1">Address</h3>
-                    <p className="text-muted-foreground">
-                      745, Kesho Ram Complex, Sector 45, Chandigarh - 160047
-                    </p>
+                    <a
+                      href={buildGoogleMapsUrl(SUPPORT_ADDRESS)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <span>{SUPPORT_ADDRESS}</span>
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
                   </div>
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <a
+                    href={buildTelUrl(APP_CONFIG.SUPPORT_PHONE)}
+                    className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105"
+                    aria-label={`Call ${APP_CONFIG.SUPPORT_PHONE}`}
+                  >
                     <Phone className="w-6 h-6 text-primary-foreground" />
-                  </div>
-                  <div>
+                  </a>
+                  <div className="space-y-2">
                     <h3 className="font-bold mb-1">Phone</h3>
-                    <p className="text-muted-foreground">{APP_CONFIG.SUPPORT_PHONE}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <a
+                        href={buildTelUrl(APP_CONFIG.SUPPORT_PHONE)}
+                        className="text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {APP_CONFIG.SUPPORT_PHONE}
+                      </a>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-2"
+                        onClick={() => handleCopyContactDetail(APP_CONFIG.SUPPORT_PHONE, "Phone number")}
+                      >
+                        <Copy className="mr-2 h-3.5 w-3.5" />
+                        
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <a
+                    href={buildGmailComposeUrl(APP_CONFIG.SUPPORT_EMAIL)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105"
+                    aria-label={`Email ${APP_CONFIG.SUPPORT_EMAIL}`}
+                  >
                     <Mail className="w-6 h-6 text-primary-foreground" />
-                  </div>
-                  <div>
+                  </a>
+                  <div className="space-y-2">
                     <h3 className="font-bold mb-1">Email</h3>
-                    <p className="text-muted-foreground">{APP_CONFIG.SUPPORT_EMAIL}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <a
+                        href={buildGmailComposeUrl(APP_CONFIG.SUPPORT_EMAIL)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {APP_CONFIG.SUPPORT_EMAIL}
+                      </a>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-2"
+                        onClick={() => handleCopyContactDetail(APP_CONFIG.SUPPORT_EMAIL, "Email address")}
+                      >
+                        <Copy className="mr-2 h-3.5 w-3.5" />
+                        
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
