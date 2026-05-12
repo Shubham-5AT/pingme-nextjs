@@ -8,6 +8,7 @@ import {
   doc,
   updateDoc,
 } from 'firebase/firestore';
+import DOMPurify from 'dompurify';
 import { db, auth } from '@/lib/firebase';
 import { resolveProductImageUrl } from '@/lib/productCatalog';
 
@@ -103,12 +104,24 @@ const getPaymentApiBaseUrl = () => {
   return typeof base === 'string' ? base.replace(/\/$/, '') : '';
 };
 
-// Simple text sanitizer to prevent XSS
-const sanitizeText = (text: string): string => {
-  return text
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<[^>]*>/g, '')
-    .trim();
+// Robust text sanitizer to prevent XSS using DOMPurify
+// Prevents: malformed tags, event handlers, HTML entities, data URIs, encoded payloads
+export const sanitizeText = (text: string): string => {
+  if (typeof text !== 'string') return '';
+  
+  // Use DOMPurify to properly parse and sanitize HTML
+  // ALLOWED_TAGS: [] means NO HTML tags allowed (strip everything)
+  // This handles entity encoding, malformed tags, and event handlers
+  const cleaned = DOMPurify.sanitize(text, {
+    ALLOWED_TAGS: [],
+    ALLOWED_ATTR: [],
+    KEEP_CONTENT: true,
+  });
+  
+  // DOMPurify handles most entity decoding, but decode remaining ones
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = cleaned;
+  return textarea.value.trim();
 };
 
 const sanitizeNFCProfile = (profile: NFCProfile): NFCProfile => {

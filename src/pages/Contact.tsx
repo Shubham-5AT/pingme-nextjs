@@ -6,6 +6,7 @@ import { Mail, Phone, MapPin } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { APP_CONFIG } from "@/config/constants";
+import { sanitizeText } from "@/lib/prebookService";
 
 // Input validation constants
 const MAX_NAME_LENGTH = 100;
@@ -13,14 +14,6 @@ const MAX_EMAIL_LENGTH = 255;
 const MAX_PHONE_LENGTH = 20;
 const MAX_MESSAGE_LENGTH = 1000;
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-// Simple text sanitizer to prevent XSS (removes script tags and HTML)
-const sanitizeText = (text: string): string => {
-  return text
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<[^>]*>/g, '')
-    .trim();
-};
 
 const Contact = () => {
   const { toast } = useToast();
