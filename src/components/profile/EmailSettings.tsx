@@ -25,6 +25,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { emailChangeSchema, type EmailChangeFormData } from "@/lib/validations/auth";
+import { APP_CONFIG } from "@/config/constants";
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (error instanceof Error && error.message) {
@@ -211,7 +212,7 @@ export function EmailSettings() {
         {!user.emailVerified && (
           <p className="text-sm text-muted-foreground">
             A verification email will be sent from{" "}
-            <span className="font-medium">contact@pingiff.ai</span>. Check your
+            <span className="font-medium">{APP_CONFIG.SUPPORT_EMAIL}</span>. Check your
             spam folder if you don't see it.
           </p>
         )}

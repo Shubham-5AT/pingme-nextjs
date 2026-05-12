@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { addressSchema, type AddressFormData } from "@/lib/validations/auth";
 import type { DeliveryAddress } from "@/types/user";
+import { APP_CONFIG } from "@/config/constants";
 
 type StateOption = {
   name: string;
@@ -42,7 +43,7 @@ export function AddressManagement() {
     resolver: zodResolver(addressSchema),
     defaultValues: {
       pincode: "",
-      country: "India",
+      country: APP_CONFIG.DEFAULT_COUNTRY,
       state: "",
       city: "",
       fullAddress: "",
@@ -51,12 +52,12 @@ export function AddressManagement() {
   });
 
   const watchStateName = addressForm.watch("state");
-  const inStates = State.getStatesOfCountry("IN") as StateOption[];
+  const inStates = State.getStatesOfCountry(APP_CONFIG.DEFAULT_COUNTRY_ISO) as StateOption[];
   const selectedStateObj = inStates.find(
     (stateOption) => stateOption.name === watchStateName
   );
   const cities = selectedStateObj
-    ? (City.getCitiesOfState("IN", selectedStateObj.isoCode) as CityOption[])
+    ? (City.getCitiesOfState(APP_CONFIG.DEFAULT_COUNTRY_ISO, selectedStateObj.isoCode) as CityOption[])
     : [];
 
   const addAddressMutation = useMutation({
@@ -180,7 +181,7 @@ export function AddressManagement() {
                 <Label htmlFor="country">Country *</Label>
                 <Input
                   id="country"
-                  placeholder="India"
+                  placeholder={APP_CONFIG.DEFAULT_COUNTRY}
                   {...addressForm.register("country")}
                 />
                 {addressForm.formState.errors.country && (

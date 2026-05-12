@@ -78,9 +78,9 @@ export function NFCEditModal({
       }
       onOpenChange(false);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message =
-        typeof error?.message === "string" && error.message.trim().length > 0
+        error instanceof Error && error.message.trim().length > 0
           ? error.message
           : "Failed to update NFC profile. Please try again.";
       toast.error(message);

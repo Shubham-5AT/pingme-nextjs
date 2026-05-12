@@ -51,8 +51,8 @@ export default function Profile() {
     onSuccess: () => {
       toast.success("Verification email sent! Please check your inbox.");
     },
-    onError: (error: any) => {
-      toast.error(error?.message || "Failed to send verification email.");
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : "Failed to send verification email.");
     },
   });
 
