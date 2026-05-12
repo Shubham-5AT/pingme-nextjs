@@ -235,7 +235,19 @@ const buildPublicNfcProfilePayload = ({ profileId, profile }) => {
   };
 };
 
-const syncProfileToNfcProfilesCollection = async ({ profileId, profile, source = "unknown" }) => {
+const isConfirmedNfcProfileRecord = (data) => {
+  if (!data || typeof data !== "object") {
+    return false;
+  }
+
+  if (data.status === "confirmed") {
+    return true;
+  }
+
+  return data.updatedSource && data.updatedSource !== "prePaymentDraft";
+};
+
+const syncProfileToNfcProfilesCollection = async ({ profileId, profile, source = "unknown", status = "confirmed" }) => {
   if (!profileId || !profile) {
     return { synced: false, reason: "Missing profileId or profile" };
   }
@@ -250,6 +262,7 @@ const syncProfileToNfcProfilesCollection = async ({ profileId, profile, source =
   await targetRef.set(
     {
       ...payload,
+      status,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedSource: source,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -593,6 +606,7 @@ exports.syncNfcProfileDraft = onRequest({
         profileId,
         profile: nfcProfile,
         source: "prePaymentDraft",
+        status: "draft",
       });
 
       if (!result.synced) {
@@ -607,6 +621,54 @@ exports.syncNfcProfileDraft = onRequest({
     } catch (error) {
       console.error("syncNfcProfileDraft error", error);
       res.status(500).send("Failed to sync NFC profile.");
+    }
+  });
+});
+
+exports.deleteNfcProfileDraft = onRequest({
+  region: "asia-south1",
+}, (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send("Method Not Allowed");
+      return;
+    }
+
+    const decodedToken = await authenticate(req);
+    if (!decodedToken) {
+      res.status(401).send("Unauthorized");
+      return;
+    }
+
+    try {
+      const { profileId } = req.body || {};
+
+      if (!profileId) {
+        res.status(400).send("profileId is required.");
+        return;
+      }
+
+      const draftRef = db.collection(NFC_PROFILES_COLLECTION).doc(String(profileId));
+      const draftSnap = await draftRef.get();
+
+      if (!draftSnap.exists) {
+        res.status(200).json({ success: true, deleted: false });
+        return;
+      }
+
+      const draftData = draftSnap.data() || {};
+      const isConfirmed = draftData.status === "confirmed" && draftData.updatedSource !== "prePaymentDraft";
+
+      if (isConfirmed) {
+        res.status(200).json({ success: true, deleted: false, reason: "confirmed profile preserved" });
+        return;
+      }
+
+      await draftRef.delete();
+      res.status(200).json({ success: true, deleted: true });
+    } catch (error) {
+      console.error("deleteNfcProfileDraft error", error);
+      res.status(500).send("Failed to delete NFC draft.");
     }
   });
 });
@@ -630,7 +692,6 @@ exports.getPublicNfcProfile = onRequest({
       const snapshot = await db
         .collection(NFC_PROFILES_COLLECTION)
         .where("username", "==", username)
-        .limit(1)
         .get();
 
       if (snapshot.empty) {
@@ -638,12 +699,18 @@ exports.getPublicNfcProfile = onRequest({
         return;
       }
 
-      const docSnap = snapshot.docs[0];
-      const profile = docSnap.data();
+      const confirmedDoc = snapshot.docs.find((docSnap) => isConfirmedNfcProfileRecord(docSnap.data()));
+
+      if (!confirmedDoc) {
+        res.status(404).send("Profile not found.");
+        return;
+      }
+
+      const profile = confirmedDoc.data();
       res.status(200).json({
         profile: {
           ...profile,
-          orderId: docSnap.id,
+          orderId: confirmedDoc.id,
         },
       });
     } catch (error) {

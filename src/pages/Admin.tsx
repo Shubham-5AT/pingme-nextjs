@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, startTransition } from "react";
 import { CheckCircle2, Copy, Eye, Loader2, Save, Search, Shield, SlidersHorizontal, XCircle, Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import MainLayout from "@/layouts/MainLayout";
@@ -352,6 +352,12 @@ export default function Admin() {
     }
   };
 
+  const handleViewOrder = (order: PrebookingRecord) => {
+    startTransition(() => {
+      setSelectedOrder(order);
+    });
+  };
+
   return (
     <MainLayout>
       <div className="container py-8 space-y-6">
@@ -471,7 +477,7 @@ export default function Admin() {
                           <TableCell>{formatDate(order.createdAt)}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <Button variant="outline" size="sm" onClick={() => setSelectedOrder(order)}>
+                              <Button variant="outline" size="sm" onClick={() => handleViewOrder(order)}>
                                 <Eye className="w-4 h-4 mr-1" />
                                 View
                               </Button>

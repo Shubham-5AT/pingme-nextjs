@@ -140,6 +140,34 @@ export const verifyRazorpayPaymentAndCreatePrebooking = async (input: {
   return (await res.json()) as VerifyPaymentResponse;
 };
 
+export const deleteNfcProfileDraft = async (profileId: string): Promise<void> => {
+  const baseUrl = getPaymentApiBaseUrl();
+  if (!baseUrl) {
+    return;
+  }
+
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    return;
+  }
+
+  const idToken = await currentUser.getIdToken();
+
+  const res = await fetch(`${baseUrl}/deleteNfcProfileDraft`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${idToken}`,
+    },
+    body: JSON.stringify({ profileId }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to delete NFC draft.");
+  }
+};
+
 export const openRazorpayCheckout = async (input: {
   keyId?: string;
   orderId: string;

@@ -48,6 +48,11 @@ const isPublicNfcProfile = (value: unknown): value is PublicNfcProfile => {
   );
 };
 
+const isDraftNfcProfile = (value: unknown): boolean => {
+  if (!isRecord(value)) return false;
+  return value.status === "draft" || value.updatedSource === "prePaymentDraft";
+};
+
 export const fetchPublicNfcProfile = async (username: string): Promise<PublicNfcProfile> => {
   const normalizedUsername = normalizeNfcUsername(username);
   if (!normalizedUsername) {
@@ -75,6 +80,10 @@ export const fetchPublicNfcProfile = async (username: string): Promise<PublicNfc
   const payload: unknown = await response.json();
   if (!isRecord(payload) || !isPublicNfcProfile(payload.profile)) {
     throw new Error("Invalid profile response.");
+  }
+
+  if (isDraftNfcProfile(payload.profile)) {
+    throw new Error("Profile not found.");
   }
 
   return payload.profile;

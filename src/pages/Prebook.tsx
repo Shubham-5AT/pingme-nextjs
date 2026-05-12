@@ -13,6 +13,7 @@ import { syncNfcProfileToPublicDomain } from "@/lib/prebookService";
 import {
   createRazorpayOrder,
   openRazorpayCheckout,
+  deleteNfcProfileDraft,
   verifyRazorpayPaymentAndCreatePrebooking,
 } from "@/lib/paymentService";
 import { resolveProductImageUrl } from "@/lib/productCatalog";
@@ -251,6 +252,11 @@ const Prebook = () => {
           }
         },
         onDismiss: () => {
+          if (showProfileBuilding) {
+            void deleteNfcProfileDraft(order.orderId).catch((cleanupError: unknown) => {
+              console.error("Failed to delete NFC draft after payment cancel", cleanupError);
+            });
+          }
           setSubmitting(false);
           toast({
             title: "Payment cancelled",
