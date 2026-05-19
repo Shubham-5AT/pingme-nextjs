@@ -204,16 +204,7 @@ const Contact = () => {
                       >
                         {APP_CONFIG.SUPPORT_PHONE}
                       </a>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-2"
-                        onClick={() => handleCopyContactDetail(APP_CONFIG.SUPPORT_PHONE, "Phone number")}
-                      >
-                        <Copy className="mr-2 h-3.5 w-3.5" />
-                        
-                      </Button>
+                      
                     </div>
                   </div>
                 </div>
@@ -239,16 +230,7 @@ const Contact = () => {
                       >
                         {APP_CONFIG.SUPPORT_EMAIL}
                       </a>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-2"
-                        onClick={() => handleCopyContactDetail(APP_CONFIG.SUPPORT_EMAIL, "Email address")}
-                      >
-                        <Copy className="mr-2 h-3.5 w-3.5" />
-                        
-                      </Button>
+                      
                     </div>
                   </div>
                 </div>

@@ -31,7 +31,7 @@ import petSafetyTag from "@/assets/pingprocard.jpeg";
 import heroDemoVideoMp4 from "@/assets/IMG_9847.mp4";
 import heroDemoVideoWebm from "@/assets/IMG_9847.webm";
 import { subscribeToProducts, type DbProduct } from "@/lib/productService";
-import { normalizeCategorySlug } from "@/lib/productCatalog";
+import { normalizeCategorySlug, buildProductImageUrl } from "@/lib/productCatalog";
 
 const quickFacts = [
   {
@@ -64,9 +64,10 @@ type HeroProduct = {
 };
 
 const getBestSellingImage = (products: DbProduct[], categorySlug: string, fallback?: string): string | undefined => {
+  const normalizedTarget = normalizeCategorySlug(categorySlug);
   const categoryProducts = products.filter(
     (product): product is DbProduct & HeroProduct =>
-      normalizeCategorySlug(product.categorySlug) === categorySlug && typeof (product as HeroProduct).image === "string" && Boolean((product as HeroProduct).image)
+      normalizeCategorySlug(product.categorySlug) === normalizedTarget && typeof (product as HeroProduct).image === "string" && Boolean((product as HeroProduct).image)
   );
 
   if (!categoryProducts.length) {
@@ -103,7 +104,11 @@ const getOfferings = (products: DbProduct[], hasProductSnapshot: boolean) => [
     icon: PackageSearch,
     title: "Lost & Found Tags",
     description: "Backpacks, laptops, keychains, and everyday essentials can find their way back faster.",
-    image: getBestSellingImage(products, "backpack-stickers", hasProductSnapshot ? backpackSticker : undefined),
+    image: getBestSellingImage(
+      products,
+      "backpack-stickers",
+      hasProductSnapshot ? buildProductImageUrl("products/backpack-stickers/backpack_sticker2.png") : undefined
+    ),
     imageFrameClass: "md:h-[250px]",
     accent: "from-slate-400/30 to-zinc-200/10",
     points: ["For bags, laptops, and accessories", "Easy scan for the finder", "Private return flow"],
