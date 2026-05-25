@@ -356,7 +356,7 @@ const Prebook = () => {
         </div>
 
         {/* Order Summary Sidebar */}
-        <div className="w-full md:w-[350px] lg:w-[400px]">
+        <div className="w-[clamp(220px,50vw,400px)] mx-auto md:mx-0 md:w-[350px] lg:w-[400px]">
           <div className="bg-card border border-border rounded-2xl p-6 sticky top-24 shadow-sm">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-primary" /> Order Summary

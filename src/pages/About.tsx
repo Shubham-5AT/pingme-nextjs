@@ -155,7 +155,7 @@ const About = () => {
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-foreground">{aboutStats.citiesCovered}+</div>
-                  <div className="text-sm text-foreground/80">Cities Covered</div>
+                  <div className="text-sm text-foreground/80">Cities Explored</div>
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-foreground">{aboutStats.googleRating.toFixed(1)}★</div>
