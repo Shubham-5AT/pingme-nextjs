@@ -44,7 +44,8 @@ const Navbar = () => {
         <div className="flex items-center justify-between gap-6">
           {/* Logo */}
           <Link to="/" className="flex items-center transition-transform hover:scale-105">
-            <img src={logo} alt="PingME" className="h-10 w-auto" />
+            <img src={logo} alt="PingME" height="100px" width="200px" />
+            <iframe style={{ width: '56px', height: '55px' ,border: '1px solid #ccc' ,marginLeft: '40px'}} src='https://dunsregistered.dnb.com/SealAuthentication.aspx?Cid=1' frameborder='0' scrolling='no' allowtransparency='true' ></iframe>
           </Link>
 
           {/* Desktop Navigation */}

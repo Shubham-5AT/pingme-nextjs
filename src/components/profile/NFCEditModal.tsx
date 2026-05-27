@@ -68,10 +68,14 @@ export function NFCEditModal({
     mutationFn: async () => {
       if (!orderId || !user?.uid) throw new Error("Missing order information");
 
+      const orders = queryClient.getQueryData<PrebookingRecord[]>(["userPrebookings", user.uid]) || [];
+      const selectedOrder = orders.find((order) => order.id === orderId);
+      const profileId = selectedOrder?.payment?.orderId || orderId;
+
       if (profileDraft.username) {
         const isTaken = await checkUsernameUniqueness(
           profileDraft.username,
-          orderId
+          profileId
         );
         if (isTaken) {
           const suggestions = await generateUsernameSuggestions(
@@ -82,9 +86,6 @@ export function NFCEditModal({
           );
         }
       }
-
-      const orders = queryClient.getQueryData<PrebookingRecord[]>(["userPrebookings", user.uid]) || [];
-      const selectedOrder = orders.find((order) => order.id === orderId);
 
       await updatePrebookingNFCProfile(
         orderId,
@@ -170,7 +171,7 @@ export function NFCEditModal({
               isLoading={updateNFCMutation.isPending}
               title="Edit Your NFC Profile"
               description="Keep your NFC card profile up to date from your account dashboard."
-              infoText="These details power your public NFC page link as pleaseping.me/nfc&lt;username&gt;. Username is globally unique and updates reflect on your live link."
+              infoText="These details power your public NFC page link as plzpingme.com/&lt;username&gt;. Username is globally unique and updates reflect on your live link."
               backLabel="Cancel"
               continueLabel="Save NFC Profile"
               variant="edit"

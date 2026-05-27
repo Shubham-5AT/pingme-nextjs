@@ -252,8 +252,8 @@ const Prebook = () => {
             We'll reach out to you shortly with payment and delivery details.
           </p>
           <div className="flex gap-3 justify-center">
-            <Button onClick={() => navigate("/products")}>Browse More Tags</Button>
-            <Button variant="outline" onClick={() => navigate("/")}>Go Home</Button>
+            <Button onClick={() => navigate("/profile")}>View My Profile</Button>
+            <Button variant="outline" onClick={() => navigate("/products")}>Continue Shopping</Button>
           </div>
         </div>
       </MainLayout>

@@ -6,6 +6,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useParams, useNavigate } from "react-router-dom";
+import { ToastAction } from "@/components/ui/toast";
 import {
   buildGenericCategoryTutorial,
   categoryCoverImageFromProducts,
@@ -32,6 +33,7 @@ const categoryEmojiBySlug: Record<string, string> = {
 const ProductCardItem = ({ product }: { product: ProductVariant }) => {
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [imageFailed, setImageFailed] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -44,7 +46,11 @@ const ProductCardItem = ({ product }: { product: ProductVariant }) => {
       image: product.image,
       emoji: product.emoji,
     });
-    toast({ title: "Added to Cart", description: `${product.title} was added to your cart.` });
+    toast({ 
+      title: "Added to Cart", 
+      description: `${product.title} was added to your cart.`,
+      action: <ToastAction altText="Checkout" onClick={() => navigate("/booking")}>Checkout</ToastAction>
+    });
   };
 
   return (

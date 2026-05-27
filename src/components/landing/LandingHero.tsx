@@ -26,6 +26,7 @@ import {
 
 import carcardFront from "@/assets/product-card.png";
 import backpackSticker from "@/assets/pingwebsite-2.webp";
+import pingMeLogo from "@/assets/ping-me-logo.png";
 import nfcFront from "@/assets/pingprocard_logo.jpeg";
 import petSafetyTag from "@/assets/pingprocard.jpeg";
 import heroDemoVideoMp4 from "@/assets/IMG_9847.mp4";
@@ -55,6 +56,9 @@ const quickFacts = [
     description: "Designed and developed locally, with a platform built to scale.",
   },
 ];
+
+const dunsProfileUrl = "https://dunsregistered.dnb.com/DunsRegisteredProfileAnywhere.aspx?Key1=3202565&PaArea=Email";
+const dunsLogoUrl = "https://profiles.dunsregistered.com/newimages/logo-dnb-white.svg";
 
 type HeroProduct = {
   categorySlug: string;
@@ -329,8 +333,10 @@ const LandingHero = () => {
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-primary/15 via-white/20 to-transparent blur-2xl" />
-            <div className="relative rounded-[2rem] border border-border/60 bg-background/85 p-4 shadow-[0_30px_90px_rgba(81,60,9,0.16)] backdrop-blur-md md:p-6">
+            
+            
+            
+            
               <div className="overflow-hidden rounded-3xl border border-border/50 bg-black shadow-sm">
 
                 <div className="relative aspect-[9/16] w-full bg-black sm:aspect-[4/5] lg:aspect-[3/4]">
@@ -397,7 +403,7 @@ const LandingHero = () => {
               </div>
 
               
-            </div>
+            
           </div>
         </section>
 
@@ -409,7 +415,8 @@ const LandingHero = () => {
             </h2>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">
               PingME is designed around real-world scenarios where instant communication is useful, but direct exposure
-              is not. The homepage now explains the full system in one place so the value is clear from the first visit.
+                is not. The homepage gives visitors a clear view of how PingME protects privacy while keeping contact fast
+                and simple.
             </p>
           </div>
 

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Linkedin, Twitter, Instagram, Youtube, Facebook, Link as LinkIcon } from "lucide-react";
 import { fetchPublicNfcProfile, normalizeNfcUsername, type PublicNfcProfile } from "@/lib/publicNfcService";
+import { Button } from "@/components/ui/button";
 import "./PublicNFCProfile.css";
 
 const linkify = (url: string): string => {
@@ -15,6 +16,17 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
   }
 
   return fallback;
+};
+
+const getSocialIcon = (label: string) => {
+  switch (label) {
+    case "LinkedIn": return <Linkedin className="w-4 h-4 mr-2" />;
+    case "X / Twitter": return <Twitter className="w-4 h-4 mr-2" />;
+    case "Instagram": return <Instagram className="w-4 h-4 mr-2" />;
+    case "YouTube": return <Youtube className="w-4 h-4 mr-2" />;
+    case "Facebook": return <Facebook className="w-4 h-4 mr-2" />;
+    default: return <LinkIcon className="w-4 h-4 mr-2" />;
+  }
 };
 
 export default function PublicNFCProfile() {
@@ -200,16 +212,21 @@ export default function PublicNFCProfile() {
               {socialRows.length > 0 && (
                 <section className="nfc-profile-section">
                   <h3>Social Media</h3>
-                  <ul className="nfc-detail-list">
+                  <div className="flex flex-wrap gap-3 mt-4">
                     {socialRows.map((social) => (
-                      <li key={social.label}>
-                        <span>{social.label}</span>
+                      <Button
+                        key={social.label}
+                        variant="outline"
+                        asChild
+                        className="rounded-full bg-white hover:bg-gray-50 border-gray-200 text-gray-700 shadow-sm transition-all"
+                      >
                         <a href={linkify(social.href || "")} target="_blank" rel="noreferrer">
-                          {social.href}
+                          {getSocialIcon(social.label)}
+                          {social.label}
                         </a>
-                      </li>
+                      </Button>
                     ))}
-                  </ul>
+                  </div>
                 </section>
               )}
 

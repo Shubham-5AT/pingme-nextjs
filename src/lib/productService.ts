@@ -24,12 +24,21 @@ const mapToDbProduct = (id: string, value: Record<string, unknown>): DbProduct =
   const categorySlug = normalizeCategorySlug(typeof value.categorySlug === "string" ? value.categorySlug : "") || "uncategorized";
   const image = resolveProductImageUrl(typeof value.image === "string" ? value.image : "");
 
+  const formatPrice = (v: unknown): string => {
+    if (typeof v === "string" && v.trim()) return v;
+    if (typeof v === "number" && Number.isFinite(v)) return `₹${v}`;
+    return "";
+  };
+
   return {
     id,
     categorySlug,
     title: typeof value.title === "string" ? value.title : "",
-    price: typeof value.price === "string" ? value.price : "",
-    originalPrice: typeof value.originalPrice === "string" && value.originalPrice.trim() ? value.originalPrice : undefined,
+    price: formatPrice(value.price),
+    originalPrice: ((): string | undefined => {
+      const op = formatPrice(value.originalPrice);
+      return op ? op : undefined;
+    })(),
     image: image || undefined,
     emoji: typeof value.emoji === "string" && value.emoji.trim() ? value.emoji : undefined,
     popular: Boolean(value.popular),
