@@ -75,18 +75,19 @@ const About = () => {
       <div className="py-16">
         <div className="container">
           <p className="section-eyebrow">About Us</p>
-          <h1 className="section-title text-3xl">The story behind Privacy-First network for things that matter</h1>
+          <h1 className="section-title text-4xl">The story behind privacy-first vehicle contact</h1>
 
           <div className="mx-auto max-w-6xl">
             <div className="prose prose-lg mb-12">
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-                  <strong>The Problem:</strong> How do you help someone without exposing your privacy? When a vehicle is parked illegally, a pet goes missing, or keys are lost, people want to reach the owner—but there's no secure way.              </p>
-              <p className="text-muted-foreground text-lg leading-relaxed">
-                <strong>Our Solution:</strong> A privacy-first ecosystem of <strong>QR and NFC products</strong> that let anyone connect with the owner through <strong>protected channels</strong>, never seeing their personal details.
+                We started PingME because we saw a simple problem: how do you let someone contact you about your parked
+                vehicle without giving away your phone number? Whether it's wrong parking, an emergency, or just someone
+                trying to help—you should be reachable without compromising your privacy.
               </p>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                <br />
-                <strong>Our Vision:</strong> More than tags and stickers, <strong>PingME</strong> is building a smarter, safer way to stay connected to what matters most.
+                Our solution is a beautifully designed QR code card that hangs on your vehicle. When scanned, it allows
+                the person to send you predefined alerts or make a privacy-protected call—all without ever seeing your
+                number.
               </p>
             </div>
 
@@ -135,7 +136,7 @@ const About = () => {
                 <div>
                   <h3 className="font-bold text-lg mb-2">Made in India</h3>
                   <p className="text-muted-foreground">
-                    Proudly designed and manufactured in India, for Indian vehicle owners.
+                    Proudly designed and manufactured in Chandigarh, India, for Indian vehicle owners.
                   </p>
                 </div>
               </div>
@@ -166,6 +167,18 @@ const About = () => {
                   Loading live stats...
                 </p>
               )}
+            </div>
+
+            {/* Office Address */}
+            <div className="mt-12 rounded-2xl border border-border/60 bg-background/90 p-6 md:p-8">
+              <h2 className="text-xl font-bold mb-4">Our Office</h2>
+              <address className="not-italic text-muted-foreground leading-7">
+                <strong>Ping IFF LLP</strong><br />
+                745, Burail, Ekta Market, Burail Village,<br />
+                Sector 45, Chandigarh &ndash; 160047, India<br />
+                Phone: <a href="tel:+917347340007" className="hover:underline">+91 73473 40007</a><br />
+                Email: <a href="mailto:contact@pingiff.ai" className="hover:underline">contact@pingiff.ai</a>
+              </address>
             </div>
           </div>
         </div>

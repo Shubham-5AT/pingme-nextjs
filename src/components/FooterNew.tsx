@@ -12,7 +12,11 @@ const FooterNew = () => {
             <p className="text-sm text-muted-foreground">
               © 2026 Ping IFF LLP. All rights reserved <br/> PingME is a brand of Ping IFF LLP.
             </p>
-            
+            <address className="not-italic text-xs text-muted-foreground leading-5">
+              Ping IFF LLP, 745, Burail, Ekta Market,<br />
+              Burail Village, Sector 45,<br />
+              Chandigarh &ndash; 160047
+            </address>
             
           </div>
           <iframe
