@@ -234,7 +234,7 @@ const Products = () => {
         return {
           slug,
           name,
-          description: meta.description || categoryDescriptionFromName(name),
+          description: meta.description || categoryDescriptionFromName(slug, name),
           icon: meta.icon?.trim() || categoryEmojiBySlug[slug] || categoryIconFromProducts(categoryProducts),
           coverImage: meta.coverImage || categoryCoverImageFromProducts(categoryProducts),
           gradient: meta.gradient || categoryGradientFromSlug(slug),
