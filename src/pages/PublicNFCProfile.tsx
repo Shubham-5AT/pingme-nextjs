@@ -188,7 +188,43 @@ export default function PublicNFCProfile() {
                     {profile.phone && (
                       <li>
                         <span>Phone</span>
-                        <a href={`tel:${profile.phone}`}>{profile.phone}</a>
+                                  <div className="flex items-center gap-2">
+                                    <a href={`tel:${profile.phone}`}>{profile.phone}</a>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        // Generate vCard and trigger download to allow users to save contact
+                                        const lines: string[] = [];
+                                        const fn = profile.name || profile.username || "";
+                                        lines.push("BEGIN:VCARD");
+                                        lines.push("VERSION:3.0");
+                                        if (fn) lines.push(`FN:${fn}`);
+                                        if (profile.name) lines.push(`N:${profile.name}`);
+                                        if (profile.jobTitle) lines.push(`TITLE:${profile.jobTitle}`);
+                                        if (profile.companyName) lines.push(`ORG:${profile.companyName}`);
+                                        if (profile.phone) lines.push(`TEL;TYPE=CELL:${profile.phone}`);
+                                        if (profile.email) lines.push(`EMAIL;TYPE=INTERNET:${profile.email}`);
+                                        if (profile.website) lines.push(`URL:${linkify(profile.website)}`);
+                                        if (profile.address) lines.push(`ADR;TYPE=WORK:;;${profile.address.replace(/\n/g, ";")}`);
+                                        lines.push("END:VCARD");
+
+                                        const vcard = lines.join("\r\n");
+                                        const blob = new Blob([vcard], { type: "text/vcard;charset=utf-8" });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement("a");
+                                        a.href = url;
+                                        const filename = `${profile.username || fn || "contact"}.vcf`;
+                                        a.download = filename;
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        a.remove();
+                                        setTimeout(() => URL.revokeObjectURL(url), 5000);
+                                      }}
+                                    >
+                                      Save Contact
+                                    </Button>
+                                  </div>
                       </li>
                     )}
                     {profile.website && (
