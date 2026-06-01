@@ -3,6 +3,7 @@ import { useParams, useLocation } from "react-router-dom";
 import { Loader2, Linkedin, Twitter, Instagram, Youtube, Facebook, Link as LinkIcon } from "lucide-react";
 import { fetchPublicNfcProfile, normalizeNfcUsername, type PublicNfcProfile } from "@/lib/publicNfcService";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import "./PublicNFCProfile.css";
 
 const linkify = (url: string): string => {
@@ -17,6 +18,29 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
 
   return fallback;
 };
+
+function createVCard(profile: PublicNfcProfile) {
+  const lines: string[] = [];
+  const fn = profile.name || profile.username || "";
+  lines.push("BEGIN:VCARD");
+  lines.push("VERSION:3.0");
+  if (fn) lines.push(`FN:${fn}`);
+  if (profile.name) lines.push(`N:${profile.name}`);
+  if (profile.jobTitle) lines.push(`TITLE:${profile.jobTitle}`);
+  if (profile.companyName) lines.push(`ORG:${profile.companyName}`);
+  if (profile.phone) lines.push(`TEL;TYPE=CELL:${profile.phone}`);
+  if (profile.email) lines.push(`EMAIL;TYPE=INTERNET:${profile.email}`);
+  if (profile.website) lines.push(`URL:${linkify(profile.website)}`);
+  if (profile.address) lines.push(`ADR;TYPE=WORK:;;${profile.address.replace(/\n/g, ";")}`);
+  lines.push("END:VCARD");
+
+  const vcard = lines.join("\r\n");
+  const blob = new Blob([vcard], { type: "text/vcard;charset=utf-8" });
+  const filename = `${profile.username || fn || "contact"}.vcf`;
+  const file = new File([blob], filename, { type: "text/vcard;charset=utf-8" });
+
+  return { vcard, blob, file, filename };
+}
 
 const getSocialIcon = (label: string) => {
   switch (label) {
@@ -193,33 +217,40 @@ export default function PublicNFCProfile() {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => {
-                                        // Generate vCard and trigger download to allow users to save contact
-                                        const lines: string[] = [];
-                                        const fn = profile.name || profile.username || "";
-                                        lines.push("BEGIN:VCARD");
-                                        lines.push("VERSION:3.0");
-                                        if (fn) lines.push(`FN:${fn}`);
-                                        if (profile.name) lines.push(`N:${profile.name}`);
-                                        if (profile.jobTitle) lines.push(`TITLE:${profile.jobTitle}`);
-                                        if (profile.companyName) lines.push(`ORG:${profile.companyName}`);
-                                        if (profile.phone) lines.push(`TEL;TYPE=CELL:${profile.phone}`);
-                                        if (profile.email) lines.push(`EMAIL;TYPE=INTERNET:${profile.email}`);
-                                        if (profile.website) lines.push(`URL:${linkify(profile.website)}`);
-                                        if (profile.address) lines.push(`ADR;TYPE=WORK:;;${profile.address.replace(/\n/g, ";")}`);
-                                        lines.push("END:VCARD");
+                                      onClick={async () => {
+                                        try {
+                                          const { vcard, blob, file, filename } = createVCard(profile);
 
-                                        const vcard = lines.join("\r\n");
-                                        const blob = new Blob([vcard], { type: "text/vcard;charset=utf-8" });
-                                        const url = URL.createObjectURL(blob);
-                                        const a = document.createElement("a");
-                                        a.href = url;
-                                        const filename = `${profile.username || fn || "contact"}.vcf`;
-                                        a.download = filename;
-                                        document.body.appendChild(a);
-                                        a.click();
-                                        a.remove();
-                                        setTimeout(() => URL.revokeObjectURL(url), 5000);
+                                          const nav: any = navigator;
+                                          const canShareFiles = typeof nav.canShare === "function" && nav.canShare({ files: [file] });
+
+                                          if (canShareFiles) {
+                                            await nav.share({ files: [file], title: profile.name || profile.username, text: profile.jobTitle || undefined });
+                                            toast.success("Contact shared");
+                                            return;
+                                          }
+
+                                          if (typeof nav.share === "function") {
+                                            // Fallback: share as text
+                                            await nav.share({ title: profile.name || profile.username, text: vcard });
+                                            toast.success("Contact shared");
+                                            return;
+                                          }
+
+                                          // Final fallback: trigger download
+                                          const url = URL.createObjectURL(blob);
+                                          const a = document.createElement("a");
+                                          a.href = url;
+                                          a.download = filename;
+                                          document.body.appendChild(a);
+                                          a.click();
+                                          a.remove();
+                                          setTimeout(() => URL.revokeObjectURL(url), 5000);
+                                          toast.success("vCard downloaded");
+                                        } catch (err) {
+                                          console.error(err);
+                                          toast.error(getErrorMessage(err, "Unable to share or save contact."));
+                                        }
                                       }}
                                     >
                                       Save Contact
