@@ -10,8 +10,7 @@ const FooterNew = () => {
           <div className="flex flex-col items-center md:items-start gap-1">
             <img src={logo} alt="PingME" className="h-14 w-14 object-contain" />
             <p className="text-sm text-muted-foreground">
-              © 2026 Ping IFF LLP. All rights reserved<br/>
-              PingME is a brand of Ping IFF LLP.<br/>
+              © 2026 Ping IFF LLP.<br/> All rights reserved<br/>
             </p>
             <span className="text-xs font-light text-muted-foreground block mt-1">
               Ping IFF LLP, 745, Burail, Ekta Market,<br/>

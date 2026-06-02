@@ -70,6 +70,9 @@ const About = () => {
     };
   }, [cachedStats]);
 
+  const googleMapsUrl =
+    "https://www.google.com/maps/search/?api=1&query=745+Burail+Ekta+Market+Burail+Village+Sector+45+Chandigarh+160047";
+
   return (
     <MainLayout>
       <div className="py-16">
@@ -169,21 +172,39 @@ const About = () => {
               )}
             </div>
 
-            {/* Find Us block (moved below Stats banner) */}
+            {/* Find Us block */}
             <div className="mt-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <p className="text-xs font-semibold text-muted-foreground uppercase">Find us</p>
                 <h3 className="font-bold text-2xl mt-2">Our Office</h3>
-                <div className="mt-2 text-sm font-light text-muted-foreground">
-                  Ping IFF LLP<br/>
-                  745, Burail, Ekta Market,<br/>
-                  Burail Village, Sector 45,<br/>
+                <a
+                  href={googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 text-sm font-light text-muted-foreground block"
+                >
+                  Ping IFF LLP<br />
+                  745, Burail, Ekta Market,<br />
+                  Burail Village, Sector 45,<br />
                   Chandigarh – 160047
+                </a>
+                <div className="mt-3 text-sm font-light text-muted-foreground space-y-1">
+                  <div>
+                    Phone:{" "}
+                    <a href="tel:+917347340007" className="text-muted-foreground">
+                      +91 73473 40007
+                    </a>
+                  </div>
+                  <div>
+                    Email:{" "}
+                    <a href="mailto:contact@pingiff.ai" className="text-muted-foreground">
+                      contact@pingiff.ai
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
 
-            
           </div>
         </div>
       </div>
