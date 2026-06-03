@@ -139,7 +139,7 @@ const About = () => {
                 <div>
                   <h3 className="font-bold text-lg mb-2">Made in India</h3>
                   <p className="text-muted-foreground">
-                    Proudly designed and manufactured in Chandigarh, India, for Indian vehicle owners.
+                    Proudly designed and manufactured in India, for Indian vehicle owners.
                   </p>
                 </div>
               </div>
@@ -204,6 +204,7 @@ const About = () => {
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </div>

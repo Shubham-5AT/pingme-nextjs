@@ -319,6 +319,8 @@ const LandingHero = () => {
               })}
             </div>
 
+            
+
             <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
               {[
                 "No apps",
@@ -336,7 +338,7 @@ const LandingHero = () => {
 
           <div className="relative flex items-start justify-center lg:justify-end">
             <div className="w-full max-w-[820px] overflow-hidden lg:max-w-[1040px]">
-              <div className="relative aspect-[3.5/6] w-full overflow-hidden rounded-3xl border border-white/20 bg-transparent">
+              <div className="relative aspect-[3.5/6] w-full overflow-hidden rounded-3xl border border-white/20 bg-transparent">  
                 {heroImageUrl ? (
                   <img
                     src={heroImageUrl}
@@ -349,11 +351,14 @@ const LandingHero = () => {
                   <div className="flex h-full w-full items-center justify-center p-8">
                     <img src={pingMeLogo} alt="PingME" className="max-h-[70%] max-w-[70%] object-contain" />
                   </div>
-                )}
+                )
+                }
               </div>
             </div>
           </div>
         </section>
+
+        
 
         <section id="what-we-offer" className="space-y-8">
           <div className="max-w-3xl">
