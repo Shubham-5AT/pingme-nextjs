@@ -13,6 +13,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminRoute from "@/components/auth/AdminRoute";
 import SmoothScroll from "@/components/SmoothScroll";
+import DocsPage from "./components/DocsPage";
 
 // Pages
 const Landing = lazy(() => import("./pages/Landing"));
@@ -154,7 +155,7 @@ const App = () => (
                 <Route path="/pricing-shipment" element={<PricingShipment />} />
                 <Route path="/terms-conditions" element={<TermsConditions />} />
                 <Route path="/faq" element={<FAQ />} />
-
+                <Route path="/docs" element={<DocsPage />} />
                 <Route path="/:username" element={<PublicNFCProfile />} />
                 <Route path="/:username#" element={<PublicNFCProfile />} />
                 <Route path="*" element={<NotFound />} />
