@@ -45,6 +45,10 @@ function useScrollReveal(selector: string) {
 const Blog = () => {
   useScrollReveal(".sr-item");
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, []);
+
   return (
     <MainLayout>
       <Seo

@@ -18,10 +18,11 @@ import { resolveProductImageUrl } from "@/lib/productCatalog";
 const navLinks = [
   { label: "Home", to: "/" },
   { label: "Products", to: "/products" },
-  { label: "Blog", to: "/blog" },
   { label: "Partners", to: "/partners" },
   { label: "About", to: "/about" },
+  { label: "Blog", to: "/blog" },
   { label: "Contact", to: "/contact" },
+  
 ];
 
 const Navbar = () => {
