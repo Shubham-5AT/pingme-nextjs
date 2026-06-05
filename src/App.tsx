@@ -17,6 +17,7 @@ import DocsPage from "./components/DocsPage";
 // Pages
 const Landing = lazy(() => import("./pages/Landing"));
 const Products = lazy(() => import("./pages/Products"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Blog = lazy(() => import("./pages/Blog"));
 const Prebook = lazy(() => import("./pages/Prebook"));
 const About = lazy(() => import("./pages/About"));
@@ -106,6 +107,7 @@ const App = () => (
                 <Route path="/" element={<Landing />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/products/:categorySlug" element={<Products />} />
+                <Route path="/products/:categorySlug/:productId" element={<ProductDetail />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route
                   path="/booking"
