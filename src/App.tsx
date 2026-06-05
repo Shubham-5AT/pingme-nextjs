@@ -12,10 +12,12 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminRoute from "@/components/auth/AdminRoute";
+import DocsPage from "./components/DocsPage";
 
 // Pages
 const Landing = lazy(() => import("./pages/Landing"));
 const Products = lazy(() => import("./pages/Products"));
+const Blog = lazy(() => import("./pages/Blog"));
 const Prebook = lazy(() => import("./pages/Prebook"));
 const About = lazy(() => import("./pages/About"));
 const Partners = lazy(() => import("./pages/Partners"));
@@ -104,6 +106,7 @@ const App = () => (
                 <Route path="/" element={<Landing />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/products/:categorySlug" element={<Products />} />
+                <Route path="/blog" element={<Blog />} />
                 <Route
                   path="/booking"
                   element={
@@ -127,7 +130,7 @@ const App = () => (
 
                 {/* Protected Routes */}
                 <Route
-                  path="/profile"
+                  path="/profile/:userId?"
                   element={
                     <ProtectedRoute>
                       <Profile />
@@ -150,7 +153,7 @@ const App = () => (
                 <Route path="/pricing-shipment" element={<PricingShipment />} />
                 <Route path="/terms-conditions" element={<TermsConditions />} />
                 <Route path="/faq" element={<FAQ />} />
-
+                <Route path="/docs" element={<DocsPage />} />
                 <Route path="/:username" element={<PublicNFCProfile />} />
                 <Route path="/:username#" element={<PublicNFCProfile />} />
                 <Route path="*" element={<NotFound />} />

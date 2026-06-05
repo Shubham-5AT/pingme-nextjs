@@ -31,6 +31,14 @@ const getPaymentApiBaseUrl = () => {
   return typeof base === "string" ? base.replace(/\/$/, "") : "";
 };
 
+/* ── In-memory profile cache (TTL: 5 minutes) ── */
+const CACHE_TTL_MS = 5 * 60 * 1000;
+interface CacheEntry {
+  profile: PublicNfcProfile;
+  expiresAt: number;
+}
+const profileCache = new Map<string, CacheEntry>();
+
 export const normalizeNfcUsername = (rawUsername: string): string => {
   return rawUsername.trim().toLowerCase();
 };
@@ -59,6 +67,12 @@ export const fetchPublicNfcProfile = async (username: string): Promise<PublicNfc
     throw new Error("Username is required.");
   }
 
+  // Return cached profile if still fresh
+  const cached = profileCache.get(normalizedUsername);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.profile;
+  }
+
   const baseUrl = getPaymentApiBaseUrl();
   if (!baseUrl) {
     throw new Error("Public NFC profile API is not configured.");
@@ -70,6 +84,8 @@ export const fetchPublicNfcProfile = async (username: string): Promise<PublicNfc
 
   if (!response.ok) {
     if (response.status === 404) {
+      // Clear any stale cache entry on 404
+      profileCache.delete(normalizedUsername);
       throw new Error("Profile not found.");
     }
 
@@ -86,22 +102,65 @@ export const fetchPublicNfcProfile = async (username: string): Promise<PublicNfc
     throw new Error("Profile not found.");
   }
 
+  // Store in cache with expiry
+  profileCache.set(normalizedUsername, {
+    profile: payload.profile,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
+
   return payload.profile;
 };
 
-export const checkUsernameUniqueness = async (username: string, currentOrderId?: string): Promise<boolean> => {
+export type UsernameOwnerContext =
+  | string
+  | {
+      profileDocId?: string;
+      paymentOrderId?: string;
+      bookingId?: string;
+      lineKey?: string | null;
+      hasStoredLineProfiles?: boolean;
+    };
+
+const resolveOwnedProfileDocIds = (owner?: UsernameOwnerContext): string[] => {
+  if (!owner) return [];
+  if (typeof owner === "string") return [owner];
+
+  const ids = new Set<string>();
+  if (owner.profileDocId) ids.add(owner.profileDocId);
+  if (owner.bookingId) ids.add(owner.bookingId);
+  if (owner.paymentOrderId) ids.add(owner.paymentOrderId);
+
+  if (owner.hasStoredLineProfiles && owner.paymentOrderId && owner.lineKey) {
+    ids.add(`${owner.paymentOrderId}_${owner.lineKey}`);
+  }
+
+  return Array.from(ids);
+};
+
+export const isUsernameOwnedByProfileDoc = (
+  profileDocOrderId: string,
+  owner?: UsernameOwnerContext
+): boolean => {
+  const ownedIds = resolveOwnedProfileDocIds(owner);
+  return ownedIds.some((id) => id === profileDocOrderId);
+};
+
+export const checkUsernameUniqueness = async (
+  username: string,
+  owner?: UsernameOwnerContext
+): Promise<boolean> => {
   if (!username) return false;
   try {
     const profile = await fetchPublicNfcProfile(username);
-    if (currentOrderId && profile.orderId === currentOrderId) {
-      return false; // It's their own profile, so it's not taken by someone else
+    if (isUsernameOwnedByProfileDoc(profile.orderId, owner)) {
+      return false;
     }
-    return true; // Taken by someone else
+    return true;
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "Profile not found.") {
-      return false; // Available, not taken
+      return false;
     }
-    throw err; // Other error
+    throw err;
   }
 };
 

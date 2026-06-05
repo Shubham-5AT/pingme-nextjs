@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, startTransition } from "react";
-import { CheckCircle2, Copy, Eye, Loader2, Save, Search, Shield, SlidersHorizontal, XCircle, Plus, Edit, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { CheckCircle2, Copy, Eye, Loader2, MessageSquare, Save, Search, Shield, SlidersHorizontal, XCircle, Plus, Edit, Trash2, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import MainLayout from "@/layouts/MainLayout";
 import { Badge } from "@/components/ui/badge";
@@ -15,10 +16,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { subscribeToOrders, updateOrderStatus } from "@/lib/adminService";
+import { subscribeToOrders, updateOrderStatus, subscribeToContactMessages, deleteContactMessage, markContactMessageRead, type ContactMessage } from "@/lib/adminService";
+import { downloadReceipt } from "@/lib/paymentService";
 import { categoryDescriptionFromName, categoryNameFromSlug, normalizeCategorySlug } from "@/lib/productCatalog";
 import { subscribeToProducts, saveProduct, deleteProductDoc, uploadProductImage, DbProduct, renameCategory, moveProductsToCategory, subscribeToProductCategories, saveProductCategory, deleteCategory } from "@/lib/productService";
 import type { PrebookingRecord } from "@/lib/prebookService";
+import { subscribeToFAQs, saveFAQ, deleteFAQ, initializeDefaultFAQs, type FAQItem } from "@/lib/faqService";
 
 const formatDate = (value: unknown): string => {
   if (!value || typeof value !== "object") return "-";
@@ -70,6 +73,7 @@ const AdminProductMedia = ({ product }: { product: DbProduct }) => {
 
 export default function Admin() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<PrebookingRecord[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
@@ -98,6 +102,19 @@ export default function Admin() {
   const [newCategoryProTip, setNewCategoryProTip] = useState("");
   const [savingProductId, setSavingProductId] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(true);
+  const [messageSearch, setMessageSearch] = useState("");
+  const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
+
+  const [faqs, setFaqs] = useState<FAQItem[]>([]);
+  const [loadingFaqs, setLoadingFaqs] = useState(true);
+  const [faqSearch, setFaqSearch] = useState("");
+  const [editingFaq, setEditingFaq] = useState<Omit<FAQItem, "createdAt" | "updatedAt"> | null>(null);
+  const [isFaqDialogOpen, setIsFaqDialogOpen] = useState(false);
+  const [savingFaqId, setSavingFaqId] = useState<string | null>(null);
+  const [isInitializingFaqs, setIsInitializingFaqs] = useState(false);
 
   useEffect(() => {
     setLoadingOrders(true);
@@ -128,11 +145,43 @@ export default function Admin() {
   }, []);
 
   useEffect(() => {
+    setLoadingMessages(true);
+    const unsubscribe = subscribeToContactMessages(
+      (latest) => {
+        setContactMessages(latest);
+        setLoadingMessages(false);
+      },
+      (error) => {
+        console.error("Failed to sync contact messages", error);
+        toast.error("Failed to load message queries from Firebase.");
+        setLoadingMessages(false);
+      },
+    );
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
     const unsub = subscribeToProductCategories(
       (map) => setCategoryMetadata(map),
       (err) => console.error("Failed to load category metadata", err),
     );
     return unsub;
+  }, []);
+
+  useEffect(() => {
+    setLoadingFaqs(true);
+    const unsubscribe = subscribeToFAQs(
+      (latest) => {
+        setFaqs(latest);
+        setLoadingFaqs(false);
+      },
+      (error) => {
+        console.error("Failed to sync FAQs", error);
+        toast.error("Failed to load FAQs from Firebase.");
+        setLoadingFaqs(false);
+      }
+    );
+    return unsubscribe;
   }, []);
 
   const categorizedProducts = useMemo(() => {
@@ -156,7 +205,7 @@ export default function Admin() {
         return {
           slug,
           name,
-          description: meta.description || categoryDescriptionFromName(name),
+          description: meta.description || categoryDescriptionFromName(slug, name),
           icon: meta.icon?.trim() || getCategoryIcon(products),
           products: products.sort((left, right) => left.title.localeCompare(right.title)),
         };
@@ -166,6 +215,11 @@ export default function Admin() {
   
 
   const categoryOptions = useMemo(() => categorizedProducts.map((category) => category.slug), [categorizedProducts]);
+
+  const faqCategories = useMemo(() => {
+    const cats = new Set(faqs.map((f) => f.category).filter(Boolean));
+    return Array.from(cats);
+  }, [faqs]);
 
   const defaultCategorySlug = categoryOptions[0] || DEFAULT_CATEGORY_SLUG;
 
@@ -358,6 +412,93 @@ export default function Admin() {
     });
   };
 
+  const handleOpenMessage = (msg: ContactMessage) => {
+    setSelectedMessage(msg);
+    // Mark as read silently — real-time listener will update the count automatically
+    if (msg.status === "new") {
+      markContactMessageRead(msg.id).catch((err) =>
+        console.error("Failed to mark message as read", err),
+      );
+    }
+  };
+
+  const handleDeleteMessage = async (msgId: string) => {
+    if (!window.confirm("Delete this message query? This cannot be undone.")) return;
+    try {
+      // Close dialog if the deleted message is currently open
+      setSelectedMessage((prev) => (prev?.id === msgId ? null : prev));
+      await deleteContactMessage(msgId);
+      toast.success("Message deleted.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete message.");
+    }
+  };
+
+  const handleEditFaq = (faq: FAQItem | null) => {
+    if (faq) {
+      setEditingFaq({
+        id: faq.id,
+        question: faq.question,
+        answer: faq.answer,
+        category: faq.category,
+        sortOrder: faq.sortOrder,
+      });
+    } else {
+      setEditingFaq({
+        id: "",
+        question: "",
+        answer: "",
+        category: "General Questions",
+        sortOrder: faqs.length + 1,
+      });
+    }
+    setIsFaqDialogOpen(true);
+  };
+
+  const handleSaveFaq = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingFaq) return;
+
+    try {
+      setSavingFaqId(editingFaq.id || "new");
+      await saveFAQ(editingFaq);
+      toast.success("FAQ saved successfully.");
+      setIsFaqDialogOpen(false);
+      setEditingFaq(null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save FAQ.");
+    } finally {
+      setSavingFaqId(null);
+    }
+  };
+
+  const handleDeleteFaq = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this FAQ item?")) return;
+    try {
+      await deleteFAQ(id);
+      toast.success("FAQ deleted.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete FAQ.");
+    }
+  };
+
+  const handleInitializeDefaultFaqs = async () => {
+    if (!window.confirm("This will load the default FAQ questions into your database. Continue?")) return;
+    try {
+      setIsInitializingFaqs(true);
+      await initializeDefaultFAQs();
+      toast.success("Default FAQs loaded.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load default FAQs.");
+    } finally {
+      setIsInitializingFaqs(false);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="container py-8 space-y-6">
@@ -373,9 +514,22 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="orders" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:w-[360px]">
+          <TabsList className="grid w-full grid-cols-4 sm:w-[640px]">
             <TabsTrigger value="orders">Order History</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="messages" className="flex items-center gap-1.5">
+              <MessageSquare className="w-3.5 h-3.5" />
+              Message Queries
+              {contactMessages.length > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold w-4 h-4">
+                  {contactMessages.length > 99 ? "99+" : contactMessages.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="faqs" className="flex items-center gap-1.5">
+              <HelpCircle className="w-3.5 h-3.5" />
+              FAQ Manager
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders" className="space-y-6">
@@ -466,7 +620,19 @@ export default function Admin() {
                       {filteredOrders.map((order) => (
                         <TableRow key={order.id}>
                           <TableCell className="font-mono text-xs max-w-[140px] truncate">{order.id}</TableCell>
-                          <TableCell>{order.fullName || "-"}</TableCell>
+                          <TableCell>
+                            {order.userId ? (
+                              <button
+                                onClick={() => navigate(`/profile/${order.userId}`)}
+                                className="text-primary hover:underline cursor-pointer"
+                                title="View customer profile"
+                              >
+                                {order.fullName || "-"}
+                              </button>
+                            ) : (
+                              order.fullName || "-"
+                            )}
+                          </TableCell>
                           <TableCell>{order.phone || "-"}</TableCell>
                           <TableCell>₹{Number(order.totalAmount || 0).toFixed(2)}</TableCell>
                           <TableCell>
@@ -622,7 +788,385 @@ export default function Admin() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="messages" className="space-y-6">
+            {/* Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>Total Messages</CardDescription>
+                  <CardTitle className="text-3xl">{contactMessages.length}</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>New / Unread</CardDescription>
+                  <CardTitle className="text-3xl">
+                    {contactMessages.filter((m) => m.status === "new").length}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>With Phone</CardDescription>
+                  <CardTitle className="text-3xl">
+                    {contactMessages.filter((m) => m.phone && m.phone.trim()).length}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  Message Queries
+                </CardTitle>
+                <CardDescription>
+                  Real-time contact form submissions from the website. New entries appear instantly.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Search */}
+                <div className="relative mb-4 max-w-sm">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={messageSearch}
+                    onChange={(e) => setMessageSearch(e.target.value)}
+                    placeholder="Search by name, email or message..."
+                    className="pl-9"
+                  />
+                </div>
+
+                {loadingMessages ? (
+                  <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Loading messages…</span>
+                  </div>
+                ) : contactMessages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                    <MessageSquare className="h-10 w-10 opacity-30" />
+                    <p className="text-sm">No messages yet. They'll appear here as soon as someone fills in the contact form.</p>
+                  </div>
+                ) : (() => {
+                  const filtered = contactMessages.filter((m) => {
+                    const q = messageSearch.toLowerCase();
+                    return (
+                      !q ||
+                      m.name.toLowerCase().includes(q) ||
+                      m.email.toLowerCase().includes(q) ||
+                      m.message.toLowerCase().includes(q)
+                    );
+                  });
+
+                  return filtered.length === 0 ? (
+                    <p className="py-8 text-center text-sm text-muted-foreground">No messages match your search.</p>
+                  ) : (
+                    <div className="rounded-md border overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[140px]">Name</TableHead>
+                            <TableHead className="w-[80px]">Status</TableHead>
+                            <TableHead className="w-[200px]">Email</TableHead>
+                            <TableHead className="w-[130px]">Phone</TableHead>
+                            <TableHead>Message</TableHead>
+                            <TableHead className="w-[160px]">Received At</TableHead>
+                            <TableHead className="w-[60px] text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filtered.map((msg) => (
+                            <TableRow
+                              key={msg.id}
+                              className="cursor-pointer hover:bg-muted/60 transition-colors"
+                              onClick={() => handleOpenMessage(msg)}
+                            >
+                              <TableCell className="font-medium whitespace-nowrap">
+                                <button
+                                  className="text-primary hover:underline text-left font-medium"
+                                  onClick={(e) => { e.stopPropagation(); handleOpenMessage(msg); }}
+                                >
+                                  {msg.name}
+                                </button>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={msg.status === "new" ? "default" : "outline"} className="whitespace-nowrap">
+                                  {msg.status === "new" ? "New" : "Read"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <a
+                                  href={`mailto:${msg.email}`}
+                                  className="text-primary hover:underline break-all"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {msg.email}
+                                </a>
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap text-muted-foreground">
+                                {msg.phone && msg.phone.trim() ? (
+                                  <a
+                                    href={`tel:${msg.phone}`}
+                                    className="hover:underline"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {msg.phone}
+                                  </a>
+                                ) : (
+                                  <span className="italic opacity-50">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <p className="max-w-xs text-sm text-muted-foreground truncate">
+                                  {msg.message}
+                                </p>
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                                {formatDate(msg.createdAt)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-destructive hover:bg-destructive/10 h-7 w-7"
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteMessage(msg.id); }}
+                                  title="Delete message"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="faqs" className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>Total FAQs</CardDescription>
+                  <CardTitle className="text-3xl">{faqs.length}</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>Categories</CardDescription>
+                  <CardTitle className="text-3xl">{faqCategories.length}</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription>Status</CardDescription>
+                  <CardTitle className="text-xl">
+                    {faqs.length > 0 ? (
+                      <span className="text-green-600 flex items-center gap-1.5 font-semibold text-lg">
+                        <CheckCircle2 className="w-5 h-5" /> Active
+                      </span>
+                    ) : (
+                      <span className="text-amber-600 flex items-center gap-1.5 font-semibold text-lg">
+                        <XCircle className="w-5 h-5" /> Not Initialized
+                      </span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <div>
+                  <CardTitle>FAQ Manager</CardTitle>
+                  <CardDescription>Manage and update FAQ entries shown on the website.</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  {faqs.length === 0 && (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleInitializeDefaultFaqs} 
+                      disabled={isInitializingFaqs}
+                    >
+                      {isInitializingFaqs ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Plus className="w-4 h-4 mr-2" />
+                      )}
+                      Load Default FAQs
+                    </Button>
+                  )}
+                  <Button onClick={() => handleEditFaq(null)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add FAQ Item
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="relative mb-4 max-w-sm">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={faqSearch}
+                    onChange={(e) => setFaqSearch(e.target.value)}
+                    placeholder="Search FAQs by question or category..."
+                    className="pl-9"
+                  />
+                </div>
+
+                {loadingFaqs ? (
+                  <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Loading FAQs...</span>
+                  </div>
+                ) : faqs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                    <HelpCircle className="h-10 w-10 opacity-30" />
+                    <p className="text-sm">No FAQs found in Firestore.</p>
+                    <Button onClick={handleInitializeDefaultFaqs} disabled={isInitializingFaqs}>
+                      {isInitializingFaqs ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Load Default FAQs
+                    </Button>
+                  </div>
+                ) : (() => {
+                  const filtered = faqs.filter((faq) => {
+                    const q = faqSearch.toLowerCase();
+                    return (
+                      !q ||
+                      faq.question.toLowerCase().includes(q) ||
+                      faq.answer.toLowerCase().includes(q) ||
+                      faq.category.toLowerCase().includes(q)
+                    );
+                  });
+
+                  return filtered.length === 0 ? (
+                    <p className="py-8 text-center text-sm text-muted-foreground">No FAQs match your search.</p>
+                  ) : (
+                    <div className="rounded-md border overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[80px]">Order</TableHead>
+                            <TableHead className="w-[180px]">Category</TableHead>
+                            <TableHead>Question / Answer</TableHead>
+                            <TableHead className="w-[100px] text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filtered.map((faq) => (
+                            <TableRow key={faq.id}>
+                              <TableCell className="font-mono text-xs">{faq.sortOrder}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{faq.category}</Badge>
+                              </TableCell>
+                              <TableCell className="max-w-md">
+                                <div className="font-semibold text-sm mb-1">{faq.question}</div>
+                                <div className="text-xs text-muted-foreground line-clamp-2">{faq.answer}</div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEditFaq(faq)}
+                                    title="Edit FAQ"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive hover:bg-destructive/10"
+                                    onClick={() => handleDeleteFaq(faq.id)}
+                                    title="Delete FAQ"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
+
+        {/* Message Detail Dialog */}
+        <Dialog open={!!selectedMessage} onOpenChange={(open) => !open && setSelectedMessage(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-primary" />
+                Message from {selectedMessage?.name}
+              </DialogTitle>
+              <DialogDescription>Full message details from the contact form</DialogDescription>
+            </DialogHeader>
+            {selectedMessage && (
+              <div className="space-y-4 pt-2">
+                <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 text-sm">
+                  <span className="font-semibold text-muted-foreground">Name</span>
+                  <span className="font-medium">{selectedMessage.name}</span>
+
+                  <span className="font-semibold text-muted-foreground">Email</span>
+                  <a
+                    href={`mailto:${selectedMessage.email}`}
+                    className="text-primary hover:underline break-all"
+                  >
+                    {selectedMessage.email}
+                  </a>
+
+                  <span className="font-semibold text-muted-foreground">Phone</span>
+                  {selectedMessage.phone && selectedMessage.phone.trim() ? (
+                    <a href={`tel:${selectedMessage.phone}`} className="hover:underline">
+                      {selectedMessage.phone}
+                    </a>
+                  ) : (
+                    <span className="italic text-muted-foreground opacity-60">Not provided</span>
+                  )}
+
+                  <span className="font-semibold text-muted-foreground">Received</span>
+                  <span>{formatDate(selectedMessage.createdAt)}</span>
+                </div>
+
+                <div className="border-t pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Message</p>
+                  <div className="rounded-lg bg-muted/50 border p-4 text-sm whitespace-pre-wrap leading-relaxed">
+                    {selectedMessage.message}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteMessage(selectedMessage.id)}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1.5" />
+                    Delete Query
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`mailto:${selectedMessage.email}`}>
+                        Reply via Email
+                      </a>
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setSelectedMessage(null)}>
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
           <DialogContent className="max-w-2xl">
@@ -637,6 +1181,7 @@ export default function Admin() {
                   <p><span className="font-medium">Status:</span> {selectedOrder.status || "pending"}</p>
                   <p><span className="font-medium">Name:</span> {selectedOrder.fullName || "-"}</p>
                   <p><span className="font-medium">Email:</span> {selectedOrder.email || "-"}</p>
+                  <p><span className="font-medium">Invoice Email:</span> {selectedOrder.email || "-"}</p>
                   <p><span className="font-medium">Phone:</span> {selectedOrder.phone || "-"}</p>
                   <p><span className="font-medium">Amount:</span> ₹{Number(selectedOrder.totalAmount || 0).toFixed(2)}</p>
                   <p><span className="font-medium">Address:</span> {selectedOrder.address || "-"}</p>
@@ -683,6 +1228,13 @@ export default function Admin() {
                     disabled={!selectedOrder || updatingOrderId === selectedOrder.id || selectedOrder.status === "cancelled"}
                   >
                     Cancel Order
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => selectedOrder && downloadReceipt(selectedOrder, selectedOrder.email || "")}
+                    disabled={!selectedOrder?.payment}
+                  >
+                    Download Invoice
                   </Button>
                 </div>
               </div>
@@ -978,6 +1530,81 @@ export default function Admin() {
                 <Button type="submit">Create Category</Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* FAQ Dialog */}
+        <Dialog open={isFaqDialogOpen} onOpenChange={setIsFaqDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{editingFaq?.id ? "Edit FAQ Item" : "Add FAQ Item"}</DialogTitle>
+              <DialogDescription>Create or update FAQ questions and answers. Changes update the public FAQ page.</DialogDescription>
+            </DialogHeader>
+            {editingFaq && (
+              <form onSubmit={handleSaveFaq} className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="faqQuestion">Question</Label>
+                  <Input 
+                    id="faqQuestion" 
+                    value={editingFaq.question} 
+                    onChange={(e) => setEditingFaq({ ...editingFaq, question: e.target.value })} 
+                    placeholder="Enter the question" 
+                    required 
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="faqAnswer">Answer</Label>
+                  <Textarea 
+                    id="faqAnswer" 
+                    rows={5}
+                    value={editingFaq.answer} 
+                    onChange={(e) => setEditingFaq({ ...editingFaq, answer: e.target.value })} 
+                    placeholder="Enter the answer" 
+                    required 
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="faqCategory">Category</Label>
+                    <Input 
+                      id="faqCategory" 
+                      value={editingFaq.category} 
+                      onChange={(e) => setEditingFaq({ ...editingFaq, category: e.target.value })} 
+                      placeholder="e.g. General Questions" 
+                      list="faq-category-options"
+                      required 
+                    />
+                    <datalist id="faq-category-options">
+                      {faqCategories.map((cat) => (
+                        <option key={cat} value={cat} />
+                      ))}
+                    </datalist>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="faqSortOrder">Sort Order</Label>
+                    <Input 
+                      id="faqSortOrder" 
+                      type="number"
+                      value={editingFaq.sortOrder} 
+                      onChange={(e) => setEditingFaq({ ...editingFaq, sortOrder: parseInt(e.target.value, 10) || 0 })} 
+                      placeholder="e.g. 1" 
+                      required 
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button type="button" variant="outline" onClick={() => setIsFaqDialogOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={savingFaqId !== null}>
+                    {savingFaqId ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                    Save FAQ
+                  </Button>
+                </div>
+              </form>
+            )}
           </DialogContent>
         </Dialog>
       </div>

@@ -13,6 +13,7 @@ import {
   categoryDescriptionFromName,
   categoryGradientFromSlug,
   categoryIconFromProducts,
+  startingPriceFromProducts,
   categoryNameFromSlug,
   normalizeCategorySlug,
   type ProductVariant,
@@ -31,11 +32,16 @@ const categoryEmojiBySlug: Record<string, string> = {
 // ─── Components ─────────────────────────────────────────
 
 const ProductCardItem = ({ product }: { product: ProductVariant }) => {
-  const { addToCart } = useCart();
+  const { addToCart, clearCart } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [imageFailed, setImageFailed] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const responsiveImageSizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw";
+  const responsiveSrcSet = product.image
+    ? `${product.image} 480w, ${product.image} 768w, ${product.image} 1024w, ${product.image} 1280w`
+    : undefined;
 
   const handleAddToCart = () => {
     addToCart({
@@ -53,6 +59,21 @@ const ProductCardItem = ({ product }: { product: ProductVariant }) => {
     });
   };
 
+  const handleBuyNow = () => {
+    clearCart();
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      image: product.image,
+      emoji: product.emoji,
+      quantity: 1,
+    });
+    setIsDialogOpen(false);
+    navigate("/booking");
+  };
+
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
@@ -65,12 +86,16 @@ const ProductCardItem = ({ product }: { product: ProductVariant }) => {
             </span>
           )}
 
-          <div className="aspect-[4/3] bg-secondary/40 rounded-xl mb-5 flex items-center justify-center p-3 overflow-hidden transition-colors group-hover:bg-secondary/70">
+          <div className="aspect-[4/3] sm:aspect-[5/4] md:aspect-[16/11] xl:aspect-[4/3] 2xl:aspect-[5/4] bg-secondary/40 rounded-xl mb-5 flex items-center justify-center p-3 overflow-hidden transition-colors group-hover:bg-secondary/70">
             {product.image && !imageFailed ? (
               <img
                 src={product.image}
+                srcSet={responsiveSrcSet}
+                sizes={responsiveImageSizes}
                 alt={product.title}
-                className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                 onError={() => setImageFailed(true)}
               />
             ) : (
@@ -98,8 +123,12 @@ const ProductCardItem = ({ product }: { product: ProductVariant }) => {
           {product.image && !imageFailed ? (
             <img
               src={product.image}
+              srcSet={responsiveSrcSet}
+              sizes="100vw"
               alt={product.title}
-              className="max-h-[220px] sm:max-h-[235px] object-contain drop-shadow-xl"
+              loading="lazy"
+              decoding="async"
+              className="w-full h-auto max-h-[220px] sm:max-h-[280px] md:max-h-[360px] lg:max-h-[420px] object-contain drop-shadow-xl"
               onError={() => setImageFailed(true)}
             />
           ) : (
@@ -130,12 +159,26 @@ const ProductCardItem = ({ product }: { product: ProductVariant }) => {
             </ul>
           </div>
 
-          <Button type="button" className="w-full h-10 sm:h-11 text-sm sm:text-base font-bold shadow-lg shadow-primary/20" onClick={() => {
-            handleAddToCart();
-            setIsDialogOpen(false);
-          }}>
-            Add to Cart
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 sm:h-11 text-sm sm:text-base font-bold"
+              onClick={handleBuyNow}
+            >
+              Buy Now
+            </Button>
+            <Button
+              type="button"
+              className="h-10 sm:h-11 text-sm sm:text-base font-bold shadow-lg shadow-primary/20"
+              onClick={() => {
+                handleAddToCart();
+                setIsDialogOpen(false);
+              }}
+            >
+              Add to Cart
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -192,7 +235,7 @@ const Products = () => {
         return {
           slug,
           name,
-          description: meta.description || categoryDescriptionFromName(name),
+          description: meta.description || categoryDescriptionFromName(slug, name),
           icon: meta.icon?.trim() || categoryEmojiBySlug[slug] || categoryIconFromProducts(categoryProducts),
           coverImage: meta.coverImage || categoryCoverImageFromProducts(categoryProducts),
           gradient: meta.gradient || categoryGradientFromSlug(slug),
@@ -226,6 +269,9 @@ const Products = () => {
 
   const CategoryCoverImage = ({ category }: { category: ProductCategory }) => {
     const [coverFailed, setCoverFailed] = useState(false);
+    const responsiveCategorySrcSet = category.coverImage
+      ? `${category.coverImage} 600w, ${category.coverImage} 900w, ${category.coverImage} 1200w`
+      : undefined;
 
     if (!category.coverImage || coverFailed) {
       return <span className="text-6xl" aria-hidden="true">{category.icon}</span>;
@@ -234,8 +280,12 @@ const Products = () => {
     return (
       <img
         src={category.coverImage}
+        srcSet={responsiveCategorySrcSet}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         alt={category.name}
-        className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-110"
+        loading="lazy"
+        decoding="async"
+        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
         onError={() => setCoverFailed(true)}
       />
     );
@@ -278,9 +328,38 @@ const Products = () => {
           {/* ── Category Grid (Landing View) ── */}
           {!selectedCategory && (
             categories.length === 0 ? (
-              <div className="rounded-2xl border border-dashed p-8 text-center">
-                <h2 className="text-xl font-semibold mb-2">Products are coming soon</h2>
-                <p className="text-muted-foreground">No product categories are available yet. Please check back shortly.</p>
+              /* ── Hardcoded fallback: shown before Firebase loads (what crawlers see) ── */
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[
+                  { slug: "car-tags", emoji: "🚗", name: "Car Tags", description: "Hang on your dashboard. Anyone who needs to reach you about parking or an emergency can scan and alert you — without ever seeing your phone number.", price: "₹299", count: 3 },
+                  { slug: "pet-tags", emoji: "🐾", name: "Pet Tags", description: "Clip onto your pet's collar. If they wander off, whoever finds them can call or message you immediately — safely and anonymously.", price: "₹249", count: 2, popular: true },
+                  { slug: "nfc-cards", emoji: "💳", name: "NFC Cards", description: "Tap your card to share contact details instantly. No app needed for the other person — seamless, private, and effortless.", price: "₹349", count: 3 },
+                  { slug: "keychain-tags", emoji: "🔑", name: "Keychain Tags", description: "Attach to your keys or wallet. A quick scan lets anyone who finds them reach you safely, without knowing who you are.", price: "₹199", count: 2 },
+                  { slug: "backpack-stickers", emoji: "🎒", name: "Backpack Stickers", description: "Stick it on your bag or laptop. If it ever gets lost, the finder can contact you instantly and privately — no personal details exposed.", price: "₹149", count: 2 },
+                ].map((cat) => (
+                  <button
+                    key={cat.slug}
+                    onClick={() => navigate(`/products/${cat.slug}`)}
+                    className="group relative rounded-2xl border border-border bg-card p-6 text-left transition-all hover:shadow-xl hover:border-primary/40 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+                  >
+                    <div className="aspect-[4/3] rounded-xl bg-secondary/40 mb-5 flex items-center justify-center text-5xl">
+                      {cat.emoji}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="mb-1 flex items-center gap-2">
+                          <span className="inline-flex h-7 w-7 items-center justify-center text-xl leading-none shrink-0" aria-hidden="true">{cat.emoji}</span>
+                          <h3 className="text-lg font-bold leading-none pt-0.5">{cat.name}</h3>
+                          {cat.popular && <span className="text-xs font-bold bg-primary text-primary-foreground rounded-full px-2 py-0.5">Best Seller</span>}
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{cat.description}</p>
+                        <span className="inline-block mt-2 text-sm font-bold text-foreground">Starting at {cat.price}</span>
+                        <span className="block mt-1 text-xs font-medium text-primary">{cat.count} designs available</span>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                    </div>
+                  </button>
+                ))}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -291,10 +370,9 @@ const Products = () => {
                     className={`group relative rounded-2xl border border-border bg-gradient-to-br ${cat.gradient} p-6 text-left transition-all hover:shadow-xl hover:border-primary/40 hover:scale-[1.02] active:scale-[0.98] overflow-hidden`}
                   >
                     {/* Cover Image */}
-                    <div className="aspect-[16/10] rounded-xl bg-white/60 dark:bg-white/10 mb-5 flex items-center justify-center p-4 overflow-hidden">
+                    <div className="aspect-[16/10] sm:aspect-[5/4] md:aspect-[4/3] rounded-xl bg-white/60 dark:bg-white/10 mb-5 flex items-center justify-center p-4 overflow-hidden">
                       <CategoryCoverImage category={cat} />
                     </div>
-
                     {/* Info */}
                     <div className="flex items-center justify-between">
                       <div>
@@ -304,7 +382,12 @@ const Products = () => {
                           </span>
                           <h3 className="text-lg font-bold leading-none pt-0.5">{cat.name}</h3>
                         </div>
+                        {cat.products.length > 0 && (
+                          <span className="inline-block mt-2 text-sm font-bold text-foreground">Starting at {startingPriceFromProducts(cat.products)}</span>
+                        )}
+                        
                         <p className="text-sm text-muted-foreground line-clamp-2">{cat.description}</p>
+
                         <span className="inline-block mt-3 text-xs font-medium text-primary">
                           {cat.products.length} design{cat.products.length > 1 ? "s" : ""} available
                         </span>

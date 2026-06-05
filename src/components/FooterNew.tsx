@@ -1,55 +1,403 @@
 import { Link } from "react-router-dom";
 import logo from "@/assets/ping-me-logo.png";
+import type { MouseEvent } from "react";
+import { Mail, Phone, MapPin, Linkedin, Instagram } from "lucide-react";
 
 const FooterNew = () => {
+  const currentYear = new Date().getFullYear();
+
+  const footerSections = {
+    products: [
+      { name: "Vehicle Tags", href: "/products/car-tags" },
+      { name: "Lost & Found Tags", href: "/products/keychain-tags" },
+      { name: "Pet Safety Tags", href: "/products/pet-tags" },
+      { name: "NFC Smart Cards", href: "/products/nfc-cards" },
+    ],
+    company: [
+      { name: "About Us", href: "/about" },
+      { name: "Partners", href: "/partners" },
+      { name: "Contact Us", href: "/contact" },
+      { name: "Blog", href: "/blog" },
+    ],
+    legal: [
+      { name: "Privacy Policy", href: "/privacy-policy" },
+      { name: "Terms & Conditions", href: "/terms-conditions" },
+      { name: "Refund Policy", href: "/refund-policy" },
+      { name: "Pricing & Shipment", href: "/pricing-shipment" },
+    ],
+    support: [
+      { name: "FAQ", href: "/faq" },
+      { name: "Documentation", href: "/docs" },
+    ],
+  };
+
+  const socialLinks = [
+    { icon: Instagram, href: "https://instagram.com/plzping.me", label: "Instagram" },
+    { icon: Linkedin, href: "https://www.linkedin.com/company/plzpingme", label: "LinkedIn" },
+  ];
+
   return (
-    <footer className="bg-background border-t border-border-light py-3 mt-auto">
-      <div className="container">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          {/* Brand */}
-          <div className="flex flex-col items-center md:items-start gap-1">
-            <img src={logo} alt="PingME" className="h-14 w-14 object-contain" />
-            <p className="text-sm text-muted-foreground">
-              © 2026 PingME. All rights reserved.
+    <footer
+      className="relative text-foreground"
+      style={{ backgroundColor: "#FFF9EB", color: "hsl(var(--ping-dark))" }}
+    >
+      <div
+        className="h-0.5 mb-12"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, hsl(var(--ping-yellow) / 10.5), transparent)",
+        }}
+      />
+
+      <div className="container mx-auto px-4 py-16 md:py-20">
+        {/* MAIN GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12 md:mb-16">
+
+          {/* Brand Section */}
+          <div className="lg:col-span-1 flex flex-col space-y-6">
+            <div className="flex flex-col items-start space-y-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src={logo}
+                  alt="PingME"
+                  className="h-50 w-50 object-contain hover:scale-110 transition-transform duration-300"
+                />
+              </div>
+              <p
+                className="text-sm leading-relaxed"
+                style={{
+                  color: "hsl(var(--ping-ash))",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                Privacy-first contact ecosystem for vehicles, belongings, and pets.
+              </p>
+            </div>
+
+            {/* Contact Info */}
+            <div
+              className="flex flex-col space-y-3 pt-6"
+              style={{ borderTop: "1px solid hsl(var(--ping-brown) / 0.15)" }}
+            >
+              <a
+                href="tel:+917347340007"
+                className="flex items-center gap-2 text-sm transition-all duration-300 group"
+                style={{
+                  color: "hsl(var(--ping-ash))",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                <Phone className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                <span
+                  style={{ color: "hsl(var(--ping-yellow))" }}
+                  className="group-hover:underline"
+                >
+                  +91 73473 40007
+                </span>
+              </a>
+
+              <a
+                href="mailto:contact@pingiff.ai"
+                className="flex items-center gap-2 text-sm transition-all duration-300 group"
+                style={{
+                  color: "hsl(var(--ping-ash))",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                <span
+                  style={{ color: "hsl(var(--ping-yellow))" }}
+                  className="group-hover:underline"
+                >
+                  contact@pingiff.ai
+                </span>
+              </a>
+
+              <div
+                className="flex items-start gap-2 text-sm"
+                style={{
+                  color: "hsl(var(--ping-ash))",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>
+                  745, Burail, Ekta Market,<br />
+                  Burail Village, Sector 45,<br />
+                  Chandigarh - 160047, India
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Products */}
+          <div className="flex flex-col space-y-5">
+            <h3
+              className="text-xs font-black uppercase"
+              style={{
+                color: "hsl(var(--ping-brown))",
+                fontFamily: "'Poppins', sans-serif",
+                letterSpacing: "0.14em",
+              }}
+            >
+              Products
+            </h3>
+            <nav className="flex flex-col space-y-3">
+              {footerSections.products.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="text-sm transition-all duration-300 relative group"
+                  style={{
+                    color: "hsl(var(--ping-ash))",
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
+                  <span className="relative inline-block">
+                    {item.name}
+                    <span
+                      className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300 rounded"
+                      style={{ background: "hsl(var(--ping-yellow))" }}
+                    />
+                  </span>
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Company */}
+          <div className="flex flex-col space-y-5">
+            <h3
+              className="text-xs font-black uppercase"
+              style={{
+                color: "hsl(var(--ping-brown))",
+                fontFamily: "'Poppins', sans-serif",
+                letterSpacing: "0.14em",
+              }}
+            >
+              Company
+            </h3>
+            <nav className="flex flex-col space-y-3">
+              {footerSections.company.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="text-sm transition-all duration-300 relative group"
+                  style={{
+                    color: "hsl(var(--ping-ash))",
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
+                  <span className="relative inline-block">
+                    {item.name}
+                    <span
+                      className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300 rounded"
+                      style={{ background: "hsl(var(--ping-yellow))" }}
+                    />
+                  </span>
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Legal */}
+          <div className="flex flex-col space-y-5">
+            <h3
+              className="text-xs font-black uppercase"
+              style={{
+                color: "hsl(var(--ping-brown))",
+                fontFamily: "'Poppins', sans-serif",
+                letterSpacing: "0.14em",
+              }}
+            >
+              Legal
+            </h3>
+            <nav className="flex flex-col space-y-3">
+              {footerSections.legal.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="text-sm transition-all duration-300 relative group"
+                  style={{
+                    color: "hsl(var(--ping-ash))",
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
+                  <span className="relative inline-block">
+                    {item.name}
+                    <span
+                      className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300 rounded"
+                      style={{ background: "hsl(var(--ping-yellow))" }}
+                    />
+                  </span>
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Support */}
+          <div className="flex flex-col space-y-5">
+            <h3
+              className="text-xs font-black uppercase"
+              style={{
+                color: "hsl(var(--ping-brown))",
+                fontFamily: "'Poppins', sans-serif",
+                letterSpacing: "0.14em",
+              }}
+            >
+              Support
+            </h3>
+            <nav className="flex flex-col space-y-3">
+              {footerSections.support.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="text-sm transition-all duration-300 relative group"
+                  style={{
+                    color: "hsl(var(--ping-ash))",
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
+                  <span className="relative inline-block">
+                    {item.name}
+                    <span
+                      className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300 rounded"
+                      style={{ background: "hsl(var(--ping-yellow))" }}
+                    />
+                  </span>
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+
+        {/* PING ME — letters justified across full width */}
+        <div className="mb-[6px] mt-[-50px]">
+          <div
+            className="flex justify-between items-baseline w-full"
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              color: "hsl(var(--ping-dark))",
+            }}
+          >
+            {["P", "I", "N", "G", "M", "E"].map((letter) => (
+              <span
+                key={letter}
+                className="text-5xl md:text-6xl lg:text-7xl font-black"
+                style={{ letterSpacing: "0", lineHeight: 1 }}
+              >
+                {letter}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* DIVIDER */}
+        <div
+          className="h-0.5 mb-12"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, hsl(var(--ping-yellow) / 10.5), transparent)",
+          }}
+        />
+
+        {/* BOTTOM */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col space-y-2 text-center md:text-left">
+            <p
+              className="text-sm"
+              style={{
+                color: "hsl(var(--ping-ash))",
+                fontFamily: "'Poppins', sans-serif",
+              }}
+            >
+              {`© ${currentYear} `}
+              <span
+                style={{ color: "hsl(var(--ping-dark))" }}
+                className="font-bold"
+              >
+                Ping IFF LLP
+              </span>
+              {". All rights reserved."}
+            </p>
+            <p
+              className="text-sm"
+              style={{
+                color: "hsl(var(--ping-ash) / 0.7)",
+                fontFamily: "'Poppins', sans-serif",
+              }}
+            >
+              PingME is a privacy-first contact ecosystem powered by advanced NFC and QR technology.
             </p>
           </div>
 
-          {/* Links */}
-          <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-            <Link 
-              to="/privacy-policy" 
-              className="px-2 py-1 rounded-md text-muted-foreground transition-colors hover:bg-primary/10 hover:text-yellow-400 hover:underline"
+          {/* Social Links + D&B DUNS Seal */}
+          <div className="flex items-center gap-6">
+
+            {/* D&B DUNS Registered Seal */}
+            {/* ⚠️ Replace this placeholder div with your real D&B embed code once you have your Cid from dunsregistered.com */}
+            <div
+              style={{
+                width: "114px",
+                height: "97px",
+                border: "1.5px solid hsl(var(--ping-brown) / 0.4)",
+                borderRadius: "6px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
+                flexShrink: 0,
+              }}
             >
-              Privacy Policy
-            </Link>
-            <span className="text-muted-foreground">|</span>
-            <Link 
-              to="/refund-policy" 
-              className="px-2 py-1 rounded-md text-muted-foreground transition-colors hover:bg-primary/10 hover:text-yellow-400 hover:underline"
-            >
-              Refund Policy
-            </Link>
-            <span className="text-muted-foreground">|</span>
-            <Link 
-              to="/pricing-shipment" 
-              className="px-2 py-1 rounded-md text-muted-foreground transition-colors hover:bg-primary/10 hover:text-yellow-400 hover:underline"
-            >
-              Pricing & Shipment
-            </Link>
-            <span className="text-muted-foreground">|</span>
-            <Link 
-              to="/terms-conditions" 
-              className="px-2 py-1 rounded-md text-muted-foreground transition-colors hover:bg-primary/10 hover:text-yellow-400 hover:underline"
-            >
-              Terms & Conditions
-            </Link>
-            <span className="text-muted-foreground">|</span>
-            <Link 
-              to="/faq" 
-              className="px-2 py-1 rounded-md text-muted-foreground transition-colors hover:bg-primary/10 hover:text-yellow-400 hover:underline"
-            >
-              FAQ
-            </Link>
+              <span
+                style={{
+                  fontSize: "9px",
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  color: "hsl(var(--ping-brown))",
+                  fontFamily: "'Poppins', sans-serif",
+                  textAlign: "center",
+                  lineHeight: 1.3,
+                }}
+              >
+                D-U-N-S<br />REGISTERED™
+              </span>
+              <span
+                style={{
+                  fontSize: "8px",
+                  color: "hsl(var(--ping-ash))",
+                  fontFamily: "'Poppins', sans-serif",
+                  textAlign: "center",
+                  opacity: 0.7,
+                }}
+              >
+                Ping IFF LLP
+              </span>
+            </div>
+
+            {/* Social icons */}
+            {socialLinks.map(({ icon: Icon, href, label }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                className="transition-all duration-300 group hover:scale-110"
+                style={{ color: "hsl(var(--ping-ash))" }}
+              >
+                <Icon
+                  className="w-6 h-6 group-hover:scale-125 transition-transform"
+                  onMouseEnter={(e: MouseEvent<SVGSVGElement>) => {
+                    e.currentTarget.style.color = "hsl(var(--ping-yellow))";
+                  }}
+                  onMouseLeave={(e: MouseEvent<SVGSVGElement>) => {
+                    e.currentTarget.style.color = "hsl(var(--ping-ash))";
+                  }}
+                />
+              </a>
+            ))}
           </div>
         </div>
       </div>

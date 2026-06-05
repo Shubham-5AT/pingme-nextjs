@@ -33,6 +33,11 @@ import heroDemoVideoMp4 from "@/assets/IMG_9847.mp4";
 import heroDemoVideoWebm from "@/assets/IMG_9847.webm";
 import { subscribeToProducts, type DbProduct } from "@/lib/productService";
 import { normalizeCategorySlug, buildProductImageUrl } from "@/lib/productCatalog";
+import LandingDownloadSection from "./LandingDownloadSection";
+import LandingReviews from "../LandingReviews";
+
+const heroImagePath = import.meta.env.VITE_HERO_IMAGE_PATH || "products/hero_i.PNG";
+const heroImageUrl = buildProductImageUrl(heroImagePath);
 
 const quickFacts = [
   {
@@ -267,8 +272,8 @@ const LandingHero = () => {
         <div className="absolute bottom-0 left-[-5rem] h-80 w-80 rounded-full bg-orange-100/60 blur-3xl" />
       </div>
 
-      <div className="container relative py-10 md:py-14 lg:py-12 space-y-16 lg:space-y-24">
-        <section className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+      <div className="w-full px-4 md:px-6 lg:px-8 relative pt-4 pb-10 md:pt-6 md:pb-14 lg:pt-4 lg:pb-12 space-y-16 lg:space-y-24">
+        <section className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           <div className="space-y-8">
             <div className="space-y-4 max-w-3xl">
               <p className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-brown shadow-sm">
@@ -282,6 +287,19 @@ const LandingHero = () => {
                 smart tags. It solves the real-world need for contact without exposing your phone number, identity, or
                 unnecessary access.
               </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link to="/products">
+                <Button size="lg" className="group w-full sm:w-auto">
+                  Get Your Tag
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </Link>
+              <a href="https://app.plzpingme.com" target="_blank" rel="noreferrer" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full">
+                  Register Your Tag
+                </Button>
+              </a>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -303,19 +321,7 @@ const LandingHero = () => {
               })}
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link to="/products">
-                <Button size="lg" className="group w-full sm:w-auto">
-                  Explore Products
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </Link>
-              <a href="#what-we-offer" className="w-full sm:w-auto">
-                <Button size="lg" variant="outline" className="w-full">
-                  See What PingME Does
-                </Button>
-              </a>
-            </div>
+            
 
             <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
               {[
@@ -332,95 +338,54 @@ const LandingHero = () => {
             </div>
           </div>
 
-          <div className="relative">
-            
-            
-            
-            
-              <div className="overflow-hidden rounded-3xl border border-border/50 bg-black shadow-sm">
-
-                <div className="relative aspect-[9/16] w-full bg-black sm:aspect-[4/5] lg:aspect-[3/4]">
-                  <video
-                    ref={videoRef}
-                    className="h-full w-full object-contain"
-                    playsInline
-                    loop
-                    muted
-                    preload="metadata"
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                  >
-                    <source src={heroDemoVideoMp4} type="video/mp4" />
-                    <source src={heroDemoVideoWebm} type="video/webm" />
-                    Your browser does not support this video format.
-                  </video>
-
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-4 text-white">
-                    <div className="flex items-end gap-3">
-                      <button
-                        type="button"
-                        onClick={handleVideoToggle}
-                        className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 backdrop-blur-md transition-colors hover:bg-white/25"
-                        aria-label={isPlaying ? "Pause video" : "Play video"}
-                      >
-                        {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
-                      </button>
-
-                      <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full bg-white/10 px-3 py-2 backdrop-blur-md">
-                        <button
-                          type="button"
-                          onClick={handleMuteToggle}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
-                          aria-label={isMuted || volume === 0 ? "Unmute video" : "Mute video"}
-                        >
-                          {isMuted || volume === 0 ? (
-                            <VolumeX className="h-4 w-4" />
-                          ) : volume < 50 ? (
-                            <Volume1 className="h-4 w-4" />
-                          ) : (
-                            <Volume2 className="h-4 w-4" />
-                          )}
-                        </button>
-
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          step="1"
-                          value={volume}
-                          onChange={handleVolumeChange}
-                          aria-label="Video volume"
-                          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/30 accent-white"
-                        />
-
-                        <span className="w-10 text-right text-xs font-medium tabular-nums text-white/80">
-                          {volume}%
-                        </span>
-                      </div>
-                    </div>
+          <div className="relative flex items-start justify-center lg:justify-end">
+            <div className="w-full max-w-[820px] overflow-hidden lg:max-w-[1040px]">
+              <div className="relative aspect-[6/7] w-full overflow-hidden rounded-3xl border border-white/20 bg-transparent">  
+                {heroImageUrl ? (
+                  <img
+                    src={heroImageUrl}
+                    alt="PingME hero"
+                    className="h-full w-full object-cover"
+                    loading="eager"
+                    decoding="async"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center p-8">
+                    <img src={pingMeLogo} alt="PingME" className="max-h-[70%] max-w-[70%] object-contain" />
                   </div>
-                </div>
+                )
+                }
               </div>
-
-              
-            
+            </div>
           </div>
+          
+        
         </section>
 
+        
+        
+
         <section id="what-we-offer" className="space-y-8">
-          <div className="max-w-3xl">
-            <p className="section-eyebrow text-left">What We Offer</p>
+          <div
+          className="h-0.5 mb-12"
+          style={{
+          background:
+          "linear-gradient(90deg, transparent, hsl(var(--ping-yellow) / 10.5), transparent)",
+  }}
+/>
+          <div className="max-w-3xl justify-self-center space-y-4 text-center">
+            <p className="section-eyebrow">What We Offer</p>
             <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
               Built for the everyday moments where privacy matters most.
             </h2>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">
+            <p className="mt-4 mx-auto max-w-2xl text-lg leading-8 text-muted-foreground">
               PingME is designed around real-world scenarios where instant communication is useful, but direct exposure
-                is not. The homepage gives visitors a clear view of how PingME protects privacy while keeping contact fast
-                and simple.
+              is not. The homepage gives visitors a clear view of how PingME protects privacy while keeping contact fast
+              and simple.
             </p>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="mx-auto grid max-w-5xl gap-8 md:gap-20 lg:grid-cols-2">
             {offerings.map((item) => {
               const Icon = item.icon;
 
@@ -470,9 +435,18 @@ const LandingHero = () => {
               );
             })}
           </div>
+          <div
+  className="h-0.5 mb-12"
+  style={{
+    background:
+      "linear-gradient(90deg, transparent, hsl(var(--ping-yellow) / 10.5), transparent)",
+  }}
+/>
+          
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          
           <div className="rounded-[1.75rem] border border-border/60 bg-background/90 p-6 shadow-[0_18px_50px_rgba(81,60,9,0.08)]">
             <p className="section-eyebrow text-left">Why PingME Is Different</p>
             <h2 className="text-3xl font-bold tracking-tight text-foreground">Meaningful connection, on your terms.</h2>
@@ -528,7 +502,59 @@ const LandingHero = () => {
               <li>A scalable product system that can expand with partners and new use cases.</li>
             </ul>
           </div>
+          
         </section>
+        <div
+  className="h-0.5 mb-12"
+  style={{
+    background:
+      "linear-gradient(90deg, transparent, hsl(var(--ping-yellow) / 10.5), transparent)",
+  }}
+/>
+<LandingReviews />
+        {/* Find Us block */}
+        <div className="mx-auto max-w-6xl mt-6">
+          <div
+  className="h-0.5 mb-12"
+  style={{
+    background:
+      "linear-gradient(90deg, transparent, hsl(var(--ping-yellow) / 10.5), transparent)",
+  }}
+/>
+          
+          <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <p className="text-xs font-semibold text-muted-foreground uppercase">Find us</p>
+            <h3 className="font-bold text-2xl mt-2">Our Office</h3>
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=745+Burail+Ekta+Market+Burail+Village+Sector+45+Chandigarh+160047"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 text-sm font-light text-muted-foreground block"
+            >
+              Ping IFF LLP<br/>
+              745, Burail, Ekta Market,<br/>
+              Burail Village, Sector 45,<br/>
+              Chandigarh – 160047
+            </a>
+            <div className="mt-3 text-sm font-light text-muted-foreground space-y-1">
+              <div>
+                Phone:{" "}
+                <a href="tel:+917347340007" className="text-muted-foreground">
+                  +91 73473 40007
+                </a>
+              </div>
+              <div>
+                Email:{" "}
+                <a href="mailto:contact@pingiff.ai" className="text-muted-foreground">
+                  contact@pingiff.ai
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Download Section */}
+        <LandingDownloadSection />
       </div>
     </main>
   );
