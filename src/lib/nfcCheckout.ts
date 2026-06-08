@@ -94,18 +94,20 @@ export const getNfcLineProfilesFromOrder = (order: {
     return order.nfcLineProfiles;
   }
 
-  const hasNfc = order.items?.some(isNfcCartItem);
-  if (hasNfc && order.nfcProfile) {
-    const nfcItems = (order.items || []).filter(isNfcCartItem);
-    const firstItem = nfcItems[0];
-    return [
-      {
-        lineKey: `${firstItem?.id || "nfc-legacy"}__0`,
-        itemId: firstItem?.id || "nfc-legacy",
-        title: firstItem?.title || "NFC Card",
-        nfcProfile: order.nfcProfile,
-      },
-    ];
+  const nfcUnits = expandNfcCartUnits(order.items || []);
+  if (nfcUnits.length > 0) {
+    const fallbackProfile = order.nfcProfile || {
+      name: "",
+      email: "",
+      phone: "",
+    };
+
+    return nfcUnits.map((unit) => ({
+      lineKey: unit.lineKey,
+      itemId: unit.itemId,
+      title: unit.title,
+      nfcProfile: fallbackProfile,
+    }));
   }
 
   return [];

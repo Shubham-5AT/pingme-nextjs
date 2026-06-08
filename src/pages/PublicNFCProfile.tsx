@@ -4,6 +4,7 @@ import {
   Linkedin, Twitter, Instagram, Youtube, Facebook,
   Link as LinkIcon, Mail, Phone, Globe, MapPin,
   UserPlus, Nfc, Share2, X as XIcon, Copy, Check,
+  MessageCircle, Calendar, CreditCard, FileText, Image, Video, Award,
 } from "lucide-react";
 import { fetchPublicNfcProfile, normalizeNfcUsername, type PublicNfcProfile } from "@/lib/publicNfcService";
 import { toast } from "sonner";
@@ -14,6 +15,9 @@ const linkify = (url: string): string => {
   if (!url) return "";
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 };
+
+const buildGoogleMapsUrl = (address: string): string =>
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 
 const getErrorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error && error.message ? error.message : fallback;
@@ -26,6 +30,7 @@ const getInitials = (name?: string): string => {
 /* ── vCard builder ── */
 function createVCard(profile: PublicNfcProfile) {
   const fn = profile.name || profile.username || "";
+  const address = profile.companyAddress || profile.address || "";
   const lines = [
     "BEGIN:VCARD", "VERSION:3.0",
     fn             ? `FN:${fn}`                                           : "",
@@ -35,7 +40,7 @@ function createVCard(profile: PublicNfcProfile) {
     profile.phone  ? `TEL;TYPE=CELL:${profile.phone}`                     : "",
     profile.email  ? `EMAIL;TYPE=INTERNET:${profile.email}`               : "",
     profile.website     ? `URL:${linkify(profile.website)}`               : "",
-    profile.address     ? `ADR;TYPE=WORK:;;${profile.address.replace(/\n/g, ";")}`:"",
+    address         ? `ADR;TYPE=WORK:;;${address.replace(/\n/g, ";")}`:"",
     "END:VCARD",
   ].filter(Boolean);
 
@@ -56,6 +61,35 @@ const getSocialIcon = (label: string) => {
     case "YouTube":      return <Youtube   className={cls} />;
     case "Facebook":     return <Facebook  className={cls} />;
     default:             return <LinkIcon  className={cls} />;
+  }
+};
+
+/* ── project type helpers ── */
+const getProjectTypeIcon = (type?: string) => {
+  const cls = "w-3 h-3";
+  switch (type) {
+    case "video":       return <Video className={cls} />;
+    case "brochure":    return <FileText className={cls} />;
+    case "certificate": return <Award className={cls} />;
+    default:            return <Image className={cls} />;
+  }
+};
+
+const getProjectTypeLabel = (type?: string) => {
+  switch (type) {
+    case "video":       return "Video";
+    case "brochure":    return "Brochure";
+    case "certificate": return "Certificate";
+    default:            return "Image";
+  }
+};
+
+const getDocumentTypeLabel = (type?: string) => {
+  switch (type) {
+    case "catalogue":     return "Catalogue";
+    case "resume":        return "Resume";
+    case "presentation":  return "Presentation";
+    default:              return "Company Profile PDF";
   }
 };
 
@@ -299,9 +333,11 @@ export default function PublicNFCProfile() {
 
   const hasContent =
     !!profile &&
-    (!!profile.bio || tagList.length > 0 || !!profile.email || !!profile.phone ||
+    (!!profile.bio || !!profile.businessOverview || tagList.length > 0 || !!profile.email || !!profile.phone ||
      !!profile.website || !!profile.address || socialRows.length > 0 ||
-     (profile.projects?.length || 0) > 0);
+     (profile.projects?.length || 0) > 0 || (profile.documents?.length || 0) > 0 ||
+     !!profile.upiId || !!profile.razorpayLink || !!profile.appointmentBookingLink ||
+     !!profile.companyAddress || !!profile.googleMapsLink);
 
   /* ── Save Contact ── */
   const handleSaveContact = async () => {
@@ -364,6 +400,35 @@ export default function PublicNFCProfile() {
                     <UserPlus />
                     Save Contact
                   </button>
+                  {profile?.phone && (
+                    <a
+                      href={`tel:${profile.phone}`}
+                      className="nfc-action-btn"
+                    >
+                      <Phone />
+                      Call
+                    </a>
+                  )}
+                  {profile?.phone && (
+                    <a
+                      href={`https://wa.me/${profile.phone.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="nfc-action-btn nfc-whatsapp-btn"
+                    >
+                      <MessageCircle />
+                      WhatsApp
+                    </a>
+                  )}
+                  {profile?.email && (
+                    <a
+                      href={`mailto:${profile.email}`}
+                      className="nfc-action-btn"
+                    >
+                      <Mail />
+                      Email
+                    </a>
+                  )}
                   <button
                     className="nfc-share-btn"
                     onClick={() => setShareSheetOpen(true)}
@@ -400,10 +465,11 @@ export default function PublicNFCProfile() {
           {!loading && !error && profile && hasContent && (
             <div className="nfc-profile-content">
 
-              {(profile.bio || tagList.length > 0) && (
+              {(profile.bio || profile.businessOverview || tagList.length > 0) && (
                 <div className="nfc-profile-section">
-                  <p className="nfc-section-title">About</p>
+                  <p className="nfc-section-title">About Me / Company</p>
                   {profile.bio && <p className="nfc-bio">{profile.bio}</p>}
+                  {profile.businessOverview && <p className="nfc-bio">{profile.businessOverview}</p>}
                   {tagList.length > 0 && (
                     <div className="nfc-chip-row">
                       {tagList.map((tag) => <span className="nfc-chip" key={tag}>{tag}</span>)}
@@ -451,7 +517,7 @@ export default function PublicNFCProfile() {
                         <div className="nfc-detail-body">
                           <div className="nfc-detail-label">Address</div>
                           <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(profile.address)}`}
+                            href={buildGoogleMapsUrl(profile.address)}
                             target="_blank"
                             rel="noreferrer"
                             className="nfc-detail-value"
@@ -487,7 +553,7 @@ export default function PublicNFCProfile() {
 
               {profile.projects && profile.projects.length > 0 && (
                 <div className="nfc-profile-section">
-                  <p className="nfc-section-title">Projects</p>
+                  <p className="nfc-section-title">Portfolio / Gallery</p>
                   <div className="nfc-projects-grid">
                     {profile.projects.map((project, i) => (
                       <article key={`${project.name}-${i}`} className="nfc-project-card">
@@ -495,17 +561,126 @@ export default function PublicNFCProfile() {
                           <img src={project.photo} alt={project.name} className="nfc-project-photo" />
                         )}
                         <div className="nfc-project-body">
+                          <div className="nfc-project-type-badge">
+                            {getProjectTypeIcon(project.type)}
+                            {getProjectTypeLabel(project.type)}
+                          </div>
                           <h4>{project.name}</h4>
                           {project.description && <p>{project.description}</p>}
                           {project.link && (
                             <a href={linkify(project.link)} target="_blank" rel="noreferrer" className="nfc-project-link">
-                              Visit project →
+                              View →
                             </a>
                           )}
                         </div>
                       </article>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {profile.documents && profile.documents.length > 0 && (
+                <div className="nfc-profile-section">
+                  <p className="nfc-section-title">Documents</p>
+                  <ul className="nfc-detail-list">
+                    {profile.documents.map((doc, i) => (
+                      <li key={i} className="nfc-detail-item">
+                        <div className="nfc-detail-icon">
+                          <FileText />
+                        </div>
+                        <div className="nfc-detail-body">
+                          <div className="nfc-detail-label">{getDocumentTypeLabel(doc.type)}</div>
+                          <a href={linkify(doc.url)} target="_blank" rel="noreferrer" className="nfc-detail-value">
+                            {doc.title}
+                          </a>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {(profile.upiId || profile.razorpayLink || profile.appointmentBookingLink) && (
+                <div className="nfc-profile-section">
+                  <p className="nfc-section-title">Payment & Booking</p>
+                  <ul className="nfc-detail-list">
+                    {profile.upiId && (
+                      <li className="nfc-detail-item">
+                        <div className="nfc-detail-icon">
+                          <CreditCard />
+                        </div>
+                        <div className="nfc-detail-body">
+                          <div className="nfc-detail-label">UPI</div>
+                          <span className="nfc-detail-value">{profile.upiId}</span>
+                        </div>
+                      </li>
+                    )}
+                    {profile.razorpayLink && (
+                      <li className="nfc-detail-item">
+                        <div className="nfc-detail-icon">
+                          <CreditCard />
+                        </div>
+                        <div className="nfc-detail-body">
+                          <div className="nfc-detail-label">Razorpay</div>
+                          <a href={linkify(profile.razorpayLink)} target="_blank" rel="noreferrer" className="nfc-detail-value">
+                            Pay Now
+                          </a>
+                        </div>
+                      </li>
+                    )}
+                    {profile.appointmentBookingLink && (
+                      <li className="nfc-detail-item">
+                        <div className="nfc-detail-icon">
+                          <Calendar />
+                        </div>
+                        <div className="nfc-detail-body">
+                          <div className="nfc-detail-label">Appointment Booking</div>
+                          <a href={linkify(profile.appointmentBookingLink)} target="_blank" rel="noreferrer" className="nfc-detail-value">
+                            Book Appointment
+                          </a>
+                        </div>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              {(profile.companyAddress || profile.googleMapsLink) && (
+                <div className="nfc-profile-section">
+                  <p className="nfc-section-title">Location</p>
+                  <ul className="nfc-detail-list">
+                    {profile.companyAddress && (
+                      <li className="nfc-detail-item">
+                        <div className="nfc-detail-icon">
+                          <MapPin />
+                        </div>
+                        <div className="nfc-detail-body">
+                          <div className="nfc-detail-label">Address</div>
+                          <a
+                            href={profile.googleMapsLink ? linkify(profile.googleMapsLink) : buildGoogleMapsUrl(profile.companyAddress)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="nfc-detail-value"
+                          >
+                            {profile.companyAddress}
+                          </a>
+                        </div>
+                      </li>
+                    )}
+                    {profile.googleMapsLink && !profile.companyAddress && (
+                      <li className="nfc-detail-item">
+                        <div className="nfc-detail-icon">
+                          <MapPin />
+                        </div>
+                        <div className="nfc-detail-body">
+                          <div className="nfc-detail-label">Google Maps</div>
+                          <a href={linkify(profile.googleMapsLink)} target="_blank" rel="noreferrer" className="nfc-detail-value">
+                            View on Map
+                          </a>
+                        </div>
+                      </li>
+                    )}
+                  </ul>
                 </div>
               )}
 

@@ -30,6 +30,8 @@ const SmoothScroll: React.FC = () => {
       wheelMultiplier: 0.9,
       touchMultiplier: 1.0,
       infinite: false,
+      prevent: (node) =>
+        node instanceof HTMLElement && Boolean(node.closest("[data-lenis-prevent]")),
     });
 
     lenisRef.current = lenis;
