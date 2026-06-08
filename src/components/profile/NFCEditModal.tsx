@@ -14,7 +14,7 @@ import {
   generateUsernameSuggestions,
 } from "@/lib/publicNfcService";
 import { updatePrebookingNFCProfile, type PrebookingRecord } from "@/lib/prebookService";
-import { resolveNfcProfileDocId } from "@/lib/nfcCheckout";
+import { getNfcLineProfilesFromOrder, resolveNfcProfileDocId } from "@/lib/nfcCheckout";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -77,13 +77,15 @@ export function NFCEditModal({
       const selectedOrder = orders.find((order) => order.id === orderId);
       const paymentOrderId = selectedOrder?.payment?.orderId;
       const hasStoredLineProfiles = Boolean(selectedOrder?.nfcLineProfiles?.length);
-      const effectiveLineKey = hasStoredLineProfiles ? lineKey : null;
+      const lineProfileCount = selectedOrder ? getNfcLineProfilesFromOrder(selectedOrder).length : 0;
+      const shouldUseLineProfile = hasStoredLineProfiles || lineProfileCount > 1;
+      const effectiveLineKey = shouldUseLineProfile ? lineKey : null;
 
       const profileId = resolveNfcProfileDocId({
         paymentOrderId,
         bookingId: orderId,
         lineKey: effectiveLineKey,
-        hasStoredLineProfiles,
+        hasStoredLineProfiles: shouldUseLineProfile,
       });
 
       if (profileDraft.username) {
@@ -92,7 +94,7 @@ export function NFCEditModal({
           paymentOrderId,
           bookingId: orderId,
           lineKey: effectiveLineKey,
-          hasStoredLineProfiles,
+          hasStoredLineProfiles: shouldUseLineProfile,
         });
         if (isTaken) {
           const suggestions = await generateUsernameSuggestions(
@@ -111,7 +113,7 @@ export function NFCEditModal({
         effectiveLineKey || undefined
       );
 
-      return { orderId, lineKey, profileDraft };
+      return { orderId, lineKey: effectiveLineKey, profileDraft };
     },
     onSuccess: (data) => {
       toast.success("NFC profile updated successfully!");
@@ -122,15 +124,17 @@ export function NFCEditModal({
             old?.map((order) => {
               if (order.id !== data.orderId) return order;
 
-              if (data.lineKey && order.nfcLineProfiles?.length) {
+              if (data.lineKey) {
+                const nfcLineProfiles = getNfcLineProfilesFromOrder(order).map((line) =>
+                  line.lineKey === data.lineKey
+                    ? { ...line, nfcProfile: { ...data.profileDraft } }
+                    : line
+                );
+
                 return {
                   ...order,
-                  nfcLineProfiles: order.nfcLineProfiles.map((line) =>
-                    line.lineKey === data.lineKey
-                      ? { ...line, nfcProfile: { ...data.profileDraft } }
-                      : line
-                  ),
-                  ...(order.nfcLineProfiles.length === 1
+                  nfcLineProfiles,
+                  ...(nfcLineProfiles.length === 1
                     ? { nfcProfile: { ...data.profileDraft } }
                     : {}),
                 };
@@ -160,7 +164,11 @@ export function NFCEditModal({
 
   return (
     <Dialog open={open || showDiscardConfirm} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-2xl overflow-hidden p-0">
+        <div
+          className="max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain p-6"
+          data-lenis-prevent
+        >
         {showDiscardConfirm ? (
           <>
             <DialogHeader>
@@ -215,6 +223,7 @@ export function NFCEditModal({
             />
           </>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -12,6 +12,7 @@ import {
 import DOMPurify from 'dompurify';
 import { db, auth } from '@/lib/firebase';
 import { resolveProductImageUrl } from '@/lib/productCatalog';
+import { expandNfcCartUnits } from '@/lib/nfcCheckout';
 
 export interface CartItem {
   id: string;
@@ -40,6 +41,8 @@ export interface NFCProfile {
   youtube?: string;
   facebook?: string;
   profilePhoto?: string;
+  companyAddress?: string;
+  googleMapsLink?: string;
   projects?: Array<{
     name: string;
     description?: string;
@@ -160,6 +163,8 @@ const sanitizeNFCProfile = (profile: NFCProfile): NFCProfile => {
     ...(profile.youtube ? { youtube: sanitizeText(profile.youtube) } : {}),
     ...(profile.facebook ? { facebook: sanitizeText(profile.facebook) } : {}),
     ...(profile.profilePhoto ? { profilePhoto: sanitizeText(profile.profilePhoto) } : {}),
+    ...(profile.companyAddress ? { companyAddress: sanitizeText(profile.companyAddress) } : {}),
+    ...(profile.googleMapsLink ? { googleMapsLink: sanitizeText(profile.googleMapsLink) } : {}),
     ...(profile.projects && profile.projects.length > 0
       ? {
           projects: profile.projects.map((project) => ({
@@ -431,21 +436,45 @@ export const updatePrebookingNFCProfile = async (
     const existingLines = Array.isArray(existingData?.nfcLineProfiles)
       ? (existingData.nfcLineProfiles as NfcLineProfile[])
       : [];
+    const existingProfile = isRecord(existingData?.nfcProfile)
+      ? sanitizeNFCProfile(existingData.nfcProfile as NFCProfile)
+      : sanitizedProfile;
+    const units = expandNfcCartUnits(Array.isArray(existingData?.items) ? (existingData.items as CartItem[]) : []);
+    const seededLines = units.length > 0
+      ? units.map((unit) => ({
+          lineKey: unit.lineKey,
+          itemId: unit.itemId,
+          title: unit.title,
+          nfcProfile: existingProfile,
+        }))
+      : [
+          {
+            lineKey,
+            itemId: lineKey.split('__')[0] || 'nfc-legacy',
+            title: 'NFC Card',
+            nfcProfile: existingProfile,
+          },
+        ];
 
-    const updatedLines = existingLines.length > 0
-      ? existingLines.map((line) =>
+    const sourceLines = existingLines.length > 0 ? existingLines : seededLines;
+    const hasTargetLine = sourceLines.some((line) => line.lineKey === lineKey);
+    const updatedLines = (
+      hasTargetLine
+        ? sourceLines.map((line) =>
           line.lineKey === lineKey
             ? { ...line, nfcProfile: sanitizedProfile }
             : line
         )
-      : [
+        : [
+          ...sourceLines,
           {
             lineKey,
             itemId: lineKey.split('__')[0] || 'nfc-legacy',
             title: 'NFC Card',
             nfcProfile: sanitizedProfile,
           },
-        ];
+        ]
+    );
 
     const updatePayload: Record<string, unknown> = {
       nfcLineProfiles: sanitizeNfcLineProfiles(updatedLines),

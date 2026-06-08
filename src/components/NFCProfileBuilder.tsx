@@ -69,6 +69,13 @@ export interface NFCProjectData {
   description?: string;
   link?: string;
   photo?: string;
+  type?: "image" | "video" | "brochure" | "certificate";
+}
+
+export interface NFCDocumentData {
+  title: string;
+  url: string;
+  type?: "company_profile" | "catalogue" | "resume" | "presentation";
 }
 
 export interface NFCProfileData {
@@ -79,6 +86,7 @@ export interface NFCProfileData {
   email: string;
   phone: string;
   bio?: string;
+  businessOverview?: string;
   businessTags?: string;
   website?: string;
   address?: string;
@@ -89,6 +97,12 @@ export interface NFCProfileData {
   facebook?: string;
   profilePhoto?: string;
   projects?: NFCProjectData[];
+  documents?: NFCDocumentData[];
+  upiId?: string;
+  razorpayLink?: string;
+  appointmentBookingLink?: string;
+  companyAddress?: string;
+  googleMapsLink?: string;
 }
 
 interface NFCProfileBuilderProps {
@@ -234,6 +248,35 @@ export default function NFCProfileBuilder({
     });
   };
 
+  const handleDocumentChange = (index: number, field: keyof NFCDocumentData, value: string) => {
+    const documents = [...(profileData.documents || [])];
+    documents[index] = {
+      ...(documents[index] || { title: "", url: "" }),
+      [field]: value,
+    };
+    onProfileChange({
+      ...profileData,
+      documents,
+    });
+  };
+
+  const addDocument = () => {
+    onProfileChange({
+      ...profileData,
+      documents: [
+        ...(profileData.documents || []),
+        { title: "", url: "", type: "company_profile" },
+      ],
+    });
+  };
+
+  const removeDocument = (index: number) => {
+    onProfileChange({
+      ...profileData,
+      documents: (profileData.documents || []).filter((_, i) => i !== index),
+    });
+  };
+
   const isCheckoutValid = profileData.username?.trim() && profileData.name.trim() && profileData.email.trim() && profileData.phone.trim();
   const isEditValid =
     profileData.username?.trim() &&
@@ -343,12 +386,23 @@ export default function NFCProfileBuilder({
                 />
               </div>
               <div>
-                <Label htmlFor="profile-bio">Bio</Label>
+                <Label htmlFor="profile-bio">Short Description</Label>
                 <Textarea
                   id="profile-bio"
                   placeholder="What you do and how you help clients"
                   value={profileData.bio || ""}
                   onChange={(e) => handleInputChange("bio", e.target.value)}
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="profile-business-overview">Business Overview</Label>
+                <Textarea
+                  id="profile-business-overview"
+                  placeholder="Detailed description of your business"
+                  value={profileData.businessOverview || ""}
+                  onChange={(e) => handleInputChange("businessOverview", e.target.value)}
                   className="mt-1"
                   rows={4}
                 />
@@ -424,6 +478,105 @@ export default function NFCProfileBuilder({
                   rows={3}
                 />
               </div>
+              <div>
+                <Label htmlFor="profile-company-address">Company Address</Label>
+                <Textarea
+                  id="profile-company-address"
+                  placeholder="Full company address"
+                  value={profileData.companyAddress || ""}
+                  onChange={(e) => handleInputChange("companyAddress", e.target.value)}
+                  className="mt-1"
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  This address will open in Google Maps on the public profile.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border p-4 space-y-4">
+              <h3 className="text-xl font-semibold">Payment & Booking</h3>
+              <div>
+                <Label htmlFor="profile-upi">UPI ID</Label>
+                <Input
+                  id="profile-upi"
+                  placeholder="yourname@upi"
+                  value={profileData.upiId || ""}
+                  onChange={(e) => handleInputChange("upiId", e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="profile-razorpay">Razorpay Payment Link</Label>
+                <Input
+                  id="profile-razorpay"
+                  type="url"
+                  placeholder="https://razorpay.com/..."
+                  value={profileData.razorpayLink || ""}
+                  onChange={(e) => handleInputChange("razorpayLink", e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="profile-appointment">Appointment Booking Link</Label>
+                <Input
+                  id="profile-appointment"
+                  type="url"
+                  placeholder="https://calendly.com/..."
+                  value={profileData.appointmentBookingLink || ""}
+                  onChange={(e) => handleInputChange("appointmentBookingLink", e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-xl border p-4 space-y-4">
+              <h3 className="text-xl font-semibold">Documents</h3>
+              {(profileData.documents || []).map((doc, index) => (
+                <div key={index} className="rounded-xl border p-4 space-y-3">
+                  <div>
+                    <Label htmlFor={`doc-title-${index}`}>Document Title</Label>
+                    <Input
+                      id={`doc-title-${index}`}
+                      placeholder="Document title"
+                      value={doc.title}
+                      onChange={(e) => handleDocumentChange(index, "title", e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor={`doc-url-${index}`}>Document URL</Label>
+                    <Input
+                      id={`doc-url-${index}`}
+                      type="url"
+                      placeholder="https://..."
+                      value={doc.url}
+                      onChange={(e) => handleDocumentChange(index, "url", e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor={`doc-type-${index}`}>Document Type</Label>
+                    <select
+                      id={`doc-type-${index}`}
+                      value={doc.type || "company_profile"}
+                      onChange={(e) => handleDocumentChange(index, "type", e.target.value as any)}
+                      className="mt-1 w-full px-3 py-2 border rounded-md"
+                    >
+                      <option value="company_profile">Company Profile PDF</option>
+                      <option value="catalogue">Catalogue</option>
+                      <option value="resume">Resume</option>
+                      <option value="presentation">Presentation</option>
+                    </select>
+                  </div>
+                  <Button type="button" variant="destructive" onClick={() => removeDocument(index)}>
+                    Remove Document
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" onClick={addDocument} className="w-full">
+                + Add Document
+              </Button>
             </div>
 
             <div className="rounded-xl border p-4 space-y-4">
@@ -471,18 +624,32 @@ export default function NFCProfileBuilder({
             </div>
 
             <div className="rounded-xl border p-4 space-y-4">
-              <h3 className="text-xl font-semibold">Projects</h3>
+              <h3 className="text-xl font-semibold">Portfolio / Gallery</h3>
               {(profileData.projects || []).map((project, index) => (
                 <div key={index} className="rounded-xl border p-4 space-y-3">
                   <div>
-                    <Label htmlFor={`project-name-${index}`}>Project name</Label>
+                    <Label htmlFor={`project-name-${index}`}>Item Name</Label>
                     <Input
                       id={`project-name-${index}`}
-                      placeholder="Project name"
+                      placeholder="Project or item name"
                       value={project.name}
                       onChange={(e) => handleProjectChange(index, "name", e.target.value)}
                       className="mt-1"
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor={`project-type-${index}`}>Type</Label>
+                    <select
+                      id={`project-type-${index}`}
+                      value={project.type || "image"}
+                      onChange={(e) => handleProjectChange(index, "type", e.target.value as any)}
+                      className="mt-1 w-full px-3 py-2 border rounded-md"
+                    >
+                      <option value="image">Image</option>
+                      <option value="video">Video</option>
+                      <option value="brochure">Brochure</option>
+                      <option value="certificate">Certificate</option>
+                    </select>
                   </div>
                   <div>
                     <Label htmlFor={`project-desc-${index}`}>Description</Label>
@@ -496,7 +663,7 @@ export default function NFCProfileBuilder({
                     />
                   </div>
                   <div>
-                    <Label htmlFor={`project-link-${index}`}>GitHub or project link</Label>
+                    <Label htmlFor={`project-link-${index}`}>Link</Label>
                     <Input
                       id={`project-link-${index}`}
                       placeholder="https://..."
@@ -506,7 +673,7 @@ export default function NFCProfileBuilder({
                     />
                   </div>
                   <div>
-                    <Label htmlFor={`project-photo-${index}`}>Project Photo (optional)</Label>
+                    <Label htmlFor={`project-photo-${index}`}>Photo/Thumbnail (optional)</Label>
                     <Input
                       id={`project-photo-${index}`}
                       type="file"
@@ -516,13 +683,13 @@ export default function NFCProfileBuilder({
                     />
                   </div>
                   <Button type="button" variant="destructive" onClick={() => removeProject(index)}>
-                    Remove Project
+                    Remove Item
                   </Button>
                 </div>
               ))}
 
               <Button type="button" variant="outline" onClick={addProject} className="w-full">
-                + Add Project
+                + Add Portfolio Item
               </Button>
             </div>
           </>
@@ -620,7 +787,29 @@ export default function NFCProfileBuilder({
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="profile-bio">Bio / About You</Label>
+                  <Label htmlFor="profile-company">Company Name</Label>
+                  <Input
+                    id="profile-company"
+                    placeholder="Company name"
+                    value={profileData.companyName || ""}
+                    onChange={(e) => handleInputChange("companyName", e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="profile-job">Job Title</Label>
+                  <Input
+                    id="profile-job"
+                    placeholder="Your role"
+                    value={profileData.jobTitle || ""}
+                    onChange={(e) => handleInputChange("jobTitle", e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="profile-bio">Short Description</Label>
                   <Textarea
                     id="profile-bio"
                     placeholder="Tell people about yourself (e.g., freelancer, entrepreneur, student)"
@@ -629,9 +818,29 @@ export default function NFCProfileBuilder({
                     className="mt-1 resize-none"
                     rows={3}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Max 200 characters for NFC compatibility
-                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="profile-business-overview">Business Overview</Label>
+                  <Textarea
+                    id="profile-business-overview"
+                    placeholder="Detailed description of your business"
+                    value={profileData.businessOverview || ""}
+                    onChange={(e) => handleInputChange("businessOverview", e.target.value)}
+                    className="mt-1 resize-none"
+                    rows={4}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="profile-tags">Business Tags (comma separated)</Label>
+                  <Input
+                    id="profile-tags"
+                    placeholder="NFC, Consulting, Retail"
+                    value={profileData.businessTags || ""}
+                    onChange={(e) => handleInputChange("businessTags", e.target.value)}
+                    className="mt-1"
+                  />
                 </div>
 
                 <div>
@@ -642,6 +851,68 @@ export default function NFCProfileBuilder({
                     placeholder="https://yourwebsite.com"
                     value={profileData.website || ""}
                     onChange={(e) => handleInputChange("website", e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="profile-address">Address</Label>
+                  <Textarea
+                    id="profile-address"
+                    placeholder="City, State"
+                    value={profileData.address || ""}
+                    onChange={(e) => handleInputChange("address", e.target.value)}
+                    className="mt-1"
+                    rows={2}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="profile-company-address">Company Address</Label>
+                  <Textarea
+                    id="profile-company-address"
+                    placeholder="Full company address"
+                    value={profileData.companyAddress || ""}
+                    onChange={(e) => handleInputChange("companyAddress", e.target.value)}
+                    className="mt-1"
+                    rows={2}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This address will open in Google Maps on the public profile.
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="profile-upi">UPI ID</Label>
+                  <Input
+                    id="profile-upi"
+                    placeholder="yourname@upi"
+                    value={profileData.upiId || ""}
+                    onChange={(e) => handleInputChange("upiId", e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="profile-razorpay">Razorpay Payment Link</Label>
+                  <Input
+                    id="profile-razorpay"
+                    type="url"
+                    placeholder="https://razorpay.com/..."
+                    value={profileData.razorpayLink || ""}
+                    onChange={(e) => handleInputChange("razorpayLink", e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="profile-appointment">Appointment Booking Link</Label>
+                  <Input
+                    id="profile-appointment"
+                    type="url"
+                    placeholder="https://calendly.com/..."
+                    value={profileData.appointmentBookingLink || ""}
+                    onChange={(e) => handleInputChange("appointmentBookingLink", e.target.value)}
                     className="mt-1"
                   />
                 </div>
@@ -675,6 +946,17 @@ export default function NFCProfileBuilder({
                     placeholder="https://instagram.com/yourhandle"
                     value={profileData.instagram || ""}
                     onChange={(e) => handleInputChange("instagram", e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="profile-youtube">YouTube Profile</Label>
+                  <Input
+                    id="profile-youtube"
+                    placeholder="https://youtube.com/yourhandle"
+                    value={profileData.youtube || ""}
+                    onChange={(e) => handleInputChange("youtube", e.target.value)}
                     className="mt-1"
                   />
                 </div>

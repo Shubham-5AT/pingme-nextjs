@@ -3,6 +3,13 @@ export interface PublicNfcProject {
   description?: string;
   link?: string;
   photo?: string;
+  type?: "image" | "video" | "brochure" | "certificate";
+}
+
+export interface PublicNfcDocument {
+  title: string;
+  url: string;
+  type?: "company_profile" | "catalogue" | "resume" | "presentation";
 }
 
 export interface PublicNfcProfile {
@@ -14,6 +21,7 @@ export interface PublicNfcProfile {
   email?: string;
   phone?: string;
   bio?: string;
+  businessOverview?: string;
   businessTags?: string;
   website?: string;
   address?: string;
@@ -24,6 +32,12 @@ export interface PublicNfcProfile {
   facebook?: string;
   profilePhoto?: string;
   projects?: PublicNfcProject[];
+  documents?: PublicNfcDocument[];
+  upiId?: string;
+  razorpayLink?: string;
+  appointmentBookingLink?: string;
+  companyAddress?: string;
+  googleMapsLink?: string;
 }
 
 const getPaymentApiBaseUrl = () => {
