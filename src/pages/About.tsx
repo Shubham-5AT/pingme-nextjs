@@ -169,7 +169,7 @@ const StatCard = ({
         transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
       }}
     >
-      <span className="text-3xl font-bold text-foreground">
+      <span className="text-2xl md:text-3xl font-bold text-foreground">
         {isNumber ? displayed : value}
         {suffix}
       </span>
@@ -354,12 +354,11 @@ const About = () => {
         }
       `}</style>
 
-      <div className="py-16">
+      <div className="py-8 md:py-16">
         <div className="container">
         <div className="text-center mb-4">
-  <h2 className="group relative inline-block text-5xl md:text-3xl font-bold px-8 py-3 text-yellow-400 cursor-pointer">
+  <h2 className="group relative inline-block text-4xl md:text-5xl font-bold px-8 py-3 text-yellow-400 cursor-pointer">
     About Us
-
     <span
       className="
         absolute -inset-2 rounded-full
@@ -373,25 +372,25 @@ const About = () => {
 </div>
 
           {/* ─── HERO ──────────────────────────────────────────────────────── */}
-          <section ref={heroView.ref} className="mb-20">
-            <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16">
+          <section ref={heroView.ref} className="mb-12 md:mb-20">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
 
               {/* Left: text */}
-              <div className="flex-1 max-w-xl">
+              <div className="flex-1 max-w-xl w-full">
 
-                <h1 className="hero-b section-title text-3xl md:text-3xl ml-[-20px] mb-4">
+                <h1 className="hero-b section-title text-2xl md:text-3xl mb-4">
                   Reach people,{" "}
                   <span className="text-primary-foreground">not their data.</span>
                   <br />
-                  <span className="text-muted-foreground text-xl ml-[-120px] md:text-xl font-semibold">
+                  <span className="text-muted-foreground text-lg md:text-xl font-semibold">
                     For every moment that matters.
                   </span>
                 </h1>
-                <p className="hero-c text-muted-foreground ml-[25px] text-lg leading-relaxed mb-8 max-w-md">
+                <p className="hero-c text-muted-foreground text-base md:text-lg leading-relaxed mb-6 md:mb-8 max-w-md">
                   PingME protects your privacy across vehicles, belongings, and pets —
                   one scan or tap is all it takes to reach you, without ever exposing your number.
                 </p>
-                <div className="hero-d ml-[60px]">
+                <div className="hero-d">
                   <a
                     href="/products"
                     className="inline-flex items-center gap-2 bg-primary text-primary-foreground
@@ -480,7 +479,7 @@ const About = () => {
           {/* ─── STORY ─────────────────────────────────────────────────────── */}
           <section
             ref={storyView.ref}
-            className="ml-[100px] mb-20 max-w-4xl"
+            className="mb-12 md:mb-20 max-w-4xl"
           >
             <p
               className="section-eyebrow"
@@ -527,7 +526,7 @@ const About = () => {
           {/* ─── WHAT WE MAKE ──────────────────────────────────────────────── */}
           <section
             ref={productsView.ref}
-            className="mb-20 border-t border-border pt-16"
+            className="mb-12 md:mb-20 border-t border-border pt-10 md:pt-16"
           >
             <p
               className="section-eyebrow"
@@ -546,7 +545,7 @@ const About = () => {
               One platform. Every situation.
             </h2>
             <p
-              className="text-muted-foreground text-lg ml-[320px]  mb-10 max-w-xl"
+              className="text-muted-foreground text-base md:text-lg mb-8 md:mb-10 max-w-xl"
               style={{
                 opacity: productsView.inView ? 1 : 0,
                 transform: productsView.inView ? "none" : "translateY(16px)",
@@ -596,7 +595,7 @@ const About = () => {
           </section>
 
           {/* ─── VALUES ────────────────────────────────────────────────────── */}
-          <section ref={valuesView.ref} className="mb-20">
+          <section ref={valuesView.ref} className="mb-12 md:mb-20">
             <p
               className="section-eyebrow"
               style={{
@@ -626,7 +625,7 @@ const About = () => {
           {/* ─── TIMELINE ──────────────────────────────────────────────────── */}
           <section
             ref={timelineView.ref}
-            className="mb-20 border-t border-border pt-16"
+            className="mb-12 md:mb-20 border-t border-border pt-10 md:pt-16"
           >
             <div className="grid md:grid-cols-2 gap-16 items-start">
 
@@ -718,9 +717,9 @@ const About = () => {
           </section>
 
           {/* ─── STATS ─────────────────────────────────────────────────────── */}
-          <section ref={statsView.ref} className="mb-20">
+          <section ref={statsView.ref} className="mb-12 md:mb-20">
             <div
-              className="bg-primary rounded-2xl p-8 md:p-12"
+              className="bg-primary rounded-2xl p-6 md:p-12"
               style={{
                 opacity: statsView.inView ? 1 : 0,
                 transform: statsView.inView ? "none" : "translateY(24px)",
@@ -730,7 +729,7 @@ const About = () => {
               <p className="text-center text-xs font-bold tracking-widest uppercase text-foreground/60 mb-8">
                 By The Numbers
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 text-center">
                 <StatCard
                   value={happyCustomers}
                   label="Happy Customers"
@@ -768,7 +767,7 @@ const About = () => {
           {/* ─── OFFICE ────────────────────────────────────────────────────── */}
           <section
             ref={officeView.ref}
-            className="mb-20 border-t border-border pt-16"
+            className="mb-12 md:mb-20 border-t border-border pt-10 md:pt-16"
           >
             <div className="grid md:grid-cols-2 gap-10 items-center">
               <div

@@ -523,34 +523,39 @@ export default function Admin() {
           background: hsl(var(--primary) / 0.8);
         }
       `}</style>
-      <div className="container py-8 space-y-6">
+      <div className="container py-4 sm:py-8 space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Admin Panel</h1>
-            <p className="text-muted-foreground">Switch between orders and products from the tabs below.</p>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Admin Panel</h1>
+            <p className="text-sm text-muted-foreground">Manage orders, products, messages and FAQs.</p>
           </div>
-          <Badge className="px-3 py-1 text-sm" variant="secondary">
-            <Shield className="w-4 h-4 mr-2" />
-            {user?.email}
+          <Badge className="px-3 py-1 text-xs sm:text-sm" variant="secondary">
+            <Shield className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5" />
+            <span className="max-w-[160px] truncate">{user?.email}</span>
           </Badge>
         </div>
 
         <Tabs defaultValue="orders" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 sm:w-[640px]">
-            <TabsTrigger value="orders">Order History</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="messages" className="flex items-center gap-1.5">
-              <MessageSquare className="w-3.5 h-3.5" />
-              Message Queries
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="orders" className="text-xs sm:text-sm px-1 sm:px-3">
+              <span className="hidden sm:inline">Order History</span>
+              <span className="sm:hidden">Orders</span>
+            </TabsTrigger>
+            <TabsTrigger value="products" className="text-xs sm:text-sm px-1 sm:px-3">Products</TabsTrigger>
+            <TabsTrigger value="messages" className="text-xs sm:text-sm px-1 sm:px-3 flex items-center gap-1">
+              <MessageSquare className="w-3 h-3 flex-shrink-0" />
+              <span className="hidden sm:inline">Message Queries</span>
+              <span className="sm:hidden">Msgs</span>
               {contactMessages.length > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold w-4 h-4">
+                <span className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold w-4 h-4 flex-shrink-0">
                   {contactMessages.length > 99 ? "99+" : contactMessages.length}
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="faqs" className="flex items-center gap-1.5">
-              <HelpCircle className="w-3.5 h-3.5" />
-              FAQ Manager
+            <TabsTrigger value="faqs" className="text-xs sm:text-sm px-1 sm:px-3 flex items-center gap-1">
+              <HelpCircle className="w-3 h-3 flex-shrink-0" />
+              <span className="hidden sm:inline">FAQ Manager</span>
+              <span className="sm:hidden">FAQs</span>
             </TabsTrigger>
           </TabsList>
 
@@ -626,27 +631,28 @@ export default function Admin() {
                 ) : filteredOrders.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No orders found.</p>
                 ) : (
+                  <div className="overflow-x-auto -mx-4 sm:mx-0">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Order ID</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="whitespace-nowrap">Order ID</TableHead>
+                        <TableHead className="whitespace-nowrap">Customer</TableHead>
+                        <TableHead className="hidden sm:table-cell whitespace-nowrap">Phone</TableHead>
+                        <TableHead className="whitespace-nowrap">Amount</TableHead>
+                        <TableHead className="whitespace-nowrap">Status</TableHead>
+                        <TableHead className="hidden md:table-cell whitespace-nowrap">Created</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredOrders.map((order) => (
                         <TableRow key={order.id}>
-                          <TableCell className="font-mono text-xs max-w-[140px] truncate">{order.id}</TableCell>
-                          <TableCell>
+                          <TableCell className="font-mono text-xs max-w-[100px] truncate">{order.id}</TableCell>
+                          <TableCell className="max-w-[120px] truncate">
                             {order.userId ? (
                               <button
                                 onClick={() => navigate(`/profile/${order.userId}`)}
-                                className="text-primary hover:underline cursor-pointer"
+                                className="text-primary hover:underline cursor-pointer text-left"
                                 title="View customer profile"
                               >
                                 {order.fullName || "-"}
@@ -655,35 +661,37 @@ export default function Admin() {
                               order.fullName || "-"
                             )}
                           </TableCell>
-                          <TableCell>{order.phone || "-"}</TableCell>
-                          <TableCell>₹{Number(order.totalAmount || 0).toFixed(2)}</TableCell>
+                          <TableCell className="hidden sm:table-cell whitespace-nowrap">{order.phone || "-"}</TableCell>
+                          <TableCell className="whitespace-nowrap">₹{Number(order.totalAmount || 0).toFixed(2)}</TableCell>
                           <TableCell>
-                            <Badge variant={order.status === "confirmed" ? "default" : order.status === "cancelled" ? "destructive" : "outline"}>
+                            <Badge variant={order.status === "confirmed" ? "default" : order.status === "cancelled" ? "destructive" : "outline"} className="whitespace-nowrap text-xs">
                               {order.status || "pending"}
                             </Badge>
                           </TableCell>
-                          <TableCell>{formatDate(order.createdAt)}</TableCell>
+                          <TableCell className="hidden md:table-cell whitespace-nowrap text-sm">{formatDate(order.createdAt)}</TableCell>
                           <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button variant="outline" size="sm" onClick={() => handleViewOrder(order)}>
-                                <Eye className="w-4 h-4 mr-1" />
-                                View
+                            <div className="flex items-center justify-end gap-1">
+                              <Button variant="outline" size="sm" onClick={() => handleViewOrder(order)} className="h-8 w-8 p-0 sm:w-auto sm:px-3">
+                                <Eye className="w-4 h-4" />
+                                <span className="hidden sm:inline ml-1">View</span>
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
                                 disabled={updatingOrderId === order.id || order.status === "confirmed"}
                                 onClick={() => handleStatusUpdate(order.id, "confirmed")}
+                                className="h-8 w-8 p-0 sm:w-auto sm:px-3"
                               >
-                                {updatingOrderId === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle2 className="w-4 h-4 mr-1" />Confirm</>}
+                                {updatingOrderId === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle2 className="w-4 h-4" /><span className="hidden sm:inline ml-1">Confirm</span></>}
                               </Button>
                               <Button
                                 variant="destructive"
                                 size="sm"
                                 disabled={updatingOrderId === order.id || order.status === "cancelled"}
                                 onClick={() => handleStatusUpdate(order.id, "cancelled")}
+                                className="h-8 w-8 p-0 sm:w-auto sm:px-3"
                               >
-                                {updatingOrderId === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><XCircle className="w-4 h-4 mr-1" />Cancel</>}
+                                {updatingOrderId === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><XCircle className="w-4 h-4" /><span className="hidden sm:inline ml-1">Cancel</span></>}
                               </Button>
                             </div>
                           </TableCell>
@@ -691,6 +699,7 @@ export default function Admin() {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -698,15 +707,16 @@ export default function Admin() {
 
           <TabsContent value="products">
             <Card>
-              <CardHeader className="flex flex-row items-start justify-between">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div>
                   <CardTitle>Manage Products</CardTitle>
                   <CardDescription>View, Add, Edit, and Delete products.</CardDescription>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   <Button size="sm" onClick={() => setIsCategoryDialogOpen(true)}>
                     <Plus className="w-4 h-4 mr-1" />
-                    Add Product Category
+                    <span className="hidden sm:inline">Add Product Category</span>
+                    <span className="sm:hidden">Add Category</span>
                   </Button>
                 </div>
               </CardHeader>
@@ -888,12 +898,12 @@ export default function Admin() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="w-[140px]">Name</TableHead>
-                            <TableHead className="w-[80px]">Status</TableHead>
-                            <TableHead className="w-[200px]">Email</TableHead>
-                            <TableHead className="w-[130px]">Phone</TableHead>
+                            <TableHead className="w-[140px] whitespace-nowrap">Name</TableHead>
+                            <TableHead className="w-[80px] whitespace-nowrap">Status</TableHead>
+                            <TableHead className="w-[200px] whitespace-nowrap">Email</TableHead>
+                            <TableHead className="hidden sm:table-cell w-[130px] whitespace-nowrap">Phone</TableHead>
                             <TableHead>Message</TableHead>
-                            <TableHead className="w-[160px]">Received At</TableHead>
+                            <TableHead className="hidden md:table-cell w-[160px] whitespace-nowrap">Received At</TableHead>
                             <TableHead className="w-[60px] text-right">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -913,20 +923,20 @@ export default function Admin() {
                                 </button>
                               </TableCell>
                               <TableCell>
-                                <Badge variant={msg.status === "new" ? "default" : "outline"} className="whitespace-nowrap">
+                                <Badge variant={msg.status === "new" ? "default" : "outline"} className="whitespace-nowrap text-xs">
                                   {msg.status === "new" ? "New" : "Read"}
                                 </Badge>
                               </TableCell>
                               <TableCell>
                                 <a
                                   href={`mailto:${msg.email}`}
-                                  className="text-primary hover:underline break-all"
+                                  className="text-primary hover:underline break-all text-xs sm:text-sm"
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   {msg.email}
                                 </a>
                               </TableCell>
-                              <TableCell className="whitespace-nowrap text-muted-foreground">
+                              <TableCell className="hidden sm:table-cell whitespace-nowrap text-muted-foreground">
                                 {msg.phone && msg.phone.trim() ? (
                                   <a
                                     href={`tel:${msg.phone}`}
@@ -940,11 +950,11 @@ export default function Admin() {
                                 )}
                               </TableCell>
                               <TableCell>
-                                <p className="max-w-xs text-sm text-muted-foreground truncate">
+                                <p className="max-w-[180px] text-sm text-muted-foreground truncate">
                                   {msg.message}
                                 </p>
                               </TableCell>
-                              <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                              <TableCell className="hidden md:table-cell whitespace-nowrap text-sm text-muted-foreground">
                                 {formatDate(msg.createdAt)}
                               </TableCell>
                               <TableCell className="text-right">
@@ -1002,15 +1012,16 @@ export default function Admin() {
             </div>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0 pb-4">
                 <div>
                   <CardTitle>FAQ Manager</CardTitle>
                   <CardDescription>Manage and update FAQ entries shown on the website.</CardDescription>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   {faqs.length === 0 && (
                     <Button 
-                      variant="outline" 
+                      variant="outline"
+                      size="sm"
                       onClick={handleInitializeDefaultFaqs} 
                       disabled={isInitializingFaqs}
                     >
@@ -1019,12 +1030,14 @@ export default function Admin() {
                       ) : (
                         <Plus className="w-4 h-4 mr-2" />
                       )}
-                      Load Default FAQs
+                      <span className="hidden sm:inline">Load Default FAQs</span>
+                      <span className="sm:hidden">Load Defaults</span>
                     </Button>
                   )}
-                  <Button onClick={() => handleEditFaq(null)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add FAQ Item
+                  <Button size="sm" onClick={() => handleEditFaq(null)}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    <span className="hidden sm:inline">Add FAQ Item</span>
+                    <span className="sm:hidden">Add FAQ</span>
                   </Button>
                 </div>
               </CardHeader>
