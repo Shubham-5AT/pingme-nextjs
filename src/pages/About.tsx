@@ -468,8 +468,8 @@ const About = () => {
                   </div>
 
                   {/* Floating pills */}
-                  <Pill icon={Lock}  text="Number Hidden"  style={{ top: "-14px",  right: "-18px" }} />
-                  <Pill icon={Zap}   text="Instant Alert"  style={{ bottom: "36px", left: "-24px" }} />
+                  <Pill icon={Zap}  text="Instant Alert"  style={{ top: "-14px",  left: "-24px" }} />
+                  <Pill icon={Lock}   text="Number Hidden"  style={{ top: "-14px", right: "-18px" }} />
                   <Pill icon={Globe} text="Works Anywhere" style={{ bottom: "-12px", right: "-14px" }} />
                 </div>
               </div>
