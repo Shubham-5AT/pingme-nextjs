@@ -501,6 +501,28 @@ export default function Admin() {
 
   return (
     <MainLayout>
+      <style>{`
+        .admin-scroll-form {
+          max-height: 70vh;
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
+          touch-action: pan-y;
+        }
+        .admin-scroll-form::-webkit-scrollbar {
+          width: 8px;
+        }
+        .admin-scroll-form::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .admin-scroll-form::-webkit-scrollbar-thumb {
+          background: hsl(var(--primary));
+          border-radius: 4px;
+        }
+        .admin-scroll-form::-webkit-scrollbar-thumb:hover {
+          background: hsl(var(--primary) / 0.8);
+        }
+      `}</style>
       <div className="container py-8 space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -1349,13 +1371,17 @@ export default function Admin() {
 
         {/* Product Dialog */}
         <Dialog open={isProductDialogOpn} onOpenChange={setIsProductDialogOpn}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
+          <DialogContent className="max-w-2xl flex flex-col overflow-hidden">
+            <DialogHeader className="shrink-0">
               <DialogTitle>{editingProduct?.id ? "Edit Product" : "Add Product"}</DialogTitle>
               <DialogDescription>Modify product details here. Changes sync to Firestore instantly.</DialogDescription>
             </DialogHeader>
             {editingProduct && (
-              <form onSubmit={handleSaveProduct} className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
+              <form
+                onSubmit={handleSaveProduct}
+                className="admin-scroll-form grid gap-4 py-4 overflow-y-auto px-1"
+                onWheel={(e) => e.stopPropagation()}
+              >
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="category">Category Slug</Label>
