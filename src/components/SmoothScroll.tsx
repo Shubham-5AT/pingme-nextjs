@@ -49,12 +49,16 @@ const SmoothScroll: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Instantly scroll to top of page when route/pathname changes
-    if (lenisRef.current) {
-      lenisRef.current.scrollTo(0, { immediate: true });
-    } else {
-      window.scrollTo(0, 0);
-    }
+    // Scroll to top after route/pathname changes, with a small delay to allow
+    // lazy-loaded (Suspense) pages to finish rendering before scrolling
+    const id = setTimeout(() => {
+      if (lenisRef.current) {
+        lenisRef.current.scrollTo(0, { immediate: true });
+      } else {
+        window.scrollTo(0, 0);
+      }
+    }, 50);
+    return () => clearTimeout(id);
   }, [pathname]);
 
   return null;
