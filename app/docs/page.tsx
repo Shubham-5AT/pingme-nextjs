@@ -3,7 +3,8 @@
 import { Suspense } from 'react';
 import PageLoader from '@/components/providers/PageLoader';
 import ChunkErrorBoundary from '@/components/providers/ChunkErrorBoundary';
-import DocsPage from '@/components/DocsPage';
+import dynamic from 'next/dynamic';
+const DocsPage = dynamic(() => import('@/components/DocsPage'), { ssr: false });
 
 export default function DocsRoutePage() {
   return (

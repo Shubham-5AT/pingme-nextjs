@@ -3,7 +3,8 @@
 import { Suspense } from 'react';
 import PageLoader from '@/components/providers/PageLoader';
 import ChunkErrorBoundary from '@/components/providers/ChunkErrorBoundary';
-import ProductDetail from '@/src/screens/ProductDetail';
+import dynamic from 'next/dynamic';
+const ProductDetail = dynamic(() => import('@/src/screens/ProductDetail'), { ssr: false });
 
 export default function ProductDetailPage() {
   return (

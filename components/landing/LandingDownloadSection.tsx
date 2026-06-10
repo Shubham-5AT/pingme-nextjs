@@ -51,15 +51,21 @@ const LandingDownloadSection: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-6xl mt-8 px-4 sm:px-0">
-      <div className="bg-white rounded-2xl p-8 shadow-sm flex flex-col items-center justify-center space-y-6 relative overflow-visible border border-border/40">
+      <div
+        className="rounded-2xl p-8 flex flex-col items-center justify-center space-y-6 relative overflow-visible"
+        style={{
+          background: "linear-gradient(135deg, #eccf9cff 0%, #f0d5a8ff 60%, #e1ba7aff 100%)",
+          boxShadow: "0 8px 40px rgba(200,130,10,0.35)",
+        }}
+      >
         <div className="text-center space-y-2 max-w-xl">
-          <p className="text-xs font-semibold text-primary uppercase tracking-widest">
+          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#7A4A00" }}>
             PingME Mobile App
           </p>
-          <h3 className="font-extrabold text-2xl md:text-3xl text-foreground">
+          <h3 className="font-extrabold text-2xl md:text-3xl" style={{ color: "#694920ff" }}>
             Download our App
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm" style={{ color: "#5C3200" }}>
             Manage your smart tags, customize QR actions, receive real-time notifications, and protect your privacy on the go.
           </p>
         </div>

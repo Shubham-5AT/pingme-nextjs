@@ -16,7 +16,12 @@ import {
   EmailAuthProvider,
   type User,
 } from "firebase/auth";
-import { initializeFirestore, persistentLocalCache, memoryLocalCache } from "firebase/firestore";
+import {
+  initializeFirestore,
+  getFirestore,
+  persistentLocalCache,
+  memoryLocalCache,
+} from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -28,16 +33,23 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Prevent duplicate app initialization (Next.js hot reload)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+// Prevent duplicate Firebase app initialization on Next.js hot reload
+const isNewApp = getApps().length === 0;
+const app = isNewApp ? initializeApp(firebaseConfig) : getApps()[0];
 
 export const auth = getAuth(app);
 
-// Use persistentLocalCache only in browser; fall back to memory cache on server
-export const db = initializeFirestore(app, {
-  localCache:
-    typeof window !== "undefined" ? persistentLocalCache() : memoryLocalCache(),
-});
+// Only call initializeFirestore on the first initialization.
+// On hot reload getApps()[0] is reused — calling initializeFirestore again
+// on an existing app throws and corrupts the Firestore stream.
+export const db = isNewApp
+  ? initializeFirestore(app, {
+      localCache:
+        typeof window !== "undefined"
+          ? persistentLocalCache()
+          : memoryLocalCache(),
+    })
+  : getFirestore(app);
 
 export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();

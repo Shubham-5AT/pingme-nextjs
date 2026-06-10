@@ -4,7 +4,8 @@ import { Suspense } from 'react';
 import PageLoader from '@/components/providers/PageLoader';
 import ChunkErrorBoundary from '@/components/providers/ChunkErrorBoundary';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import Profile from '@/src/screens/Profile';
+import dynamic from 'next/dynamic';
+const Profile = dynamic(() => import('@/src/screens/Profile'), { ssr: false });
 
 export default function ProfilePage() {
   return (

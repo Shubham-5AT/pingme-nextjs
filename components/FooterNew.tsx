@@ -65,6 +65,7 @@ const FooterNew = () => {
                   alt="PingME"
                   className="h-12 w-auto sm:h-16 md:h-20 object-contain hover:scale-110 transition-transform duration-300"
                   height={80}
+                  width={280}
                   priority={false}
                 />
               </div>

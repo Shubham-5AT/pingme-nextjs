@@ -21,7 +21,7 @@ export default function AuthLayout({
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <Link href="/" className="inline-block">
-              <Image src={logo} alt="PingME" className="h-12 mx-auto" height={48} priority />
+              <Image src={logo} alt="PingME" className="h-12 mx-auto w-auto" height={48} width={168} priority />
             </Link>
             <h1 className="mt-6 text-2xl font-bold tracking-tight">{title}</h1>
             {subtitle && (

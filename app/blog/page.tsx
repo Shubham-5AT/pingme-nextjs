@@ -3,7 +3,8 @@
 import { Suspense } from 'react';
 import PageLoader from '@/components/providers/PageLoader';
 import ChunkErrorBoundary from '@/components/providers/ChunkErrorBoundary';
-import Blog from '@/src/screens/Blog';
+import dynamic from 'next/dynamic';
+const Blog = dynamic(() => import('@/src/screens/Blog'), { ssr: false });
 
 export default function BlogPage() {
   return (

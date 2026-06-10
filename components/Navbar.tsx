@@ -416,6 +416,7 @@ const Navbar = () => {
                 alt="PingME"
                 className="logo-image h-12 md:h-14 w-auto object-contain"
                 height={56}
+                width={200}
                 priority
               />
             </Link>

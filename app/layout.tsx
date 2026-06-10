@@ -45,8 +45,6 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export const dynamic = 'force-dynamic';
-
 export default function RootLayout({
   children,
 }: {
@@ -54,7 +52,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${poppins.variable} ${spaceGrotesk.variable}`}>
-      <body>
+      <body suppressHydrationWarning>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

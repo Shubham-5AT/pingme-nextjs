@@ -25,7 +25,10 @@ const NFCEditModal = lazy(() => import("@/components/profile/NFCEditModal").then
 const AddressManagement = lazy(() => import("@/components/profile/AddressManagement").then((module) => ({ default: module.AddressManagement })));
 
 export default function Profile() {
-  const { userId } = useParams<{ userId?: string }>();
+  const params = useParams<{ userId?: string | string[] }>();
+  const rawUserId = params.userId;
+  // [[...userId]] catch-all returns an array — normalise to a plain string
+  const userId = Array.isArray(rawUserId) ? rawUserId[0] : rawUserId;
   const { user, profile: currentUserProfile, resendVerification, refreshProfile } = useAuth();
   const [fetchedProfile, setFetchedProfile] = useState<UserProfile | null>(null);
 

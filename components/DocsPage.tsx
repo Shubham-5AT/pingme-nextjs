@@ -60,11 +60,11 @@ interface Section {
 // ─── useMediaQuery hook ───────────────────────────────────────────────────────
 
 const useMediaQuery = (query: string) => {
-  const [matches, setMatches] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia(query).matches : false
-  );
+  // Always start false (matches server render), update after mount in useEffect
+  const [matches, setMatches] = useState(false);
   useEffect(() => {
     const mql = window.matchMedia(query);
+    setMatches(mql.matches);
     const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
     mql.addEventListener("change", handler);
     return () => mql.removeEventListener("change", handler);
@@ -1266,7 +1266,7 @@ const DocsPage = () => {
             </button>
           )}
           <Link href="/" style={{ flexShrink: 0 }}>
-            <Image src={logo} alt="PingME" className="h-8 w-auto" style={{ height: isMobile ? "32px" : "40px", width: "auto" }} height={40} />
+            <Image src={logo} alt="PingME" className="h-8 w-auto" style={{ height: isMobile ? "32px" : "40px", width: "auto" }} height={40} width={140} />
           </Link>
           {!isMobile && (
             <>

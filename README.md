@@ -1,168 +1,61 @@
-# Welcome to your Lovable project
+# PingME — Privacy-First NFC Smart Tags
 
-## Project info
+A Next.js 15 app with Firebase Auth, Firestore, and Razorpay payments.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Tech Stack
 
-## How can I edit this code?
+- **Framework**: Next.js 15 (App Router)
+- **Auth & DB**: Firebase Auth + Firestore
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Payments**: Razorpay
 
-There are several ways of editing your application.
+## Getting Started
 
-**Use Lovable**
+### 1. Install dependencies
+```bash
+npm install
+```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### 2. Set up environment variables
 
-Changes made via Lovable will be committed automatically to this repo.
+Copy `.env.example` to `.env.local` and fill in your values:
+```bash
+cp .env.example .env.local
+```
 
-**Use your preferred IDE**
+Required variables:
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+NEXT_PUBLIC_RAZORPAY_KEY_ID=
+NEXT_PUBLIC_PAYMENT_API_BASE_URL=
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 3. Run development server
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open [http://localhost:3000](http://localhost:3000).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Scripts
 
-**Use GitHub Codespaces**
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Run production build |
+| `npm run lint` | Run ESLint |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Deployment
 
-## What technologies are used for this project?
+This app requires a Node.js server. Recommended platforms:
+- **Vercel** (recommended) — connect GitHub repo, add env vars, deploy
+- **Railway** — connect GitHub repo, set build/start commands
+- **Any VPS** — run `npm run build` then `npm run start`
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## Razorpay Payment Setup
-
-This project now uses a secure Razorpay flow:
-
-1. Frontend creates an order via Firebase Functions.
-2. Razorpay Checkout collects payment.
-3. Backend verifies payment signature.
-4. Backend writes to Firestore collections:
-	- `payments`
-	- `prebookings`
-
-### Frontend env (`.env`)
-
-Set:
-
-```sh
-VITE_RAZORPAY_KEY_ID=rzp_test_your_public_key
-VITE_PAYMENT_API_BASE_URL=https://asia-south1-your-project-id.cloudfunctions.net
-```
-
-### Backend secrets (`functions`)
-
-For production deploys, use Firebase Secret Manager:
-
-```sh
-firebase functions:secrets:set RAZORPAY_KEY_ID
-firebase functions:secrets:set RAZORPAY_KEY_SECRET
-firebase functions:secrets:set SMTP_HOST
-firebase functions:secrets:set SMTP_PORT
-firebase functions:secrets:set SMTP_USER
-firebase functions:secrets:set SMTP_PASS
-firebase functions:secrets:set SMTP_FROM
-```
-
-For local emulator only, you can keep using `functions/.env`:
-
-```sh
-RAZORPAY_KEY_ID=rzp_test_your_public_key
-RAZORPAY_KEY_SECRET=your_server_secret_key
-
-# Order confirmation email
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@domain.com
-SMTP_PASS=your-email-app-password
-SMTP_FROM=your-email@domain.com
-
-# Order confirmation SMS (Twilio)
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=your_twilio_auth_token
-TWILIO_PHONE_NUMBER=+1xxxxxxxxxx
-
-# Order confirmation WhatsApp (Twilio)
-# If TWILIO_WHATSAPP_FROM is set, backend sends WhatsApp first.
-TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
-
-# Optional: use an approved WhatsApp template via Twilio Content API
-TWILIO_WHATSAPP_CONTENT_SID=HXxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
-
-Important:
-
-- Never expose `RAZORPAY_KEY_SECRET` in frontend env.
-- If a secret was added to frontend by mistake, rotate it in Razorpay dashboard immediately.
-- Keep SMTP and Twilio secrets only in backend env/secrets.
-
-### NFC profile sync behavior
-
-For NFC orders, the profile now syncs inside the same `pingmereg` Firestore project to collection `nfcProfiles` in these moments:
-
-1. Pre-payment draft sync (right before Razorpay checkout opens).
-2. Payment verification sync (confirmed payload).
-3. Profile edits sync (from account profile order editor + Firestore update triggers).
-
-The sync key is the Razorpay `orderId` when available, which keeps pre-payment and post-payment updates mapped to the same public profile record.
-
-### Order confirmation notifications
-
-When an admin changes a prebooking status from `pending` to `confirmed`, a Cloud Function now attempts to send:
-
-1. Email to customer with order ID, items, and expected delivery date.
-2. WhatsApp message to customer if configured; otherwise SMS fallback.
-
-Expected delivery is calculated as current date + 5 days.
-
-### Deploy functions
-
-```sh
-cd functions
-npm install
-firebase deploy --only functions
-```
-
-After deploy, use the returned functions URL as `VITE_PAYMENT_API_BASE_URL`.
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+> GoDaddy shared hosting is **not supported** — it requires Node.js runtime.

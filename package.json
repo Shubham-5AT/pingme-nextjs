@@ -1,18 +1,14 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "pingme",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev --turbopack -H 0.0.0.0",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
-    "dev": "next dev",
-    "build": "next build",
-    "build:dev": "vite build --mode development",
-    "deploy:rules": "firebase deploy --only firestore:rules --project nfc-card-31edd",
     "lint": "next lint",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "deploy:rules": "firebase deploy --only firestore:rules --project nfc-card-31edd"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
