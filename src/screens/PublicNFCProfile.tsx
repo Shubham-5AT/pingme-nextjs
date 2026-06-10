@@ -12,7 +12,7 @@ import { fetchPublicNfcProfile, normalizeNfcUsername, type PublicNfcProfile } fr
 import { toast } from "sonner";
 import "./PublicNFCProfile.css";
 
-/* ── helpers ── */
+/* -- helpers -- */
 const linkify = (url: string): string => {
   if (!url) return "";
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
@@ -29,7 +29,7 @@ const getInitials = (name?: string): string => {
   return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 };
 
-/* ── vCard builder ── */
+/* -- vCard builder -- */
 function createVCard(profile: PublicNfcProfile) {
   const fn = profile.name || profile.username || "";
   const address = profile.companyAddress || profile.address || "";
@@ -53,7 +53,7 @@ function createVCard(profile: PublicNfcProfile) {
   return { vcard, blob, file, filename };
 }
 
-/* ── social icon map ── */
+/* -- social icon map -- */
 const getSocialIcon = (label: string) => {
   const cls = "w-4 h-4";
   switch (label) {
@@ -66,7 +66,7 @@ const getSocialIcon = (label: string) => {
   }
 };
 
-/* ── project type helpers ── */
+/* -- project type helpers -- */
 const getProjectTypeIcon = (type?: string) => {
   const cls = "w-3 h-3";
   switch (type) {
@@ -95,7 +95,7 @@ const getDocumentTypeLabel = (type?: string) => {
   }
 };
 
-/* ── detail icon map ── */
+/* -- detail icon map -- */
 const DetailIcon = ({ type }: { type: "email" | "phone" | "website" | "address" }) => {
   const icons = { email: Mail, phone: Phone, website: Globe, address: MapPin };
   const Icon = icons[type];
@@ -106,7 +106,7 @@ const DetailIcon = ({ type }: { type: "email" | "phone" | "website" | "address" 
   );
 };
 
-/* ── Share Sheet ── */
+/* -- Share Sheet -- */
 interface ShareSheetProps {
   url: string;
   name: string;
@@ -272,9 +272,9 @@ function ShareSheet({ url, name, onClose }: ShareSheetProps) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ===========================================================================
    Main Component
-═══════════════════════════════════════════════════════════════════════════ */
+=========================================================================== */
 export default function PublicNFCProfile() {
   const pathname = usePathname();
   const usernameWithHash   = pathname.slice(1);
@@ -341,7 +341,7 @@ export default function PublicNFCProfile() {
      !!profile.upiId || !!profile.razorpayLink || !!profile.appointmentBookingLink ||
      !!profile.companyAddress || !!profile.googleMapsLink);
 
-  /* ── Save Contact ── */
+  /* -- Save Contact -- */
   const handleSaveContact = async () => {
     if (!profile) return;
     try {
@@ -365,7 +365,7 @@ export default function PublicNFCProfile() {
     }
   };
 
-  /* ── Render ── */
+  /* -- Render -- */
   return (
     <div className="nfc-public-page">
       <main className="nfc-app-shell">

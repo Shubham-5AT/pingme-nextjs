@@ -23,7 +23,7 @@ import {
   subscribeToProductCategories,
 } from "@/lib/productService";
 
-/* ─── Brand tokens ── */
+/* --- Brand tokens -- */
 const GOLD       = "#edd09f";
 const GOLD_DEEP  = "#c9a96e";
 const GOLD_LIGHT = "#f5e6c8";
@@ -94,7 +94,7 @@ const FAQ_ITEMS = [
   },
 ];
 
-/* ── Ticker — never pauses ── */
+/* -- Ticker — never pauses -- */
 const Ticker = () => (
   <div style={{ overflow: "hidden", width: "100%", padding: "12px 0" }}>
     <style>{`
@@ -134,7 +134,7 @@ const Ticker = () => (
   </div>
 );
 
-/* ── FAQ Accordion ── */
+/* -- FAQ Accordion -- */
 const FAQAccordion = () => {
   const [open, setOpen] = useState<number | null>(null);
   return (
@@ -209,7 +209,7 @@ const FAQAccordion = () => {
   );
 };
 
-/* ── Trust Strip ── */
+/* -- Trust Strip -- */
 const TrustStrip = () => (
   <div style={{ background: GOLD_LIGHT, borderTop: `1px solid ${MIST}`, borderBottom: `1px solid ${MIST}`, padding: "32px 24px" }}>
     <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: "24px 0" }}>
@@ -234,7 +234,7 @@ const TrustStrip = () => (
   </div>
 );
 
-/* ── Category Cover Image ── */
+/* -- Category Cover Image -- */
 const CategoryCoverImage = ({ category }: { category: ProductCategory }) => {
   const [failed, setFailed] = useState(false);
   if (!category.coverImage || failed) {
@@ -252,7 +252,7 @@ const CategoryCoverImage = ({ category }: { category: ProductCategory }) => {
   );
 };
 
-/* ── Product Card ── */
+/* -- Product Card -- */
 const ProductCardItem = ({ product, categorySlug }: { product: ProductVariant & { categorySlug: string }; categorySlug?: string }) => {
   const router = useRouter();
   const [imageFailed, setImageFailed] = useState(false);
@@ -326,7 +326,7 @@ const ProductCardItem = ({ product, categorySlug }: { product: ProductVariant & 
   );
 };
 
-/* ═══════════════════════════════════ MAIN ═══════════════════════════════════ */
+/* =================================== MAIN =================================== */
 const Products = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
   const router = useRouter();
@@ -439,7 +439,7 @@ const Products = () => {
 
       <div className="pm-page">
 
-        {/* ── Hero ── */}
+        {/* -- Hero -- */}
         <section style={{ paddingTop: "clamp(60px, 10vw, 100px)", paddingBottom: "clamp(32px, 6vw, 60px)", textAlign: "center", position: "relative", overflow: "hidden" }}>
           <div aria-hidden style={{ position: "absolute", inset: 0, backgroundImage: `radial-gradient(circle, ${MIST} 1px, transparent 1px)`, backgroundSize: "28px 28px", opacity: 0.45, pointerEvents: "none" }} />
           <div style={{ position: "relative", maxWidth: 720, margin: "0 auto", padding: "0 24px" }}>
@@ -465,7 +465,7 @@ const Products = () => {
           </div>
         </section>
 
-        {/* ── Filter Bar — NOT sticky ── */}
+        {/* -- Filter Bar — NOT sticky -- */}
         {!selectedCategory && categories.length > 0 && (
           <div style={{ background: "rgba(249,244,236,0.98)", borderBottom: `1px solid ${MIST}`, padding: "14px 0" }}>
             <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
@@ -504,7 +504,7 @@ const Products = () => {
           </div>
         )}
 
-        {/* ── Main Content ── */}
+        {/* -- Main Content -- */}
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 24px" }}>
 
           {/* Category Grid */}

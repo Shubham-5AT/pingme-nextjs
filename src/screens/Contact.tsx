@@ -85,7 +85,7 @@ const Contact = () => {
 
   return (
     <MainLayout>
-      {/* ── Page hero ── */}
+      {/* -- Page hero -- */}
       <div className="bg-cream border-b border-border/40 py-12 md:py-16">
         <div className="container mx-auto flex flex-col items-center text-center gap-3">
           <div>
@@ -97,7 +97,7 @@ const Contact = () => {
         </div>
       </div>
 
-      {/* ── Main two-column section ── */}
+      {/* -- Main two-column section -- */}
       <div className="container py-12 md:py-16">
         <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
 
@@ -262,7 +262,7 @@ const Contact = () => {
         </div>
       </div>
 
-      {/* ── Map full-width ── */}
+      {/* -- Map full-width -- */}
       
     </MainLayout>
   );

@@ -100,7 +100,7 @@ const Blog = () => {
 
       <main className="overflow-hidden pb-20">
 
-        {/* ── HERO ── */}
+        {/* -- HERO -- */}
         <section className="relative dot-grid bg-cream pt-12 pb-16 md:pt-16 md:pb-20">
           {/* Decorative blobs */}
           <div className="pointer-events-none absolute -top-10 right-0 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
@@ -139,7 +139,7 @@ const Blog = () => {
           </div>
         </section>
 
-        {/* ── ARTICLES ── */}
+        {/* -- ARTICLES -- */}
         <section className="container mt-14 space-y-20 md:mt-18">
 
           {blogArticles.map((article, index) => {
@@ -233,8 +233,8 @@ const Blog = () => {
           })}
         </section>
 
-        {/* ── CTA BAND ── */}
-        {/* ── CTA BAND ── */}
+        {/* -- CTA BAND -- */}
+        {/* -- CTA BAND -- */}
         <div className="sr-item sr-from-below mt-24 container">
           <div className="relative overflow-hidden rounded-[2rem] border border-border/70 bg-background px-6 py-16 text-center shadow-[0_20px_50px_rgba(0,0,0,0.03)] md:py-20">
             {/* Context-matching dot grid background element */}

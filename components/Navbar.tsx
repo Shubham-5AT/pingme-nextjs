@@ -152,7 +152,7 @@ const Navbar = () => {
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── Hide / show navbar ── */
+        /* -- Hide / show navbar -- */
         @keyframes navSlideDown {
           from { transform: translateY(-100%); opacity: 0; }
           to   { transform: translateY(0);     opacity: 1; }
@@ -196,7 +196,7 @@ const Navbar = () => {
           border-bottom: 1px solid rgba(244, 180, 0, 0.05);
         }
 
-        /* ── Nav links ── */
+        /* -- Nav links -- */
         .nav-link-wrapper {
           position: relative;
           overflow: hidden;
@@ -241,7 +241,7 @@ const Navbar = () => {
         .nav-link-wrapper:hover .nav-link,
         .nav-link-wrapper.active .nav-link { color: var(--primary-yellow); }
 
-        /* ── Cart button ── */
+        /* -- Cart button -- */
         .cart-button {
           position: relative;
           display: flex;
@@ -287,7 +287,7 @@ const Navbar = () => {
           letter-spacing: -0.5px;
         }
 
-        /* ── Login button ── */
+        /* -- Login button -- */
         .login-button {
           position: relative;
           padding: 10px 24px;
@@ -323,7 +323,7 @@ const Navbar = () => {
         }
         .login-button:active { transform: translateY(-1px) scale(0.98); }
 
-        /* ── Mobile menu ── */
+        /* -- Mobile menu -- */
         .mobile-menu-item {
           animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
           position: relative;
@@ -370,7 +370,7 @@ const Navbar = () => {
         .menu-icon { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .menu-toggle.open .menu-icon { transform: rotate(90deg); }
 
-        /* ── Logo ── */
+        /* -- Logo -- */
         .logo-wrapper {
           position: relative;
           display: flex;

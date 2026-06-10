@@ -148,7 +148,7 @@ const Partners = () => {
             </aside>
           </div>
 
-          {/* ── BECOME A PARTNER — dark-themed to match page ── */}
+          {/* -- BECOME A PARTNER — dark-themed to match page -- */}
           <div className="rounded-[1.75rem] border border-white/10 bg-black/70 p-6 shadow-[0_0_50px_rgba(250,204,21,0.08),0_0_80px_rgba(239,68,68,0.1)] backdrop-blur-xl md:p-8">
             <div className="mb-5 flex items-center gap-3">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/20 to-amber-400/20 shadow-[0_0_20px_rgba(239,68,68,0.12)]">

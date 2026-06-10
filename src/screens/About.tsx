@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { getCachedPublicStats, refreshPublicStats } from "@/lib/publicStatsService";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// --- Constants ----------------------------------------------------------------
 const STATIC_CITIES_COVERED = 3;
 const STATIC_GOOGLE_RATING = 4.0;
 
@@ -47,7 +47,7 @@ const FAQ_ITEMS = [
   { q: "Is PingME only for vehicles?", a: "Not at all! We have tags for bags, pets, and NFC smart cards for networking. One platform covers all your privacy needs." },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ------------------------------------------------------------------
 const animateNumber = (from: number, to: number, duration: number, onUpdate: (v: number) => void) => {
   const start = performance.now();
   const frame = (now: number) => {
@@ -59,7 +59,7 @@ const animateNumber = (from: number, to: number, duration: number, onUpdate: (v:
   requestAnimationFrame(frame);
 };
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
+// --- Hooks --------------------------------------------------------------------
 const useInView = (threshold = 0.15) => {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
@@ -83,7 +83,7 @@ const useMouseParallax = () => {
   return pos;
 };
 
-// ─── Particle canvas ──────────────────────────────────────────────────────────
+// --- Particle canvas ----------------------------------------------------------
 const ParticleField = ({ mouse }: { mouse: { x: number; y: number } }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef(mouse);
@@ -135,7 +135,7 @@ const ParticleField = ({ mouse }: { mouse: { x: number; y: number } }) => {
   return <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", opacity: 0.65 }} />;
 };
 
-// ─── Magnetic button ──────────────────────────────────────────────────────────
+// --- Magnetic button ----------------------------------------------------------
 const MagneticBtn = ({ href, children, className, style }: { href: string; children: React.ReactNode; className?: string; style?: React.CSSProperties }) => {
   const ref = useRef<HTMLAnchorElement>(null);
   const [off, setOff] = useState({ x: 0, y: 0 });
@@ -151,7 +151,7 @@ const MagneticBtn = ({ href, children, className, style }: { href: string; child
   );
 };
 
-// ─── Typewriter ───────────────────────────────────────────────────────────────
+// --- Typewriter ---------------------------------------------------------------
 const Typewriter = ({ words }: { words: string[] }) => {
   const [idx, setIdx] = useState(0); const [ci, setCi] = useState(0); const [del, setDel] = useState(false); const [text, setText] = useState("");
   useEffect(() => {
@@ -169,7 +169,7 @@ const Typewriter = ({ words }: { words: string[] }) => {
   );
 };
 
-// ─── Scroll progress ──────────────────────────────────────────────────────────
+// --- Scroll progress ----------------------------------------------------------
 const ScrollBar = () => {
   const [pct, setPct] = useState(0);
   useEffect(() => {
@@ -180,14 +180,14 @@ const ScrollBar = () => {
   return <div style={{ position: "fixed", top: 0, left: 0, height: 3, width: `${pct}%`, background: "linear-gradient(90deg, hsl(var(--primary)), #f59e0b, hsl(var(--primary)))", backgroundSize: "200% 100%", animation: "shimmerBar 2s linear infinite", zIndex: 9999, borderRadius: "0 2px 2px 0", transition: "width 0.08s ease" }} />;
 };
 
-// ─── Floating pill ────────────────────────────────────────────────────────────
+// --- Floating pill ------------------------------------------------------------
 const Pill = ({ icon: Icon, text, style }: { icon: React.ElementType; text: string; style?: React.CSSProperties }) => (
   <div style={{ position: "absolute", display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, fontSize: 10, fontWeight: 700, background: "rgba(255,255,255,0.92)", border: "1px solid rgba(0,0,0,0.08)", backdropFilter: "blur(10px)", color: "#555", boxShadow: "0 4px 16px rgba(0,0,0,0.08)", whiteSpace: "nowrap", pointerEvents: "none", userSelect: "none", animation: "floatIn 0.8s ease both", ...style }}>
     <Icon style={{ width: 12, height: 12, color: "hsl(var(--primary))" }} />{text}
   </div>
 );
 
-// ─── Stat card ────────────────────────────────────────────────────────────────
+// --- Stat card ----------------------------------------------------------------
 const StatCard = ({ value, suffix = "+", label, delay = 0, inView }: { value: number | string; suffix?: string; label: string; delay?: number; inView: boolean }) => {
   const [d, setD] = useState(0);
   const isNum = typeof value === "number";
@@ -200,7 +200,7 @@ const StatCard = ({ value, suffix = "+", label, delay = 0, inView }: { value: nu
   );
 };
 
-// ─── Value card ───────────────────────────────────────────────────────────────
+// --- Value card ---------------------------------------------------------------
 const ValueCard = ({ icon: Icon, label, description, color, index, inView }: (typeof VALUES)[0] & { index: number; inView: boolean }) => {
   const [hov, setHov] = useState(false);
   return (
@@ -217,7 +217,7 @@ const ValueCard = ({ icon: Icon, label, description, color, index, inView }: (ty
   );
 };
 
-// ─── Product card ─────────────────────────────────────────────────────────────
+// --- Product card -------------------------------------------------------------
 const ProductCard = ({ emoji, label, tag, description, href, accent, index, inView }: (typeof PRODUCTS)[0] & { index: number; inView: boolean }) => {
   const [hov, setHov] = useState(false);
   const [ripple, setRipple] = useState<{ x: number; y: number; key: number } | null>(null);
@@ -243,7 +243,7 @@ const ProductCard = ({ emoji, label, tag, description, href, accent, index, inVi
   );
 };
 
-// ─── Timeline ─────────────────────────────────────────────────────────────────
+// --- Timeline -----------------------------------------------------------------
 const TimelineItem = ({ year, title, description, icon, index, inView, isLast }: (typeof TIMELINE)[0] & { index: number; inView: boolean; isLast: boolean }) => {
   const [hov, setHov] = useState(false);
   return (
@@ -262,7 +262,7 @@ const TimelineItem = ({ year, title, description, icon, index, inView, isLast }:
   );
 };
 
-// ─── Testimonial card ─────────────────────────────────────────────────────────
+// --- Testimonial card ---------------------------------------------------------
 const TestiCard = ({ name, city, text, rating, emoji, index, inView }: (typeof TESTIMONIALS)[0] & { index: number; inView: boolean }) => {
   const [hov, setHov] = useState(false);
   return (
@@ -281,7 +281,7 @@ const TestiCard = ({ name, city, text, rating, emoji, index, inView }: (typeof T
   );
 };
 
-// ─── FAQ accordion item ───────────────────────────────────────────────────────
+// --- FAQ accordion item -------------------------------------------------------
 const FAQItem = ({ q, a, index, inView }: { q: string; a: string; index: number; inView: boolean }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -297,7 +297,7 @@ const FAQItem = ({ q, a, index, inView }: { q: string; a: string; index: number;
   );
 };
 
-// ─── Live ping ticker ─────────────────────────────────────────────────────────
+// --- Live ping ticker ---------------------------------------------------------
 const PingTicker = () => {
   const EVENTS = ["🚗 Vehicle pinged in Sector 22", "🐾 Pet found near IT Park", "🎒 Bag recovered at Bus Stand", "📲 NFC card tapped at Elante Mall", "🚗 Parking alert triggered in Phase 7", "🐾 Dog tag scanned in Mohali", "🎒 Luggage ping at Chandigarh Airport"];
   const [idx, setIdx] = useState(0);
@@ -314,7 +314,7 @@ const PingTicker = () => {
   );
 };
 
-// ─── Tilt card wrapper ────────────────────────────────────────────────────────
+// --- Tilt card wrapper --------------------------------------------------------
 const TiltCard = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50 });
@@ -333,7 +333,7 @@ const TiltCard = ({ children, style }: { children: React.ReactNode; style?: Reac
   );
 };
 
-// ─── Testimonials auto-slider ─────────────────────────────────────────────────
+// --- Testimonials auto-slider -------------------------------------------------
 const TestimonialsSection = ({ inView }: { inView: boolean }) => {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -364,7 +364,7 @@ const TestimonialsSection = ({ inView }: { inView: boolean }) => {
   );
 };
 
-// ─── Eyebrow ──────────────────────────────────────────────────────────────────
+// --- Eyebrow ------------------------------------------------------------------
 const Eyebrow = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
   <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "hsl(var(--primary))", marginBottom: 12, ...style }}>
     <span style={{ display: "block", width: 20, height: 2, background: "hsl(var(--primary))", borderRadius: 2 }} />
@@ -372,7 +372,7 @@ const Eyebrow = ({ children, style }: { children: React.ReactNode; style?: React
   </div>
 );
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// --- Main ---------------------------------------------------------------------
 const About = () => {
   const cached = useMemo(() => getCachedPublicStats(), []);
   const [customers, setCustomers] = useState(cached?.happyCustomers || 0);
@@ -494,7 +494,7 @@ const About = () => {
             <h2 className="page-title"><span className="g-text">About Us</span><div className="page-title-bar" /></h2>
           </div>
 
-          {/* HERO ─────────────────────────────────────────────────────────── */}
+          {/* HERO ----------------------------------------------------------- */}
           <section ref={heroV.ref} className="pm-sec">
             <div className="hero-bg">
               <ParticleField mouse={mouse} />
@@ -568,7 +568,7 @@ const About = () => {
             </div>
           </section>
 
-          {/* MARQUEE TRUST STRIP ─────────────────────────────────────────── */}
+          {/* MARQUEE TRUST STRIP ------------------------------------------- */}
           <div style={{ overflow: "hidden", marginBottom: 72, borderTop: "1px solid rgba(0,0,0,0.07)", borderBottom: "1px solid rgba(0,0,0,0.07)", padding: "14px 0", background: "white" }}>
             <div style={{ display: "flex", gap: 0, animation: "marquee 22s linear infinite", width: "max-content" }}>
               {[...Array(2)].map((_, gi) => (
@@ -581,7 +581,7 @@ const About = () => {
             </div>
           </div>
 
-          {/* STORY ──────────────────────────────────────────────────────── */}
+          {/* STORY -------------------------------------------------------- */}
           <section ref={storyV.ref} className="pm-sec" style={{ maxWidth: 900 }}>
             <Eyebrow style={{ opacity: storyV.inView ? 1 : 0, transition: "opacity .5s" }}>Why We Built This</Eyebrow>
             <h2 style={{ fontSize: "clamp(26px,3vw,38px)", fontWeight: 900, letterSpacing: "-0.02em", marginBottom: 28, color: "#1a1a0a", opacity: storyV.inView ? 1 : 0, transform: storyV.inView ? "none" : "translateY(18px)", transition: "opacity .55s ease .08s, transform .55s ease .08s" }}>
@@ -597,7 +597,7 @@ const About = () => {
             </div>
           </section>
 
-          {/* PRODUCTS ───────────────────────────────────────────────────── */}
+          {/* PRODUCTS ----------------------------------------------------- */}
           <section ref={productsV.ref} className="pm-sec" id="how-it-works" style={{ borderTop: "1.5px solid rgba(0,0,0,0.07)", paddingTop: 52 }}>
             <Eyebrow style={{ opacity: productsV.inView ? 1 : 0, transition: "opacity .5s" }}>What We Make</Eyebrow>
             <h2 style={{ fontSize: "clamp(26px,3vw,38px)", fontWeight: 900, letterSpacing: "-0.02em", marginBottom: 8, color: "#1a1a0a", opacity: productsV.inView ? 1 : 0, transform: productsV.inView ? "none" : "translateY(16px)", transition: "opacity .55s ease .08s, transform .55s ease .08s" }}>
@@ -611,7 +611,7 @@ const About = () => {
             </div>
           </section>
 
-          {/* VALUES ─────────────────────────────────────────────────────── */}
+          {/* VALUES ------------------------------------------------------- */}
           <section ref={valuesV.ref} className="pm-sec">
             <Eyebrow style={{ opacity: valuesV.inView ? 1 : 0, transition: "opacity .5s" }}>What We Stand For</Eyebrow>
             <h2 style={{ fontSize: "clamp(26px,3vw,38px)", fontWeight: 900, letterSpacing: "-0.02em", marginBottom: 36, color: "#1a1a0a", opacity: valuesV.inView ? 1 : 0, transform: valuesV.inView ? "none" : "translateY(16px)", transition: "opacity .55s ease .08s, transform .55s ease .08s" }}>
@@ -622,7 +622,7 @@ const About = () => {
             </div>
           </section>
 
-          {/* TIMELINE ──────────────────────────────────────────────────── */}
+          {/* TIMELINE ---------------------------------------------------- */}
           <section ref={timelineV.ref} className="pm-sec" style={{ borderTop: "1.5px solid rgba(0,0,0,0.07)", paddingTop: 52 }}>
             <div className="grid md:grid-cols-2 gap-16 items-start">
               <div style={{ opacity: timelineV.inView ? 1 : 0, transform: timelineV.inView ? "none" : "translateX(-28px)", transition: "opacity .55s ease, transform .55s ease" }}>
@@ -667,7 +667,7 @@ const About = () => {
             </div>
           </section>
 
-          {/* STATS ──────────────────────────────────────────────────────── */}
+          {/* STATS -------------------------------------------------------- */}
           <section ref={statsV.ref} className="pm-sec">
             <div className="stats-bg" style={{ opacity: statsV.inView ? 1 : 0, transform: statsV.inView ? "none" : "translateY(28px)", transition: "opacity .65s ease, transform .65s ease" }}>
               <p style={{ textAlign:"center",fontSize:10,fontWeight:800,letterSpacing:"0.2em",textTransform:"uppercase",color:"rgba(255,248,227,0.4)",marginBottom:40 }}>By The Numbers</p>
@@ -681,7 +681,7 @@ const About = () => {
             </div>
           </section>
 
-          {/* TESTIMONIALS ───────────────────────────────────────────────── */}
+          {/* TESTIMONIALS ------------------------------------------------- */}
           <section ref={testiV.ref} className="pm-sec" style={{ borderTop: "1.5px solid rgba(0,0,0,0.07)", paddingTop: 52 }}>
             <Eyebrow style={{ opacity: testiV.inView ? 1 : 0, transition: "opacity .5s" }}>Real Stories</Eyebrow>
             <h2 style={{ fontSize: "clamp(26px,3vw,38px)", fontWeight: 900, letterSpacing: "-0.02em", marginBottom: 36, color: "#1a1a0a", opacity: testiV.inView ? 1 : 0, transform: testiV.inView ? "none" : "translateY(16px)", transition: "opacity .55s ease .08s, transform .55s ease .08s" }}>
@@ -690,7 +690,7 @@ const About = () => {
             <TestimonialsSection inView={testiV.inView} />
           </section>
 
-          {/* FAQ ────────────────────────────────────────────────────────── */}
+          {/* FAQ ---------------------------------------------------------- */}
           <section ref={faqV.ref} className="pm-sec" style={{ borderTop: "1.5px solid rgba(0,0,0,0.07)", paddingTop: 52 }}>
             <div className="grid md:grid-cols-2 gap-12 items-start">
               <div>
@@ -717,7 +717,7 @@ const About = () => {
             </div>
           </section>
 
-          {/* OFFICE ─────────────────────────────────────────────────────── */}
+          {/* OFFICE ------------------------------------------------------- */}
           <section ref={officeV.ref} className="pm-sec" style={{ borderTop: "1.5px solid rgba(0,0,0,0.07)", paddingTop: 52 }}>
             <div className="grid md:grid-cols-2 gap-10 items-center">
               <div className="office-card" style={{ opacity: officeV.inView ? 1 : 0, transform: officeV.inView ? "none" : "translateY(22px)", transition: "opacity .55s ease, transform .55s ease" }}>
@@ -743,7 +743,7 @@ const About = () => {
             </div>
           </section>
 
-          {/* CTA ────────────────────────────────────────────────────────── */}
+          {/* CTA ---------------------------------------------------------- */}
           <section ref={ctaV.ref}>
             <div className="cta-bg" style={{ opacity:ctaV.inView?1:0,transform:ctaV.inView?"none":"translateY(24px)",transition:"opacity .65s ease, transform .65s ease" }}>
               <div style={{ position:"relative",zIndex:1 }}>

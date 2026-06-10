@@ -39,7 +39,7 @@ import {
   Moon,
 } from "lucide-react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// --- Types --------------------------------------------------------------------
 
 interface NavItem {
   id: string;
@@ -57,7 +57,7 @@ interface Section {
   readingTime?: number; // minutes
 }
 
-// ─── useMediaQuery hook ───────────────────────────────────────────────────────
+// --- useMediaQuery hook -------------------------------------------------------
 
 const useMediaQuery = (query: string) => {
   // Always start false (matches server render), update after mount in useEffect
@@ -72,7 +72,7 @@ const useMediaQuery = (query: string) => {
   return matches;
 };
 
-// ─── Nav Structure ─────────────────────────────────────────────────────────────
+// --- Nav Structure -------------------------------------------------------------
 
 const NAV: NavItem[] = [
   {
@@ -135,7 +135,7 @@ const NAV: NavItem[] = [
   },
 ];
 
-// ─── Reusable Components ────────────────────────────────────────────────────────
+// --- Reusable Components --------------------------------------------------------
 
 const Callout = ({
   type,
@@ -432,7 +432,7 @@ const Divider = () => (
   />
 );
 
-// ─── All Section Content ────────────────────────────────────────────────────────
+// --- All Section Content --------------------------------------------------------
 
 const buildSections = (
   onCopyLink: (id: string) => void
@@ -875,7 +875,7 @@ const buildSections = (
   },
 ];
 
-// ─── Accordion FAQ Item ────────────────────────────────────────────────────────
+// --- Accordion FAQ Item --------------------------------------------------------
 
 const FAQItem = ({ question, answer }: { question: string; answer: string }) => {
   const [open, setOpen] = useState(false);
@@ -934,7 +934,7 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
   );
 };
 
-// ─── Sidebar Nav Tree ────────────────────────────────────────────────────────
+// --- Sidebar Nav Tree --------------------------------------------------------
 
 const SidebarContent = ({
   activeSection,
@@ -1075,7 +1075,7 @@ const SidebarContent = ({
   </div>
 );
 
-// ─── Main Component ────────────────────────────────────────────────────────────
+// --- Main Component ------------------------------------------------------------
 
 const DocsPage = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -1100,7 +1100,7 @@ const DocsPage = () => {
   const isManualScrollRef = useRef(false);
   const mainRef = useRef<HTMLDivElement>(null);
 
-  // ── Copy anchor link ──────────────────────────────────────────────────────
+  // -- Copy anchor link ------------------------------------------------------
   const handleCopyLink = useCallback((id: string) => {
     const url = `${window.location.origin}${window.location.pathname}#${id}`;
     navigator.clipboard.writeText(url).catch(() => {});
@@ -1111,7 +1111,7 @@ const DocsPage = () => {
   // Build sections with copy handler
   const SECTIONS = buildSections(handleCopyLink);
 
-  // ── Scroll progress + back-to-top ─────────────────────────────────────────
+  // -- Scroll progress + back-to-top -----------------------------------------
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
@@ -1123,7 +1123,7 @@ const DocsPage = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ── IntersectionObserver ──────────────────────────────────────────────────
+  // -- IntersectionObserver --------------------------------------------------
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
     const visibleSections = new Set<string>();
@@ -1159,7 +1159,7 @@ const DocsPage = () => {
     return () => observers.forEach((o) => o.disconnect());
   }, []);
 
-  // ── Auto-expand group ─────────────────────────────────────────────────────
+  // -- Auto-expand group -----------------------------------------------------
   useEffect(() => {
     const group = NAV.find((g) => g.children?.some((c) => c.id === activeSection));
     if (group) {
@@ -1167,14 +1167,14 @@ const DocsPage = () => {
     }
   }, [activeSection]);
 
-  // ── Sidebar scroll active into view ──────────────────────────────────────
+  // -- Sidebar scroll active into view --------------------------------------
   useEffect(() => {
     if (!sidebarRef.current) return;
     const btn = sidebarRef.current.querySelector(`[data-section-id="${activeSection}"]`) as HTMLElement | null;
     if (btn) btn.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [activeSection]);
 
-  // ── Lock body scroll when drawer open ────────────────────────────────────
+  // -- Lock body scroll when drawer open ------------------------------------
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -1204,7 +1204,7 @@ const DocsPage = () => {
       )
     : null;
 
-  // ── Prev / Next section ───────────────────────────────────────────────────
+  // -- Prev / Next section ---------------------------------------------------
   const flatSections = SECTIONS;
   const currentIdx = flatSections.findIndex((s) => s.id === activeSection);
   const prevSection = currentIdx > 0 ? flatSections[currentIdx - 1] : null;
@@ -1218,7 +1218,7 @@ const DocsPage = () => {
         fontFamily: "'Poppins', sans-serif",
       }}
     >
-      {/* ── Reading Progress Bar ─────────────────────────────────────────── */}
+      {/* -- Reading Progress Bar ------------------------------------------- */}
       <div
         style={{
           position: "fixed",
@@ -1233,7 +1233,7 @@ const DocsPage = () => {
         }}
       />
 
-      {/* ── Top Bar ─────────────────────────────────────────────────────────── */}
+      {/* -- Top Bar ----------------------------------------------------------- */}
       <div
         style={{
           position: "sticky",
@@ -1311,7 +1311,7 @@ const DocsPage = () => {
         </div>
       </div>
 
-      {/* ── Mobile Drawer Overlay ─────────────────────────────────────────── */}
+      {/* -- Mobile Drawer Overlay ------------------------------------------- */}
       {isMobile && (
         <>
           {/* Backdrop */}
@@ -1389,7 +1389,7 @@ const DocsPage = () => {
         </>
       )}
 
-      {/* ── Page Body ────────────────────────────────────────────────────────── */}
+      {/* -- Page Body ---------------------------------------------------------- */}
       <div
         style={{
           display: "flex",
@@ -1397,7 +1397,7 @@ const DocsPage = () => {
           margin: "0 auto",
         }}
       >
-        {/* ── Desktop Sidebar ──────────────────────────────────────────────── */}
+        {/* -- Desktop Sidebar ------------------------------------------------ */}
         {!isMobile && (
           <aside
             ref={sidebarRef}
@@ -1424,7 +1424,7 @@ const DocsPage = () => {
           </aside>
         )}
 
-        {/* ── Main Content ─────────────────────────────────────────────────── */}
+        {/* -- Main Content --------------------------------------------------- */}
         <main
           ref={mainRef}
           style={{
@@ -1578,7 +1578,7 @@ const DocsPage = () => {
             </div>
           ))}
 
-          {/* ── Prev / Next Navigation ──────────────────────────────────── */}
+          {/* -- Prev / Next Navigation ------------------------------------ */}
           <div
             style={{
               display: "flex",
@@ -1631,7 +1631,7 @@ const DocsPage = () => {
         </main>
       </div>
 
-      {/* ── Back to Top Button ───────────────────────────────────────────────── */}
+      {/* -- Back to Top Button ------------------------------------------------- */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         aria-label="Back to top"
@@ -1659,7 +1659,7 @@ const DocsPage = () => {
         <ArrowUp size={18} color="hsl(var(--ping-dark))" />
       </button>
 
-      {/* ── Copy Link Toast ──────────────────────────────────────────────────── */}
+      {/* -- Copy Link Toast ---------------------------------------------------- */}
       <div
         style={{
           position: "fixed",

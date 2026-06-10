@@ -39,7 +39,7 @@ const half = Math.ceil(reviews.length / 2);
 const row1 = reviews.slice(0, half);
 const row2 = reviews.slice(half);
 
-// ─── Animated counter ────────────────────────────────────────────────────────
+// --- Animated counter --------------------------------------------------------
 const AnimatedCounter = ({ target, suffix = "" }: { target: number; suffix?: string }) => {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
@@ -59,7 +59,7 @@ const AnimatedCounter = ({ target, suffix = "" }: { target: number; suffix?: str
   return <span ref={ref}>{count}{suffix}</span>;
 };
 
-// ─── Star rating ──────────────────────────────────────────────────────────────
+// --- Star rating --------------------------------------------------------------
 const StarRating = ({ rating, animate = false }: { rating: number; animate?: boolean }) => (
   <div style={{ display: "flex", gap: "3px" }}>
     {Array.from({ length: 5 }).map((_, i) => (
@@ -74,7 +74,7 @@ const StarRating = ({ rating, animate = false }: { rating: number; animate?: boo
   </div>
 );
 
-// ─── Avatar ───────────────────────────────────────────────────────────────────
+// --- Avatar -------------------------------------------------------------------
 const Avatar = ({ initials, color }: { initials: string; color: string }) => (
   <motion.div whileHover={{ scale: 1.15, rotate: 5 }} transition={{ type: "spring", stiffness: 400, damping: 15 }}
     style={{ width: 38, height: 38, borderRadius: "50%", backgroundColor: color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 700, color: "#FEF3C7", letterSpacing: "0.04em", fontFamily: "'Poppins',sans-serif", border: "2px solid rgba(244,180,0,0.25)", cursor: "default" }}>
@@ -82,7 +82,7 @@ const Avatar = ({ initials, color }: { initials: string; color: string }) => (
   </motion.div>
 );
 
-// ─── Review card with 3D tilt ─────────────────────────────────────────────────
+// --- Review card with 3D tilt -------------------------------------------------
 const ReviewCard = ({ review, index }: { review: Review; index: number }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const rotateX = useMotionValue(0);
@@ -153,7 +153,7 @@ const ReviewCard = ({ review, index }: { review: Review; index: number }) => {
   );
 };
 
-// ─── Framer marquee row ───────────────────────────────────────────────────────
+// --- Framer marquee row -------------------------------------------------------
 const MarqueeRow = ({ items, direction = "left", speed = 30 }: { items: Review[]; direction?: "left" | "right"; speed?: number }) => {
   const baseX = useMotionValue(0);
   const { scrollY } = useScroll();
@@ -186,7 +186,7 @@ const MarqueeRow = ({ items, direction = "left", speed = 30 }: { items: Review[]
   );
 };
 
-// ─── Floating orb ─────────────────────────────────────────────────────────────
+// --- Floating orb -------------------------------------------------------------
 const FloatingOrb = ({ delay, size, left, top, color }: { delay: number; size: number; left: string; top: string; color: string }) => (
   <motion.div
     style={{ position: "absolute", left, top, width: size, height: size, borderRadius: "50%", background: color, filter: "blur(40px)", pointerEvents: "none", zIndex: 0 }}
@@ -194,7 +194,7 @@ const FloatingOrb = ({ delay, size, left, top, color }: { delay: number; size: n
     transition={{ duration: 6 + delay, repeat: Infinity, ease: "easeInOut", delay }} />
 );
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// --- Main ---------------------------------------------------------------------
 const LandingReviews = () => {
   const headerRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);

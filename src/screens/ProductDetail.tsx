@@ -36,7 +36,7 @@ import {
   type ProductVariant,
 } from "@/lib/productCatalog";
 
-/* ─── Brand Tokens ────────────────────────────────────────────── */
+/* --- Brand Tokens ---------------------------------------------- */
 const GOLD       = "#edd09f";
 const GOLD_DEEP  = "#c9a96e";
 const GOLD_LIGHT = "#f5e6c8";
@@ -49,7 +49,7 @@ const TEXT_SEC   = "#6b5d4f";
 const TEXT_MUTED = "#a89880";
 const SUCCESS    = "#4a7c59";
 
-/* ─── Static Trust Items ──────────────────────────────────────── */
+/* --- Static Trust Items ---------------------------------------- */
 const TRUST_PERKS = [
   {
     icon: <Truck size={22} strokeWidth={1.8} />,
@@ -68,7 +68,7 @@ const TRUST_PERKS = [
   },
 ];
 
-/* ─── Breadcrumb ──────────────────────────────────────────────── */
+/* --- Breadcrumb ------------------------------------------------ */
 const Breadcrumb = ({
   categorySlug,
   categoryName,
@@ -138,7 +138,7 @@ const Breadcrumb = ({
   </nav>
 );
 
-/* ─── Image Gallery ───────────────────────────────────────────── */
+/* --- Image Gallery --------------------------------------------- */
 const ImageGallery = ({
   images,
   emoji,
@@ -268,7 +268,7 @@ const ImageGallery = ({
   );
 };
 
-/* ─── Quantity Selector ───────────────────────────────────────── */
+/* --- Quantity Selector ----------------------------------------- */
 const QtySelector = ({
   qty,
   onChange,
@@ -346,7 +346,7 @@ const QtySelector = ({
   </div>
 );
 
-/* ─── Related Products Row ────────────────────────────────────── */
+/* --- Related Products Row -------------------------------------- */
 const RelatedProducts = ({
   products,
   currentId,
@@ -470,7 +470,7 @@ const RelatedProducts = ({
   );
 };
 
-/* ─── Support Banner ──────────────────────────────────────────── */
+/* --- Support Banner -------------------------------------------- */
 const SupportBanner = () => (
   <section
     style={{
@@ -613,9 +613,9 @@ const SupportBanner = () => (
   </section>
 );
 
-/* ══════════════════════════════════════════════════════════════════
+/* ==================================================================
    MAIN COMPONENT
-══════════════════════════════════════════════════════════════════ */
+================================================================== */
 const ProductDetail = () => {
   const { categorySlug, productId } = useParams<{
     categorySlug: string;
@@ -636,7 +636,7 @@ const ProductDetail = () => {
   const [copied, setCopied] = useState(false);
   const addBtnRef = useRef<HTMLButtonElement>(null);
 
-  /* ── Data Subscriptions ── */
+  /* -- Data Subscriptions -- */
   useEffect(() => {
     const unsub = subscribeToProducts(
       (latest) => setDbProducts(latest),
@@ -653,7 +653,7 @@ const ProductDetail = () => {
     return unsub;
   }, []);
 
-  /* ── Resolve product ── */
+  /* -- Resolve product -- */
   const normalizedSlug = categorySlug ? normalizeCategorySlug(categorySlug) : null;
 
   const categoryProducts = dbProducts.filter(
@@ -666,7 +666,7 @@ const ProductDetail = () => {
   const categoryName =
     categoryMeta?.name || (normalizedSlug ? categoryNameFromSlug(normalizedSlug) : "Products");
 
-  /* ── Derived fields ── */
+  /* -- Derived fields -- */
   const images: string[] = product?.image ? [product.image] : [];
   const numericPrice = product
     ? parseFloat(product.price.replace(/[^\d.]/g, ""))
@@ -679,7 +679,7 @@ const ProductDetail = () => {
       ? Math.round(((numericOriginal - numericPrice) / numericOriginal) * 100)
       : null;
 
-  /* ── Cart Handlers ── */
+  /* -- Cart Handlers -- */
   const handleAddToCart = () => {
     if (!product) return;
     for (let i = 0; i < qty; i++) {
@@ -734,7 +734,7 @@ const ProductDetail = () => {
     } catch {}
   };
 
-  /* ── Loading / Not Found ── */
+  /* -- Loading / Not Found -- */
   if (!product && dbProducts.length > 0) {
     return (
       <MainLayout>
@@ -783,7 +783,7 @@ const ProductDetail = () => {
 
   return (
     <MainLayout>
-      {/* ── Global Styles ── */}
+      {/* -- Global Styles -- */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap');
 
@@ -906,7 +906,7 @@ const ProductDetail = () => {
         }
         .pm-btn-cart:hover { border-color: ${GOLD_DEEP}; background: ${GOLD_LIGHT}; transform: translateY(-2px); }
         .pm-btn-cart-added { background: ${SUCCESS} !important; color: #fff !important; border-color: ${SUCCESS} !important; }
-      `}</style>   {/* ── Announcement Bar ── */}
+      `}</style>   {/* -- Announcement Bar -- */}
         <div
           style={{
             background: INK,
@@ -945,7 +945,7 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* ── Main Layout ── */}
+        {/* -- Main Layout -- */}
         <div className="pm-detail-layout">
 
           {/* LEFT — Image Gallery */}
@@ -1462,7 +1462,7 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* ── Trust Perks Strip ── */}
+        {/* -- Trust Perks Strip -- */}
         <div
           style={{
             background: "#fff",
@@ -1509,10 +1509,10 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* ── Support Banner ── */}
+        {/* -- Support Banner -- */}
         <SupportBanner />
 
-        {/* ── Related Products ── */}
+        {/* -- Related Products -- */}
         {product && normalizedSlug && (
           <RelatedProducts
             products={categoryProducts}

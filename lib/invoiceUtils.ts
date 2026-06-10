@@ -1,5 +1,5 @@
 // invoiceUtils.ts
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Changes from previous version:
 //  1. QR code is generated via qrcode-svg (pure-JS, no canvas needed) and
 //     embedded as an XObject stream in the PDF.
@@ -10,7 +10,7 @@
 //  4. The 6-column order-info row is replaced with a cleaner layout that
 //     avoids text overlap: columns are wider and the payment-mode value is
 //     split if long.
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 // Install dependency: npm install qrcode-svg
 // If using Next.js / Vite you can also use the browser-friendly "qrcode" pkg:
@@ -21,9 +21,9 @@
 // The helper below uses qrcode-svg which returns raw SVG/path data that we
 // convert to a minimal PDF XObject so no canvas / DOM is needed.
 
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 // PUBLIC TYPES  (unchanged — fully backward-compatible)
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 
 export interface InvoiceCompanyDetails {
   name: string;
@@ -90,9 +90,9 @@ export interface InvoiceData {
   authorizedSignatory: string;
 }
 
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 // UTILITY FUNCTIONS
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 
 export const formatCurrency = (
   value: number,
@@ -153,12 +153,12 @@ export const computeTotals = (items: InvoiceItem[]): InvoiceTotals => {
   };
 };
 
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 // QR CODE GENERATION
 // Generates a simple QR-code PDF XObject from a URL string.
 // Uses the lightweight "qrcode-svg" package (npm install qrcode-svg).
 // Returns { stream, width, height } ready to embed as a PDF XObject.
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 
 /**
  * Generate a QR-code as a minimal PDF graphics stream.
@@ -208,10 +208,10 @@ export const generateQrPdfStream = async (
   return { stream: ops.join("\n"), size: sizeInPts };
 };
 
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 // PDF LOW-LEVEL HELPERS
 // A4 = 595 × 842 pts; origin = bottom-left.
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 
 const esc = (v: string) =>
   String(v ?? "")
@@ -248,9 +248,9 @@ const fillRect = (x: number, y: number, w: number, h: number, gray = 0.93) =>
 const fmtMoney = (v: number, currency: string) =>
   `${currency === "INR" ? "Rs." : currency + " "}${v.toFixed(2)}`;
 
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 // MAIN PDF CONTENT BUILDER
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 
 const buildPdfPageContent = (
   inv: InvoiceData,
@@ -265,7 +265,7 @@ const buildPdfPageContent = (
   // Outer border
   ops.push(rect(L, 30, R - L, 800, 0.8));
 
-  // ── [1] HEADER ──────────────────────────────────────────────────────────────
+  // -- [1] HEADER --------------------------------------------------------------
   // Left side: company details
   // Right side: QR code (only — no separate invoice-number box)
   //             Invoice number printed as text below QR
@@ -298,7 +298,7 @@ const buildPdfPageContent = (
   const headerBot = QR_Y - 28; // separator below QR+inv-number block
   ops.push(hLine(L, headerBot, R, 0.8));
 
-  // ── [2] ORDER INFO ROW ──────────────────────────────────────────────────────
+  // -- [2] ORDER INFO ROW ------------------------------------------------------
   // 5 columns to avoid overlap: ORDER ID | ORDER DATE | INVOICE DATE | PAN | PAYMENT MODE
   // (CIN moved into header to save space)
   const infoY = headerBot - 18;
@@ -328,7 +328,7 @@ const buildPdfPageContent = (
     if (i > 0) ops.push(vLine(cols5[i], infoY - 15, infoY + 13, 0.4));
   }
 
-  // ── [3] BILL TO / SHIP TO ───────────────────────────────────────────────────
+  // -- [3] BILL TO / SHIP TO ---------------------------------------------------
   const bsTop = infoY - 20;
   ops.push(rect(L, bsTop - 52, R - L, 54, 0.5));
   ops.push(vLine(MID, bsTop - 52, bsTop + 2, 0.4));
@@ -349,7 +349,7 @@ const buildPdfPageContent = (
   }
   if (inv.shipTo.gstin) ops.push(txt(`GSTIN: ${inv.shipTo.gstin}`, MID + 5, sy, 7.5));
 
-  // ── [4] PRODUCT TABLE ───────────────────────────────────────────────────────
+  // -- [4] PRODUCT TABLE -------------------------------------------------------
   const tblTop = bsTop - 60;
   const colW = [100, 125, 40, 80, 80, 100];
   const colX: number[] = [L];
@@ -393,7 +393,7 @@ const buildPdfPageContent = (
   }
   ops.push(hLine(L, rowY + 2, R, 0.5));
 
-  // ── [5] NOTES + TOTALS ──────────────────────────────────────────────────────
+  // -- [5] NOTES + TOTALS ------------------------------------------------------
   const secTop = rowY - 4;
   const secBot = secTop - 58;
   const secMid = L + 295;
@@ -424,7 +424,7 @@ const buildPdfPageContent = (
   ops.push(bold("GRAND TOTAL", tx, ty, 8.5));
   ops.push(boldR(fmtMoney(inv.totals.grandTotal, inv.currency), tValX, ty, 8.5));
 
-  // ── [6] FOOTER ──────────────────────────────────────────────────────────────
+  // -- [6] FOOTER --------------------------------------------------------------
   const ftTop = secBot - 6;
   const ftBot = ftTop - 40;
   ops.push(rect(L, ftBot, R - L, ftTop - ftBot, 0.4));
@@ -445,12 +445,12 @@ const buildPdfPageContent = (
   ops.push(txt(`Email: ${inv.contact.email}`, MID + 5, ftTop - 20, 7));
   ops.push(txt(`Phone: ${inv.contact.phone}`, MID + 5, ftTop - 30, 7));
 
-  // ── [7] AUTHORIZED SIGNATORY ────────────────────────────────────────────────
+  // -- [7] AUTHORIZED SIGNATORY ------------------------------------------------
   const sigY = ftBot - 20;
   ops.push(hLine(L + 5, sigY + 10, L + 100, 0.5));
   ops.push(txt("AUTHORIZED SIGNATORY", L + 5, sigY, 7));
 
-  // ── [8] PAGE FOOTER ─────────────────────────────────────────────────────────
+  // -- [8] PAGE FOOTER ---------------------------------------------------------
   ops.push(txt(inv.company.name, MID - 30, 38, 7.5));
   ops.push(txtR("Page 1 of 1", R - 5, 38, 7));
 
@@ -460,9 +460,9 @@ const buildPdfPageContent = (
   return ops;
 };
 
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 // PDF BLOB BUILDER  (async — generates QR first)
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 
 export const buildInvoicePdfBlob = async (invoice: InvoiceData): Promise<Blob> => {
   // 1. Generate QR code stream for the invoice URL / order ID
@@ -538,9 +538,9 @@ export const buildInvoicePdfBlob = async (invoice: InvoiceData): Promise<Blob> =
   });
 };
 
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 // buildInvoiceDataFromPrebooking  (unchanged logic)
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 
 // Minimal stub — replace with your actual PrebookingData type
 export interface PrebookingData {
@@ -662,9 +662,9 @@ export const buildInvoiceDataFromPrebooking = (
   };
 };
 
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 // USAGE EXAMPLE (browser)
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 //
 // import { buildInvoiceDataFromPrebooking, buildInvoicePdfBlob } from "./invoiceUtils";
 //

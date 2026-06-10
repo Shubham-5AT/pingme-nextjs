@@ -45,7 +45,7 @@ const getPaymentApiBaseUrl = () => {
   return typeof base === "string" ? base.replace(/\/$/, "") : "";
 };
 
-/* ── In-memory profile cache (TTL: 5 minutes) ── */
+/* -- In-memory profile cache (TTL: 5 minutes) -- */
 const CACHE_TTL_MS = 5 * 60 * 1000;
 interface CacheEntry {
   profile: PublicNfcProfile;

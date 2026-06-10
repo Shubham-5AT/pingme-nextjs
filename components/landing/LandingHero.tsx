@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback, Suspense } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -65,9 +65,9 @@ const LandingReviews = dynamic(() => import("../LandingReviews"), { ssr: false }
 const heroImagePath = process.env.NEXT_PUBLIC_HERO_IMAGE_PATH || "products/hero_i.PNG";
 const heroImageUrl = buildProductImageUrl(heroImagePath);
 
-/* ─────────────────────────────────────────────────────────────────
+/* -----------------------------------------------------------------
    DESIGN TOKENS
-───────────────────────────────────────────────────────────────── */
+----------------------------------------------------------------- */
 
 const GOLD      = "#C8820A";
 const GOLD_MID  = "#F5A623";
@@ -76,9 +76,9 @@ const CREAM     = "#FFF9EB";
 const CREAM_2   = "#FFF3D6";
 const DARK_GOLD = "#3D2200";
 
-/* ─────────────────────────────────────────────────────────────────
+/* -----------------------------------------------------------------
    DATA
-───────────────────────────────────────────────────────────────── */
+----------------------------------------------------------------- */
 
 type HeroProduct = {
   categorySlug: string;
@@ -238,9 +238,9 @@ const FEATURES = [
   },
 ];
 
-/* ─────────────────────────────────────────────────────────────────
+/* -----------------------------------------------------------------
    CUSTOM CURSOR
-───────────────────────────────────────────────────────────────── */
+----------------------------------------------------------------- */
 
 const CustomCursor: React.FC = () => {
   const cursorX = useMotionValue(-200);
@@ -325,9 +325,9 @@ const CustomCursor: React.FC = () => {
   );
 };
 
-/* ─────────────────────────────────────────────────────────────────
+/* -----------------------------------------------------------------
    UTILITY COMPONENTS
-───────────────────────────────────────────────────────────────── */
+----------------------------------------------------------------- */
 
 const FadeUp: React.FC<{
   children: React.ReactNode;
@@ -410,9 +410,9 @@ const SectionEyebrow: React.FC<{ children: React.ReactNode; align?: "center" | "
   </motion.div>
 );
 
-/* ─────────────────────────────────────────────────────────────────
+/* -----------------------------------------------------------------
    SCAN STORY — hero right panel
-───────────────────────────────────────────────────────────────── */
+----------------------------------------------------------------- */
 
 const SCAN_PRODUCTS = [
   { label: "Vehicle Tag",  icon: CarFront,      color: GOLD,      bg: "rgba(245,166,35,0.13)" },
@@ -453,7 +453,7 @@ const ScanStory: React.FC<{ offerings: ReturnType<typeof getOfferings> }> = ({ o
         }}
       />
 
-      {/* ── Central animated product card ── */}
+      {/* -- Central animated product card -- */}
       <div className="relative z-10 w-full max-w-[268px]">
         <AnimatePresence mode="wait">
           <motion.div
@@ -688,9 +688,9 @@ const ScanStory: React.FC<{ offerings: ReturnType<typeof getOfferings> }> = ({ o
   );
 };
 
-/* ─────────────────────────────────────────────────────────────────
+/* -----------------------------------------------------------------
    TRUST TICKER
-───────────────────────────────────────────────────────────────── */
+----------------------------------------------------------------- */
 
 const TrustTicker: React.FC = () => {
   const items = [
@@ -749,9 +749,9 @@ const TrustTicker: React.FC = () => {
   );
 };
 
-/* ─────────────────────────────────────────────────────────────────
+/* -----------------------------------------------------------------
    STATS BAR
-───────────────────────────────────────────────────────────────── */
+----------------------------------------------------------------- */
 
 const StatsBar: React.FC = () => {
   const stats = [
@@ -816,9 +816,9 @@ const StatsBar: React.FC = () => {
   );
 };
 
-/* ─────────────────────────────────────────────────────────────────
+/* -----------------------------------------------------------------
    HOW IT WORKS
-───────────────────────────────────────────────────────────────── */
+----------------------------------------------------------------- */
 
 const HowItWorks: React.FC = () => (
   <section className="space-y-10">
@@ -914,9 +914,9 @@ const HowItWorks: React.FC = () => (
   </section>
 );
 
-/* ─────────────────────────────────────────────────────────────────
+/* -----------------------------------------------------------------
    OFFERING CARD
-───────────────────────────────────────────────────────────────── */
+----------------------------------------------------------------- */
 
 const OfferingCard: React.FC<{
   item: ReturnType<typeof getOfferings>[0];
@@ -1048,9 +1048,9 @@ const OfferingCard: React.FC<{
   );
 };
 
-/* ─────────────────────────────────────────────────────────────────
+/* -----------------------------------------------------------------
    FEATURE STRIP
-───────────────────────────────────────────────────────────────── */
+----------------------------------------------------------------- */
 
 const FeatureStrip: React.FC = () => (
   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -1079,9 +1079,9 @@ const FeatureStrip: React.FC = () => (
   </div>
 );
 
-/* ─────────────────────────────────────────────────────────────────
+/* -----------------------------------------------------------------
    CTA BANNER
-───────────────────────────────────────────────────────────────── */
+----------------------------------------------------------------- */
 
 const CTABanner: React.FC = () => (
   <FadeUp>
@@ -1165,9 +1165,9 @@ const CTABanner: React.FC = () => (
   </FadeUp>
 );
 
-/* ─────────────────────────────────────────────────────────────────
+/* -----------------------------------------------------------------
    MAIN COMPONENT
-───────────────────────────────────────────────────────────────── */
+----------------------------------------------------------------- */
 
 const LandingHero = () => {
   const router = useRouter();
@@ -1226,7 +1226,7 @@ const LandingHero = () => {
       {/* Custom cursor — rendered at root so it's above everything */}
       <CustomCursor />
 
-      {/* ── Global ambient background ── */}
+      {/* -- Global ambient background -- */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Noise layer */}
         <div
@@ -1280,12 +1280,12 @@ const LandingHero = () => {
         />
       </div>
 
-      {/* ════════════════════════════════════════════════════════════
+      {/* ============================================================
           CONTENT  — tighter section spacing throughout
-      ════════════════════════════════════════════════════════════ */}
+      ============================================================ */}
       <div className="w-full px-4 md:px-6 lg:px-10 xl:px-14 relative pt-6 pb-10 md:pt-10 md:pb-14 space-y-14 lg:space-y-18">
 
-        {/* ═══ HERO ═══════════════════════════════════════════════ */}
+        {/* === HERO =============================================== */}
         <section
           className="grid gap-6 lg:grid-cols-[1fr_0.82fr] lg:items-center"
           style={{ minHeight: "88vh" }}
@@ -1492,7 +1492,7 @@ const LandingHero = () => {
         {/* TrustTicker */}
         <TrustTicker />
 
-        {/* ═══ STATS ══════════════════════════════════════════════ */}
+        {/* === STATS ============================================== */}
         <section>
           <StatsBar />
         </section>
@@ -1502,7 +1502,7 @@ const LandingHero = () => {
           style={{ background: "linear-gradient(90deg, transparent, rgba(245,166,35,0.18), transparent)" }}
         />
 
-        {/* ═══ HOW IT WORKS ═══════════════════════════════════════ */}
+        {/* === HOW IT WORKS ======================================= */}
         <HowItWorks />
 
         <div
@@ -1510,7 +1510,7 @@ const LandingHero = () => {
           style={{ background: "linear-gradient(90deg, transparent, rgba(245,166,35,0.18), transparent)" }}
         />
 
-        {/* ═══ WHAT WE OFFER ══════════════════════════════════════ */}
+        {/* === WHAT WE OFFER ====================================== */}
         <section id="what-we-offer" className="space-y-10">
           <div className="max-w-3xl mx-auto space-y-3 text-center">
             <SectionEyebrow>What We Offer</SectionEyebrow>
@@ -1551,7 +1551,7 @@ const LandingHero = () => {
           style={{ background: "linear-gradient(90deg, transparent, rgba(245,166,35,0.18), transparent)" }}
         />
 
-        {/* ═══ WHY PINGME ═════════════════════════════════════════ */}
+        {/* === WHY PINGME ========================================= */}
         <section className="space-y-10">
           <div className="max-w-3xl mx-auto text-center space-y-3">
             <SectionEyebrow>Why PingME</SectionEyebrow>
@@ -1588,7 +1588,7 @@ const LandingHero = () => {
           <FeatureStrip />
         </section>
 
-        {/* ═══ CTA BANNER ═════════════════════════════════════════ */}
+        {/* === CTA BANNER ========================================= */}
         <CTABanner />
 
         <div
@@ -1596,12 +1596,10 @@ const LandingHero = () => {
           style={{ background: "linear-gradient(90deg, transparent, rgba(245,166,35,0.18), transparent)" }}
         />
 
-        {/* ═══ REVIEWS ════════════════════════════════════════════ */}
-        <Suspense fallback={null}>
-          <LandingReviews />
-        </Suspense>
+        {/* === REVIEWS ============================================ */}
+        <LandingReviews />
 
-        {/* ═══ OFFICE / CONTACT ═══════════════════════════════════ */}
+        {/* === OFFICE / CONTACT =================================== */}
         <div className="mx-auto max-w-6xl">
           <div
             className="h-px mb-10"
@@ -1685,10 +1683,8 @@ const LandingHero = () => {
           </FadeUp>
         </div>
 
-        {/* ═══ DOWNLOAD ═══════════════════════════════════════════ */}
-        <Suspense fallback={null}>
-          <LandingDownloadSection />
-        </Suspense>
+        {/* === DOWNLOAD =========================================== */}
+        <LandingDownloadSection />
       </div>
     </main>
   );

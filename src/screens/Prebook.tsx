@@ -34,7 +34,7 @@ import {
   isNfcCartItem,
 } from "@/lib/nfcCheckout";
 
-/* ─────────────────────────── CONSTANTS ─────────────────────────────────── */
+/* --------------------------- CONSTANTS ----------------------------------- */
 
 const indianStates = [
   "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chandigarh","Chhattisgarh",
@@ -69,7 +69,7 @@ type FormErrors   = Partial<Record<DeliveryFieldKey, string>>;
 type TouchedFields = Partial<Record<DeliveryFieldKey, boolean>>;
 type FieldProps = { label: string; required?: boolean; hint?: string; children: ReactNode; error?: string; optional?: boolean; };
 
-/* ─────────────────────────── useIsMobile hook ───────────────────────────── */
+/* --------------------------- useIsMobile hook ----------------------------- */
 
 const useIsMobile = () => {
   const [mobile, setMobile] = useState(() =>
@@ -95,7 +95,7 @@ const useIsTablet = () => {
   return tablet;
 };
 
-/* ─────────────────────────── STYLES ────────────────────────────────────── */
+/* --------------------------- STYLES -------------------------------------- */
 
 const STYLES = `
   :root {
@@ -126,7 +126,7 @@ const STYLES = `
     min-height: 100vh;
   }
 
-  /* ── LAYOUT ── */
+  /* -- LAYOUT -- */
   .pb-wrap {
     max-width: 1040px; margin: 0 auto;
     padding: 40px 24px 120px;
@@ -164,7 +164,7 @@ const STYLES = `
     .pm-grid { grid-template-columns: 1fr !important; }
   }
 
-  /* ── STEP PROGRESS ── */
+  /* -- STEP PROGRESS -- */
   .steps {
     display: flex; align-items: center;
     margin-bottom: 28px; overflow: hidden;
@@ -191,7 +191,7 @@ const STYLES = `
     .step-item  { gap: 0; }
   }
 
-  /* ── SECTION CARD ── */
+  /* -- SECTION CARD -- */
   .section-card {
     background: rgba(255,255,255,0.55);
     border: 1.5px solid var(--border-soft);
@@ -210,7 +210,7 @@ const STYLES = `
   }
   .section-card-title svg { width: 13px; height: 13px; }
 
-  /* ── FIELD ── */
+  /* -- FIELD -- */
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .field  { margin-bottom: 13px; }
   .field:last-child { margin-bottom: 0; }
@@ -242,7 +242,7 @@ const STYLES = `
   .field-error svg { width: 11px; height: 11px; flex-shrink: 0; }
   .field-hint  { font-size: 11px; color: var(--ink-light); margin-top: 4px; }
 
-  /* ── SAVED ADDRESS ── */
+  /* -- SAVED ADDRESS -- */
   .saved-addr-list { display: flex; flex-direction: column; gap: 8px; }
   .saved-addr-btn {
     width: 100%; text-align: left;
@@ -256,7 +256,7 @@ const STYLES = `
   .saved-addr-main { font-size: 13px; font-weight: 500; color: var(--ink); display: block; }
   .saved-addr-sub  { font-size: 11.5px; color: var(--ink-muted); margin-top: 1px; display: block; }
 
-  /* ── TOGGLE ── */
+  /* -- TOGGLE -- */
   .toggle-row {
     display: flex; align-items: center; gap: 10px;
     padding: 11px 13px; border-radius: var(--r-sm);
@@ -274,7 +274,7 @@ const STYLES = `
   .toggle-box.checked { background: var(--gold); border-color: var(--gold); }
   .toggle-label { font-size: 13px; font-weight: 500; color: var(--ink); }
 
-  /* ── PINCODE ── */
+  /* -- PINCODE -- */
   .pincode-wrap { position: relative; }
   .pincode-badge {
     position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
@@ -285,7 +285,7 @@ const STYLES = `
   .pincode-badge.found   { background: rgba(22,163,74,.1); color: var(--success); }
   .pincode-badge.error   { background: rgba(220,38,38,.1); color: var(--error); }
 
-  /* ── COUPON ── */
+  /* -- COUPON -- */
   .coupon-row { display: flex; gap: 0; }
   .coupon-row .field-input { border-radius: var(--r-sm) 0 0 var(--r-sm); border-right: 0; flex: 1; }
   .coupon-apply {
@@ -321,7 +321,7 @@ const STYLES = `
   }
   .coupon-chip:hover { background: var(--gold-pale); border-color: var(--gold); }
 
-  /* ── PAYMENT METHOD ── */
+  /* -- PAYMENT METHOD -- */
   .pm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .pm-option {
     padding: 11px 12px; border-radius: var(--r-sm);
@@ -353,7 +353,7 @@ const STYLES = `
   .pm-radio-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); opacity: 0; transition: opacity .15s; }
   .pm-option.active .pm-radio-dot { opacity: 1; }
 
-  /* ── NFC HUB ── */
+  /* -- NFC HUB -- */
   .nfc-row {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
     padding: 13px 14px; border-radius: var(--r-sm);
@@ -384,7 +384,7 @@ const STYLES = `
   .btn-nfc-setup.pending { background: var(--ink); color: var(--cream); border-color: var(--ink); box-shadow: 0 3px 10px rgba(28,20,9,.18); }
   .btn-nfc-setup.pending:hover { background: #2e2010; }
 
-  /* ── ORDER SUMMARY CARD ── */
+  /* -- ORDER SUMMARY CARD -- */
   .summary-card {
     background: rgba(255,255,255,0.65);
     border: 1.5px solid var(--border);
@@ -468,7 +468,7 @@ const STYLES = `
   .trust-item { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--ink-muted); }
   .trust-item svg { color: var(--gold); width: 12px; height: 12px; flex-shrink: 0; }
 
-  /* ── STICKY BOTTOM CTA ── */
+  /* -- STICKY BOTTOM CTA -- */
   .sticky-cta { display: none; }
   @media (max-width: 768px) {
     .sticky-cta {
@@ -491,7 +491,7 @@ const STYLES = `
     .btn-primary-inline { display: flex; }
   }
 
-  /* ── BUTTONS ── */
+  /* -- BUTTONS -- */
   .btn-primary {
     width: 100%; height: 50px;
     background: var(--ink);
@@ -538,12 +538,12 @@ const STYLES = `
   }
   .btn-back:hover { color: var(--ink); }
 
-  /* ── PAGE HEADER ── */
+  /* -- PAGE HEADER -- */
   .pb-header { margin-bottom: 20px; }
   .pb-header h1 { font-size: clamp(19px,3vw,25px); font-weight: 700; color: var(--ink); line-height: 1.2; }
   .pb-header p  { font-size: 13px; color: var(--ink-muted); margin-top: 4px; line-height: 1.5; }
 
-  /* ── SUCCESS ── */
+  /* -- SUCCESS -- */
   .success-wrap { max-width: 460px; margin: 0 auto; text-align: center; padding: 48px 20px; }
   .success-ring {
     width: 76px; height: 76px; border-radius: 50%; margin: 0 auto 22px;
@@ -563,7 +563,7 @@ const STYLES = `
   .success-meta p { font-size: 12.5px; color: var(--ink-muted); line-height: 1.6; }
   .success-meta strong { color: var(--ink); }
 
-  /* ── EMPTY ── */
+  /* -- EMPTY -- */
   .empty-wrap { max-width: 380px; margin: 0 auto; text-align: center; padding: 56px 20px; }
   .empty-icon {
     width: 68px; height: 68px; border-radius: 50%; margin: 0 auto 18px;
@@ -574,10 +574,10 @@ const STYLES = `
   .empty-wrap h1 { font-size: clamp(20px,4vw,24px); font-weight: 700; color: var(--ink); margin-bottom: 8px; }
   .empty-wrap p  { font-size: 14px; color: var(--ink-muted); margin-bottom: 18px; line-height: 1.6; }
 
-  /* ── DIVIDER ── */
+  /* -- DIVIDER -- */
   .divider { height: 1px; background: var(--border-soft); margin: 12px 0; }
 
-  /* ── ANIMATIONS ── */
+  /* -- ANIMATIONS -- */
   .fade-up { animation: fadeUp .28s ease both; }
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }
@@ -591,9 +591,9 @@ const STYLES = `
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
-  /* ════════════════════════════════════════════════
+  /* ================================================
      NFC PROFILE EDITOR — IMPROVED UI
-  ════════════════════════════════════════════════ */
+  ================================================ */
 
   /* Two-column: form on left, live preview on right */
   .nfc-editor-wrap {
@@ -606,7 +606,7 @@ const STYLES = `
     .nfc-editor-wrap { grid-template-columns: 1fr; }
   }
 
-  /* ── Avatar + name identity hero ── */
+  /* -- Avatar + name identity hero -- */
   .nfc-identity-hero {
     background: linear-gradient(135deg, rgba(201,146,42,0.08) 0%, rgba(255,247,228,0.5) 100%);
     border: 1.5px solid var(--border);
@@ -659,7 +659,7 @@ const STYLES = `
     display: flex; align-items: center;
   }
 
-  /* ── Progress bar ── */
+  /* -- Progress bar -- */
   .nfc-progress-bar-wrap {
     margin-bottom: 14px;
     padding: 11px 14px;
@@ -679,7 +679,7 @@ const STYLES = `
   }
   .nfc-progress-label { font-size: 11.5px; font-weight: 700; color: var(--gold-dim); white-space: nowrap; }
 
-  /* ── Social link rows ── */
+  /* -- Social link rows -- */
   .social-link-row {
     display: flex; align-items: center; gap: 0;
     margin-bottom: 10px;
@@ -709,7 +709,7 @@ const STYLES = `
     font-size: 12px; color: var(--ink-muted); margin-bottom: 14px; line-height: 1.55;
   }
 
-  /* ── Live Preview Panel ── */
+  /* -- Live Preview Panel -- */
   .nfc-preview-panel { position: sticky; top: 24px; }
   @media (max-width: 860px) { .nfc-preview-panel { position: static; } }
 
@@ -784,7 +784,7 @@ const STYLES = `
     text-transform: uppercase; color: rgba(201,146,42,.4);
   }
 
-  /* ── Completeness checklist below preview ── */
+  /* -- Completeness checklist below preview -- */
   .nfc-checklist {
     margin-top: 14px; padding: 13px 14px;
     background: rgba(255,255,255,0.5);
@@ -808,12 +808,12 @@ const STYLES = `
   .nfc-check-dot.undone { background: rgba(201,146,42,.07); color: transparent; border: 1.5px dashed rgba(201,146,42,.25); }
   .nfc-check-item.done-item { color: var(--ink); }
 
-  /* ── Save button area ── */
+  /* -- Save button area -- */
   .nfc-editor-actions { display: flex; gap: 10px; margin-top: 16px; }
   .nfc-editor-actions .btn-primary { flex: 1; }
 `;
 
-/* ─────────────────────────── HELPERS ───────────────────────────────────── */
+/* --------------------------- HELPERS ------------------------------------- */
 
 function getDeliveryEstimate() {
   const now = new Date();
@@ -841,7 +841,7 @@ function calcProfileCompletion(p: ReturnType<typeof emptyNfcProfile>) {
   return { pct: Math.round((done / items.length) * 100), items };
 }
 
-/* ─────────────────────────── SUB-COMPONENTS ────────────────────────────── */
+/* --------------------------- SUB-COMPONENTS ------------------------------ */
 
 function StepTrack({ current }) {
   const steps = [
@@ -893,7 +893,7 @@ function CheckToggle({ checked, onChange, label, icon: Icon }) {
   );
 }
 
-/* ─── Live NFC Card Preview ─── */
+/* --- Live NFC Card Preview --- */
 function NfcCardPreview({ profile }: { profile: ReturnType<typeof emptyNfcProfile> }) {
   const hasName   = !!profile.name?.trim();
   const hasHandle = !!profile.username?.trim();
@@ -966,7 +966,7 @@ function NfcCardPreview({ profile }: { profile: ReturnType<typeof emptyNfcProfil
   );
 }
 
-/* ─── Improved Inline NFC Profile Editor ─── */
+/* --- Improved Inline NFC Profile Editor --- */
 function NfcProfileEditor({
   profile, onChange, onBack, onSave, isSaving, title, subtitle,
 }: {
@@ -1022,7 +1022,7 @@ function NfcProfileEditor({
       </div>
 
       <div className="nfc-editor-wrap">
-        {/* ── LEFT COLUMN: Form ── */}
+        {/* -- LEFT COLUMN: Form -- */}
         <div>
           {/* Identity block with avatar */}
           <div className="section-card">
@@ -1140,14 +1140,14 @@ function NfcProfileEditor({
           )}
         </div>
 
-        {/* ── RIGHT COLUMN: Live preview ── */}
+        {/* -- RIGHT COLUMN: Live preview -- */}
         <NfcCardPreview profile={profile} />
       </div>
     </div>
   );
 }
 
-/* ─── Collapsible mobile order summary ─── */
+/* --- Collapsible mobile order summary --- */
 function OrderSummaryCard({
   items, appliedCoupon, discountAmt, subtotal, finalTotal,
   gstAmt, updateQuantity, removeFromCart, submitting,
@@ -1270,7 +1270,7 @@ function OrderSummaryCard({
   );
 }
 
-/* ─────────────────────────── MAIN PAGE ─────────────────────────────────── */
+/* --------------------------- MAIN PAGE ----------------------------------- */
 
 const Prebook = () => {
   const router = useRouter();
@@ -1283,7 +1283,7 @@ const Prebook = () => {
   const { items, cartTotal, clearCart, updateQuantity, removeFromCart } = useCart();
   const { user, profile } = useAuth();
 
-  /* ── Delivery form ── */
+  /* -- Delivery form -- */
   const [fullName,   setFullName]   = useState("");
   const [email,      setEmail]      = useState("");
   const [phone,      setPhone]      = useState("");
@@ -1293,16 +1293,16 @@ const Prebook = () => {
   const [pincode,    setPincode]    = useState("");
   const [orderNote,  setOrderNote]  = useState("");
 
-  /* ── Validation ── */
+  /* -- Validation -- */
   const [errors,  setErrors]  = useState<FormErrors>({});
   const [touched, setTouched] = useState<TouchedFields>({});
 
-  /* ── NFC state ── */
+  /* -- NFC state -- */
   const nfcCartUnits        = useMemo(() => expandNfcCartUnits(items), [items]);
   const hasNFCCards         = nfcCartUnits.length > 0;
   const showProfileBuilding = hasNFCCards;
 
-  /* ── Flow ── */
+  /* -- Flow -- */
   const [step,              setStep]              = useState(() => hasNFCCards ? "profileHub" : "delivery");
   const [activeLineKey,     setActiveLineKey]     = useState(null);
   const [nfcProfilesByLine, setNfcProfilesByLine] = useState({});
@@ -1311,7 +1311,7 @@ const Prebook = () => {
   const [receiptOrder,      setReceiptOrder]      = useState(null);
   const [invoiceEmail,      setInvoiceEmail]      = useState("");
 
-  /* ── Extra features ── */
+  /* -- Extra features -- */
   const [couponInput,       setCouponInput]       = useState("");
   const [appliedCoupon,     setAppliedCoupon]     = useState(null);
   const [couponLoading,     setCouponLoading]     = useState(false);
@@ -1326,7 +1326,7 @@ const Prebook = () => {
   const activeUnit             = nfcCartUnits.find(u => u.lineKey === activeLineKey);
   const allNfcProfilesComplete = nfcCartUnits.every(u => isNfcLineProfileComplete(nfcProfilesByLine[u.lineKey]));
 
-  /* ── Pricing ── */
+  /* -- Pricing -- */
   const subtotal    = cartTotal;
   const discountAmt = appliedCoupon
     ? appliedCoupon.type === "percent"
@@ -1337,7 +1337,7 @@ const Prebook = () => {
   const gstAmt     = parseFloat((taxableAmt * GST_RATE).toFixed(2));
   const finalTotal = parseFloat((taxableAmt).toFixed(2));
 
-  /* ── Session restore ── */
+  /* -- Session restore -- */
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(SESSION_KEY);
@@ -1361,7 +1361,7 @@ const Prebook = () => {
     } catch {}
   }, [fullName, email, phone, address, city, state, pincode, orderNote]);
 
-  /* ── Prefill from auth ── */
+  /* -- Prefill from auth -- */
   useEffect(() => {
     if (profile) {
       if (profile.displayName && !fullName) setFullName(profile.displayName);
@@ -1370,7 +1370,7 @@ const Prebook = () => {
     }
   }, [profile]);
 
-  /* ── Pincode lookup ── */
+  /* -- Pincode lookup -- */
   useEffect(() => {
     if (pincode.length !== 6 || !/^\d{6}$/.test(pincode)) { setPincodeStatus(null); return; }
     clearTimeout(pincodeTimer.current);
@@ -1393,7 +1393,7 @@ const Prebook = () => {
     return () => clearTimeout(pincodeTimer.current);
   }, [pincode]);
 
-  /* ── Validation ── */
+  /* -- Validation -- */
   const validate = useCallback((): FormErrors => {
     const e: FormErrors = {};
     if (!fullName.trim())                               e.fullName = "Full name is required";
@@ -1414,7 +1414,7 @@ const Prebook = () => {
     return errors[f] ? "field-input error" : "field-input valid";
   };
 
-  /* ── Coupon ── */
+  /* -- Coupon -- */
   const handleApplyCoupon = () => {
     const code = couponInput.trim().toUpperCase();
     if (!code) { setCouponError("Enter a coupon code"); return; }
@@ -1435,7 +1435,7 @@ const Prebook = () => {
     toast({ title: "Coupon removed" });
   };
 
-  /* ── Saved address ── */
+  /* -- Saved address -- */
   const handleApplySavedAddress = (addr) => {
     setAddress(addr.fullAddress || ""); setCity(addr.city || "");
     setState(addr.state || ""); setPincode(addr.pincode || "");
@@ -1443,7 +1443,7 @@ const Prebook = () => {
     toast({ title: "Address applied" });
   };
 
-  /* ── NFC helpers ── */
+  /* -- NFC helpers -- */
   const seedLineProfile = (lineKey, unitIndex, dName, dEmail, dPhone) => {
     const base   = dName.trim().split(" ")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || "user";
     const suffix = unitIndex > 0 ? String(unitIndex + 1) : "";
@@ -1468,7 +1468,7 @@ const Prebook = () => {
     setStep("profileHub");
   };
 
-  /* ── Delivery submit ── */
+  /* -- Delivery submit -- */
   const handleDeliverySubmit = (e) => {
     e.preventDefault();
     setTouched({ fullName: true, phone: true, address: true, city: true, state: true, pincode: true });
@@ -1479,7 +1479,7 @@ const Prebook = () => {
     setStep("payment");
   };
 
-  /* ── Payment ── */
+  /* -- Payment -- */
   const handlePayment = async () => {
     if (showProfileBuilding && !allNfcProfilesComplete) {
       toast({ title: "Profiles incomplete", description: "Set up each NFC profile before paying.", variant: "destructive" }); return;
@@ -1579,14 +1579,14 @@ const Prebook = () => {
       ? "Continue to Payment"
       : `Pay ₹${finalTotal.toFixed(2)}`;
 
-  /* ─── RENDER ──────────────────────────────────────────────────────────── */
+  /* --- RENDER ------------------------------------------------------------ */
   return (
     <>
       <style>{STYLES}</style>
       <MainLayout>
         <div className="pb">
 
-          {/* ══ SUCCESS ══════════════════════════════════════════════════════ */}
+          {/* == SUCCESS ====================================================== */}
           {success && (
             <div className="success-wrap fade-up">
               <div className="success-ring"><CheckCircle size={34} /></div>
@@ -1610,7 +1610,7 @@ const Prebook = () => {
             </div>
           )}
 
-          {/* ══ EMPTY CART ════════════════════════════════════════════════════ */}
+          {/* == EMPTY CART ==================================================== */}
           {!success && items.length === 0 && (
             <div className="empty-wrap fade-up">
               <div className="empty-icon"><ShoppingBag size={28} /></div>
@@ -1622,11 +1622,11 @@ const Prebook = () => {
             </div>
           )}
 
-          {/* ══ CHECKOUT ══════════════════════════════════════════════════════ */}
+          {/* == CHECKOUT ====================================================== */}
           {!success && items.length > 0 && (
             <div className="pb-wrap">
 
-              {/* ── RIGHT: Order Summary (hidden during profile edit to maximise space) ── */}
+              {/* -- RIGHT: Order Summary (hidden during profile edit to maximise space) -- */}
               {step !== "profileEdit" && (
                 <div className="pb-aside">
                   <OrderSummaryCard
@@ -1647,7 +1647,7 @@ const Prebook = () => {
                 </div>
               )}
 
-              {/* ── LEFT: Steps ──────────────────────────────────────────── */}
+              {/* -- LEFT: Steps -------------------------------------------- */}
               <div className="pb-main">
 
                 {/* ■ STEP 1: NFC PROFILE HUB */}
@@ -1917,7 +1917,7 @@ const Prebook = () => {
             </div>
           )}
 
-          {/* ══ STICKY MOBILE CTA ═══════════════════════════════════════════ */}
+          {/* == STICKY MOBILE CTA =========================================== */}
           {!success && items.length > 0 && step !== "profileEdit" && (
             <div className="sticky-cta">
               <div className="sticky-cta-total">
