@@ -847,7 +847,6 @@ function getInitials(name: string): string {
 function calcProfileCompletion(p: ReturnType<typeof emptyNfcProfile>) {
   const items = [
     { label: "Name",             done: !!p.name?.trim() },
-    { label: "Username",         done: !!p.username?.trim() },
     { label: "Bio",              done: !!p.bio?.trim() },
     { label: "Phone",            done: !!p.phone?.trim() },
     { label: "Email",            done: !!p.email?.trim() },
@@ -1003,13 +1002,6 @@ function NfcProfileEditor({
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     onChange({ ...profile, [key]: e.target.value });
 
-  const handleNameBlur = () => {
-    if (!profile.username && profile.name.trim()) {
-      const base = profile.name.trim().split(" ")[0].toLowerCase().replace(/[^a-z0-9]/g, "");
-      onChange({ ...profile, username: base });
-    }
-  };
-
   const isComplete = isNfcLineProfileComplete(profile);
   const { pct } = calcProfileCompletion(profile);
 
@@ -1065,7 +1057,7 @@ function NfcProfileEditor({
           <div className="section-card">
             <div className="section-card-title"><User />Identity</div>
             <p className="nfc-section-sub">
-              This is how you appear when someone taps your NFC card. Your username becomes your public profile URL.
+              This is how you appear when someone taps your NFC card.
             </p>
 
             <div className="nfc-identity-hero">
@@ -1084,27 +1076,7 @@ function NfcProfileEditor({
                     placeholder="e.g. Arjun Sharma"
                     value={profile.name}
                     onChange={set("name")}
-                    onBlur={handleNameBlur}
                   />
-                </Field>
-                <Field label="Username" required hint="Letters, numbers, underscores only">
-                  <div className="username-input-wrap">
-                    <span className="username-prefix">@</span>
-                    <input
-                      className={`field-input ${profile.username ? "valid" : ""}`}
-                      placeholder="yourhandle"
-                      value={profile.username}
-                      onChange={(e) =>
-                        onChange({ ...profile, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })
-                      }
-                      style={{ fontFamily: "'SF Mono','Fira Code',monospace", fontSize: 13, letterSpacing: ".01em" }}
-                    />
-                    {profile.username && (
-                      <span className="username-status-icon">
-                        <CheckCircle2 size={14} color="var(--success)" />
-                      </span>
-                    )}
-                  </div>
                 </Field>
               </div>
             </div>
