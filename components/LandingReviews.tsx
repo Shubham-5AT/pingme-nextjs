@@ -293,8 +293,8 @@ const LandingReviews = () => {
           style={{ position: "relative", display: "flex", flexDirection: "column", gap: 16 }}>
           <div className="pm-fade-left" />
           <div className="pm-fade-right" />
-          <MarqueeRow items={row1} direction="left"  speed={30} />
-          <MarqueeRow items={row2} direction="right" speed={25} />
+          <MarqueeRow items={row1} direction="left"  speed={3} />
+          <MarqueeRow items={row2} direction="right" speed={2} />
         </motion.div>
       </section>
     </>
