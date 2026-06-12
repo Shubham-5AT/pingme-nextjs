@@ -8,6 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import SmoothScroll from '@/components/SmoothScroll';
+import CustomCursor from '@/components/CustomCursor';
 
 export default function AppProviders({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -20,6 +21,7 @@ export default function AppProviders({ children }: { children: React.ReactNode }
             <Toaster />
             <Sonner />
             <SmoothScroll />
+            <CustomCursor />
             {children}
           </TooltipProvider>
         </CartProvider>

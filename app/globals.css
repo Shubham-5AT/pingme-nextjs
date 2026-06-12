@@ -120,6 +120,19 @@
     background: radial-gradient(circle at 20% 20%, rgba(255, 231, 170, 0.4), transparent 50%),
       radial-gradient(circle at 80% 0%, rgba(255, 248, 226, 0.5), transparent 45%),
       hsl(var(--ping-white));
+    cursor: none;
+  }
+}
+
+/* Hide the default cursor on all elements site-wide (custom cursor replaces it) */
+*, *::before, *::after {
+  cursor: none !important;
+}
+
+/* Restore default cursors on touch / coarse-pointer devices */
+@media (pointer: coarse) {
+  *, *::before, *::after {
+    cursor: auto !important;
   }
 }
 
