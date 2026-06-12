@@ -238,96 +238,11 @@ const FEATURES = [
   },
 ];
 
-/* -----------------------------------------------------------------
-   CUSTOM CURSOR
------------------------------------------------------------------ */
-
-const CustomCursor: React.FC = () => {
-  const cursorX = useMotionValue(-200);
-  const cursorY = useMotionValue(-200);
-  const [variant, setVariant] = useState<"default" | "pointer">("default");
-  const [visible, setVisible] = useState(false);
-
-  const springFast = { stiffness: 420, damping: 32, mass: 0.5 };
-  const springSlow = { stiffness: 100, damping: 22, mass: 0.9 };
-
-  const x     = useSpring(cursorX, springFast);
-  const y     = useSpring(cursorY, springFast);
-  const trailX = useSpring(cursorX, springSlow);
-  const trailY = useSpring(cursorY, springSlow);
-
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
-      if (!visible) setVisible(true);
-
-      const el = e.target as HTMLElement;
-      const clickable = el.closest("a, button, [role='button'], input, textarea, select, label, [onClick]");
-      setVariant(clickable ? "pointer" : "default");
-    };
-    const onLeave = () => setVisible(false);
-    const onEnter = () => setVisible(true);
-
-    window.addEventListener("mousemove", onMove);
-    document.documentElement.addEventListener("mouseleave", onLeave);
-    document.documentElement.addEventListener("mouseenter", onEnter);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      document.documentElement.removeEventListener("mouseleave", onLeave);
-      document.documentElement.removeEventListener("mouseenter", onEnter);
-    };
-  }, [cursorX, cursorY, visible]);
-
-  if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) return null;
-
-  return (
-    <>
-      {/* Trailing glow ring */}
-      <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[9998] rounded-full"
-        style={{
-          x: trailX,
-          y: trailY,
-          translateX: "-50%",
-          translateY: "-50%",
-          opacity: visible ? 1 : 0,
-        }}
-        animate={{
-          width:  variant === "pointer" ? 44 : 32,
-          height: variant === "pointer" ? 44 : 32,
-          background: variant === "pointer"
-            ? "rgba(245,166,35,0.22)"
-            : "rgba(245,166,35,0.12)",
-          transition: { duration: 0.18 },
-        }}
-      />
-      {/* Sharp inner dot */}
-      <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[9999] rounded-full"
-        style={{
-          x,
-          y,
-          translateX: "-50%",
-          translateY: "-50%",
-          opacity: visible ? 1 : 0,
-          boxShadow: `0 0 8px ${GOLD_MID}90`,
-        }}
-        animate={{
-          width:      variant === "pointer" ? 10 : 7,
-          height:     variant === "pointer" ? 10 : 7,
-          background: variant === "pointer" ? GOLD_MID : GOLD,
-          scale:      variant === "pointer" ? 1.15 : 1,
-          transition: { duration: 0.12 },
-        }}
-      />
-    </>
-  );
-};
 
 /* -----------------------------------------------------------------
    UTILITY COMPONENTS
 ----------------------------------------------------------------- */
+
 
 const FadeUp: React.FC<{
   children: React.ReactNode;
@@ -1221,10 +1136,7 @@ const LandingHero = () => {
   const offerings = getOfferings(products, hasProductSnapshot);
 
   return (
-    <main className="relative overflow-hidden cursor-none" style={{ background: CREAM }}>
-
-      {/* Custom cursor — rendered at root so it's above everything */}
-      <CustomCursor />
+    <main className="relative overflow-hidden" style={{ background: CREAM }}>
 
       {/* -- Global ambient background -- */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
