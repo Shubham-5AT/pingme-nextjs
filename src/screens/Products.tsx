@@ -440,23 +440,35 @@ const Products = () => {
       <div className="pm-page">
 
         {/* -- Hero -- */}
-        <section style={{ paddingTop: "clamp(60px, 10vw, 100px)", paddingBottom: "clamp(32px, 6vw, 60px)", textAlign: "center", position: "relative", overflow: "hidden" }}>
-          <div aria-hidden style={{ position: "absolute", inset: 0, backgroundImage: `radial-gradient(circle, ${MIST} 1px, transparent 1px)`, backgroundSize: "28px 28px", opacity: 0.45, pointerEvents: "none" }} />
+        <section style={{
+          paddingTop: "clamp(72px, 11vw, 110px)",
+          paddingBottom: "clamp(40px, 7vw, 72px)",
+          textAlign: "center",
+          position: "relative",
+          overflow: "hidden",
+          background: `linear-gradient(180deg, ${SMOKE} 0%, #fdf8ef 40%, #f5ead6 100%)`,
+        }}>
+          {/* Soft gold glow behind text */}
+          <div aria-hidden style={{ position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)", width: "600px", height: "600px", borderRadius: "50%", background: `radial-gradient(circle, ${GOLD_LIGHT}40 0%, transparent 60%)`, pointerEvents: "none" }} />
+          {/* Dot pattern overlay */}
+          <div aria-hidden style={{ position: "absolute", inset: 0, backgroundImage: `radial-gradient(circle, ${MIST} 1px, transparent 1px)`, backgroundSize: "28px 28px", opacity: 0.35, pointerEvents: "none" }} />
           <div style={{ position: "relative", maxWidth: 720, margin: "0 auto", padding: "0 24px" }}>
-            <span className="pm-fade" style={{ display: "inline-block", fontFamily: "system-ui, -apple-system, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: TEXT_MUTED, marginBottom: 16 }}>
-              {selectedCategory ? "Browse Category" : "Browse Our Collection"}
+            <span className="pm-fade" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "system-ui, -apple-system, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD_DEEP, marginBottom: 16 }}>
+              <span style={{ display: "inline-block", width: 20, height: 1, background: GOLD_DEEP, opacity: 0.6 }} />
+              {selectedCategory ? "Browse Category" : "Find What's Yours"}
+              <span style={{ display: "inline-block", width: 20, height: 1, background: GOLD_DEEP, opacity: 0.6 }} />
             </span>
             <h1
               className="pm-fade pm-fade-1"
               onClick={() => selectedCategory && router.push("/products")}
-              style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontSize: "clamp(32px, 6vw, 56px)", fontWeight: 900, color: INK, lineHeight: 1.1, marginBottom: 16, cursor: selectedCategory ? "pointer" : "default", letterSpacing: "-0.03em" }}
+              style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontSize: "clamp(34px, 6.5vw, 60px)", fontWeight: 900, color: INK, lineHeight: 1.08, marginBottom: 18, cursor: selectedCategory ? "pointer" : "default", letterSpacing: "-0.035em" }}
             >
-              {selectedCategory ? activeCategory?.name || categoryNameFromSlug(selectedCategory) : "Privacy-First Products"}
+              {selectedCategory ? activeCategory?.name || categoryNameFromSlug(selectedCategory) : "Stay Reachable. Stay Private."}
             </h1>
-            <p className="pm-fade pm-fade-2" style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontSize: "clamp(15px, 2vw, 18px)", fontWeight: 400, color: TEXT_SEC, lineHeight: 1.6, maxWidth: 520, margin: "0 auto" }}>
+            <p className="pm-fade pm-fade-2" style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontSize: "clamp(15px, 2.1vw, 19px)", fontWeight: 400, color: TEXT_SEC, lineHeight: 1.65, maxWidth: 540, margin: "0 auto" }}>
               {selectedCategory
                 ? activeCategory?.description || "No products are available in this category yet."
-                : "QR and NFC tags designed to help people reach you — without exposing your personal details."}
+                : "Smart tags and NFC cards that let anyone reach you instantly — while your number and identity stay completely hidden."}
             </p>
             <div className="pm-rule pm-fade pm-fade-3">
               <span style={{ color: GOLD_DEEP, fontSize: 14 }}>◆</span>
